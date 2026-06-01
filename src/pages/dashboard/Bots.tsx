@@ -120,11 +120,11 @@ export default function Bots() {
     setOpen(false); reset(); load();
   };
 
-  const remove = async (id: string) => {
-    if (!confirm("Delete this bot? All groups, rules and logs go with it.")) return;
-    const { error } = await supabase.from("bots").delete().eq("id", id);
+  const remove = async () => {
+    if (!deleteBot) return;
+    const { error } = await supabase.from("bots").delete().eq("id", deleteBot.id);
     if (error) return toast.error(error.message);
-    toast.success("Deleted"); load();
+    toast.success("Deleted"); setDeleteBot(null); load();
   };
 
   const toggleStatus = async (b: Bot) => {
