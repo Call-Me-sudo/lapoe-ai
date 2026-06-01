@@ -6,7 +6,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Send, Link2, CheckCircle2 } from "lucide-react";
+import { Link2, CheckCircle2 } from "lucide-react";
+import { SiTelegram } from "react-icons/si";
 import { toast } from "sonner";
 import { autoLinkTelegramIfPossible } from "@/lib/telegram";
 
