@@ -1,101 +1,121 @@
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* KADE — Warm editorial design system. All colors HSL. */
+/* KADE — Mobile-fintech design system. All colors HSL. */
 
 @layer base {
   :root {
-    /* Pure White & Telegram Blue palette */
-    --background: 0 0% 100%;          /* white */
-    --foreground: 215 25% 10%;         /* neutral dark */
+    /* Soft gray canvas + white cards */
+    --background: 220 14% 96%;
+    --foreground: 220 15% 8%;
 
     --card: 0 0% 100%;
-    --card-foreground: 215 25% 10%;
+    --card-foreground: 220 15% 8%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 215 25% 10%;
+    --popover-foreground: 220 15% 8%;
 
-    /* Telegram Blue accent */
+    /* Primary stays Telegram-blue for accents */
     --primary: 203 88% 53%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 215 20% 96%;
-    --secondary-foreground: 215 25% 10%;
+    --secondary: 220 14% 94%;
+    --secondary-foreground: 220 15% 8%;
 
-    --muted: 215 20% 96%;
-    --muted-foreground: 215 15% 45%;
+    --muted: 220 14% 94%;
+    --muted-foreground: 220 9% 46%;
 
-    --accent: 215 20% 94%;
-    --accent-foreground: 215 25% 10%;
+    --accent: 220 14% 92%;
+    --accent-foreground: 220 15% 8%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 215 20% 90%;
-    --input: 215 20% 90%;
-    --ring: 203 88% 53%;
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 220 15% 8%;
 
-    --radius: 0.625rem;
+    --radius: 1rem;
 
-    /* Editorial extras - updated for white theme */
-    --ink: 215 25% 10%;
-    --ink-soft: 215 15% 45%;
-    --paper: 0 0% 100%;
-    --paper-soft: 215 20% 97%;
+    /* Semantic surfaces used across the app */
+    --ink: 220 15% 8%;
+    --ink-soft: 220 9% 46%;
+    --paper: 0 0% 100%;          /* card surface */
+    --paper-soft: 220 14% 96%;   /* canvas */
     --gold: 36 65% 52%;
 
-    --gradient-warm: linear-gradient(135deg, hsl(215 20% 100%), hsl(215 20% 96%));
-    --gradient-ink: linear-gradient(180deg, hsl(215 25% 10%), hsl(215 25% 5%));
-    --shadow-soft: 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.03);
-    --shadow-lift: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+    /* Tinted icon-tile palette (mobile-fintech) */
+    --tile-blue: 205 100% 94%;
+    --tile-blue-foreground: 210 90% 50%;
+    --tile-green: 145 60% 92%;
+    --tile-green-foreground: 150 60% 38%;
+    --tile-pink: 340 90% 95%;
+    --tile-pink-foreground: 335 75% 55%;
+    --tile-amber: 38 95% 92%;
+    --tile-amber-foreground: 30 90% 45%;
+    --tile-violet: 265 80% 95%;
+    --tile-violet-foreground: 260 70% 55%;
+    --tile-gray: 220 14% 94%;
+    --tile-gray-foreground: 220 15% 20%;
 
-    --sidebar-background: 215 20% 98%;
-    --sidebar-foreground: 215 25% 10%;
-    --sidebar-primary: 203 88% 53%;
+    --gradient-warm: linear-gradient(180deg, hsl(0 0% 100%), hsl(220 14% 97%));
+    --gradient-ink: linear-gradient(180deg, hsl(220 15% 12%), hsl(220 15% 4%));
+    --shadow-soft: 0 1px 2px rgba(16,24,40,.04), 0 1px 3px rgba(16,24,40,.04);
+    --shadow-card: 0 1px 2px rgba(16,24,40,.04), 0 4px 16px rgba(16,24,40,.04);
+    --shadow-lift: 0 6px 24px -8px rgba(16,24,40,.12), 0 2px 6px rgba(16,24,40,.05);
+    --shadow-pill: 0 8px 24px -6px rgba(16,24,40,.18);
+
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 220 15% 8%;
+    --sidebar-primary: 220 15% 8%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 215 20% 94%;
-    --sidebar-accent-foreground: 215 25% 10%;
-    --sidebar-border: 215 20% 90%;
-    --sidebar-ring: 203 88% 53%;
+    --sidebar-accent: 220 14% 94%;
+    --sidebar-accent-foreground: 220 15% 8%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 220 15% 8%;
   }
 
   .dark {
-    --background: 25 22% 9%;
-    --foreground: 39 30% 92%;
-    --card: 25 22% 11%;
-    --card-foreground: 39 30% 92%;
-    --popover: 25 22% 11%;
-    --popover-foreground: 39 30% 92%;
-    --primary: 18 75% 58%;
-    --primary-foreground: 25 22% 9%;
-    --secondary: 25 15% 18%;
-    --secondary-foreground: 39 30% 92%;
-    --muted: 25 15% 16%;
-    --muted-foreground: 39 15% 65%;
-    --accent: 25 15% 18%;
-    --accent-foreground: 39 30% 92%;
-    --destructive: 0 65% 48%;
-    --destructive-foreground: 39 30% 92%;
-    --border: 25 15% 20%;
-    --input: 25 15% 20%;
-    --ring: 18 75% 58%;
+    --background: 220 15% 6%;
+    --foreground: 0 0% 98%;
+    --card: 220 15% 10%;
+    --card-foreground: 0 0% 98%;
+    --popover: 220 15% 10%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 203 88% 60%;
+    --primary-foreground: 220 15% 6%;
+    --secondary: 220 15% 14%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 220 15% 14%;
+    --muted-foreground: 220 9% 65%;
+    --accent: 220 15% 18%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 65% 55%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 220 15% 18%;
+    --input: 220 15% 18%;
+    --ring: 0 0% 98%;
+    --ink: 0 0% 98%;
+    --ink-soft: 220 9% 65%;
+    --paper: 220 15% 10%;
+    --paper-soft: 220 15% 6%;
   }
 }
 
 @layer base {
   * { @apply border-border; }
-  html { font-feature-settings: "ss01", "cv11"; }
+  html { font-feature-settings: "ss01", "cv11"; -webkit-font-smoothing: antialiased; }
   body {
     @apply bg-background text-foreground antialiased;
     font-family: 'Inter', system-ui, sans-serif;
   }
   h1, h2, h3, h4, .font-display {
-    font-family: 'Fraunces', Georgia, serif;
-    font-feature-settings: "ss01";
-    letter-spacing: -0.01em;
+    font-family: 'Manrope', system-ui, sans-serif;
+    font-weight: 700;
+    letter-spacing: -0.02em;
   }
 }
 
@@ -106,6 +126,15 @@
   .text-ink { color: hsl(var(--ink)); }
   .text-ink-soft { color: hsl(var(--ink-soft)); }
   .shadow-soft { box-shadow: var(--shadow-soft); }
+  .shadow-card { box-shadow: var(--shadow-card); }
   .shadow-lift { box-shadow: var(--shadow-lift); }
+  .shadow-pill { box-shadow: var(--shadow-pill); }
   .bg-gradient-warm { background: var(--gradient-warm); }
+
+  /* Card preset — reusable */
+  .surface-card {
+    background-color: hsl(var(--card));
+    border-radius: 1.5rem;
+    box-shadow: var(--shadow-card);
+  }
 }
