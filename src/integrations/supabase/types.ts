@@ -133,6 +133,7 @@ export type Database = {
           tone: string | null
           update_offset: number
           updated_at: string
+          webhook_secret: string
           welcome_message: string | null
         }
         Insert: {
@@ -157,6 +158,7 @@ export type Database = {
           tone?: string | null
           update_offset?: number
           updated_at?: string
+          webhook_secret?: string
           welcome_message?: string | null
         }
         Update: {
@@ -181,6 +183,7 @@ export type Database = {
           tone?: string | null
           update_offset?: number
           updated_at?: string
+          webhook_secret?: string
           welcome_message?: string | null
         }
         Relationships: []
@@ -502,6 +505,44 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      telegram_update_queue: {
+        Row: {
+          bot_id: string
+          chat_id: string | null
+          created_at: string
+          id: string
+          processed_at: string | null
+          raw_update: Json
+          telegram_update_id: number
+        }
+        Insert: {
+          bot_id: string
+          chat_id?: string | null
+          created_at?: string
+          id?: string
+          processed_at?: string | null
+          raw_update: Json
+          telegram_update_id: number
+        }
+        Update: {
+          bot_id?: string
+          chat_id?: string | null
+          created_at?: string
+          id?: string
+          processed_at?: string | null
+          raw_update?: Json
+          telegram_update_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "telegram_update_queue_bot_id_fkey"
+            columns: ["bot_id"]
+            isOneToOne: false
+            referencedRelation: "bots"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
