@@ -217,6 +217,10 @@ Deno.serve(async (req) => {
       offset = upd.update_id + 1;
       const msg = upd.message;
       if (!msg || !msg.text) continue;
+      // System bot is command-only. Ignore any non-command text silently —
+      // no chatbot/AI replies in DMs or groups. Use /help to see options.
+      const text = msg.text.trim();
+      if (!text.startsWith("/")) continue;
       try {
         await handleCommand(supabase, token, msg);
       } catch (e) {
