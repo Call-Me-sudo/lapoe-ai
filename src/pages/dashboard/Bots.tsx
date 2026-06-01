@@ -307,38 +307,47 @@ export default function Bots() {
         </div>
       ) : (
         <div className="grid gap-4">
-          {bots.map((b) => (
-            <div key={b.id} className="border border-border rounded-lg p-4 sm:p-5 bg-card flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-              <div className="flex-1 min-w-0">
-                <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-                  <h3 className="text-base font-semibold text-ink">{b.name}</h3>
-                  <Badge variant={b.status === "active" ? "default" : "secondary"} className="capitalize">{b.status}</Badge>
-                  <Badge variant="outline" className="capitalize text-xs">{b.tone || "friendly"}</Badge>
+          {bots.map((b) => {
+            const connected = !!b.telegram_bot_token;
+            return (
+              <div key={b.id} className="border border-border rounded-lg p-4 bg-card flex items-start justify-between gap-3">
+                <div className="flex items-start gap-3 min-w-0 flex-1">
+                  <div className="h-9 w-9 rounded-md bg-primary/10 text-primary grid place-items-center shrink-0">
+                    <BotIcon className="h-4 w-4" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className="text-sm font-semibold text-ink truncate">{b.name}</h3>
+                      <Badge variant={b.status === "active" ? "default" : "secondary"} className="capitalize text-[10px]">{b.status}</Badge>
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5">
+                      {b.bot_username ? (
+                        <a href={`https://t.me/${b.bot_username}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 hover:text-primary">
+                          <AtSign className="h-3 w-3" />{b.bot_username}
+                        </a>
+                      ) : (
+                        <span className="inline-flex items-center gap-1">
+                          <AlertCircle className="h-3 w-3 text-amber-600" /> not connected
+                        </span>
+                      )}
+                      <span className="inline-flex items-center gap-1">
+                        {connected
+                          ? <CheckCircle2 className="h-3 w-3 text-emerald-600" />
+                          : <AlertCircle className="h-3 w-3 text-amber-600" />}
+                        {connected ? "Token ok" : "Token missing"}
+                      </span>
+                      <span className="capitalize">{b.tone || "friendly"}</span>
+                    </div>
+                  </div>
                 </div>
-                {b.description && <p className="text-sm text-ink-soft mt-1 break-words">{b.description}</p>}
-                <div className="text-xs text-ink-soft mt-3 flex flex-wrap gap-x-4 gap-y-1 items-center">
-                  <span className="inline-flex items-center gap-1">
-                    {b.telegram_bot_token
-                      ? <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
-                      : <AlertCircle className="h-3.5 w-3.5 text-amber-600" />}
-                    Token {b.telegram_bot_token ? "connected" : "missing"}
-                  </span>
-                  {b.bot_username && <span className="inline-flex items-center gap-1"><AtSign className="h-3.5 w-3.5" />{b.bot_username}</span>}
-                  <span className="inline-flex items-center gap-1"><Sparkles className="h-3.5 w-3.5 text-primary" />AI ready</span>
+                <div className="flex items-center gap-1 shrink-0">
+                  <Button variant="outline" size="sm" onClick={() => toggleStatus(b)}>{b.status === "active" ? "Pause" : "Activate"}</Button>
+                  <Button variant="ghost" size="icon" onClick={() => startEdit(b)} aria-label="Edit bot"><Edit3 className="h-4 w-4" /></Button>
+                  <Button variant="ghost" size="icon" onClick={() => remove(b.id)} aria-label="Delete bot"><Trash2 className="h-4 w-4 text-destructive" /></Button>
                 </div>
-                {b.bot_username && (
-                  <p className="text-xs text-primary mt-2">
-                    Owner tip: DM <a className="underline" target="_blank" rel="noreferrer" href={`https://t.me/${b.bot_username}`}>@{b.bot_username}</a> with <code>/help</code> to configure from Telegram.
-                  </p>
-                )}
               </div>
-              <div className="flex gap-2 flex-wrap">
-                <Button variant="outline" size="sm" onClick={() => toggleStatus(b)}>{b.status === "active" ? "Pause" : "Activate"}</Button>
-                <Button variant="ghost" size="icon" onClick={() => startEdit(b)} aria-label="Edit bot"><Edit3 className="h-4 w-4" /></Button>
-                <Button variant="ghost" size="icon" onClick={() => remove(b.id)} aria-label="Delete bot"><Trash2 className="h-4 w-4 text-destructive" /></Button>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </DashboardLayout>
