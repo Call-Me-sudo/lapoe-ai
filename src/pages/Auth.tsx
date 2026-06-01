@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { autoLinkTelegramIfPossible } from "@/lib/telegram";
+import { FcGoogle } from "react-icons/fc";
 
 const schema = z.object({
   email: z.string().trim().email("Enter a valid email").max(255),
