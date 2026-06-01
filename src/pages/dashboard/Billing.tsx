@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
+import { SiStripe } from "react-icons/si";
 
 export default function Billing() {
   const { user } = useAuth();
