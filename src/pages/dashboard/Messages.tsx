@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
+import PageHeader from "@/components/dashboard/PageHeader";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { MessageSquare } from "lucide-react";
@@ -22,11 +23,10 @@ export default function Messages() {
 
   return (
     <DashboardLayout>
-      <div className="mb-8">
-        <div className="text-xs uppercase tracking-[0.18em] text-ink-soft">Messages</div>
-        <h1 className="font-display text-3xl sm:text-4xl text-ink mt-2">The desk</h1>
-        <p className="text-ink-soft mt-2">Live log of what KADE sees and sends. Newest first.</p>
-      </div>
+      <PageHeader
+        title="Messages"
+        description="Live log of what KADE sees and sends. Newest first."
+      />
 
       {msgs.length === 0 ? (
         <div className="border border-dashed border-border rounded-lg p-12 text-center bg-paper-soft">

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
+import PageHeader from "@/components/dashboard/PageHeader";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -53,21 +54,18 @@ export default function Settings() {
 
   return (
     <DashboardLayout>
-      <div className="mb-8">
-        <div className="text-xs uppercase tracking-[0.18em] text-ink-soft">Settings</div>
-        <h1 className="font-display text-3xl sm:text-4xl text-ink mt-2">Your profile</h1>
-      </div>
+      <PageHeader title="Settings" description="Your profile and integrations." />
 
-      <div className="border border-border rounded-lg bg-card p-6 max-w-lg space-y-4 mb-8">
+      <div className="border border-border rounded-lg bg-card p-6 max-w-lg space-y-4 mb-6">
         <div><Label>Email</Label><Input value={user?.email ?? ""} disabled /></div>
         <div><Label>Display name</Label><Input value={displayName} onChange={(e) => setDisplayName(e.target.value)} maxLength={80} /></div>
-        <Button variant="editorial" onClick={save} disabled={loading}>{loading ? "Saving…" : "Save"}</Button>
+        <Button onClick={save} disabled={loading}>{loading ? "Saving…" : "Save"}</Button>
       </div>
 
       <div className="border border-border rounded-lg bg-card p-6 max-w-lg">
         <div className="flex items-center gap-2 mb-3">
-          <Send className="h-5 w-5 text-primary" />
-          <h2 className="font-display text-xl text-ink">Telegram — KADE system bot</h2>
+          <Send className="h-4 w-4 text-primary" />
+          <h2 className="text-base font-semibold text-ink">Telegram — KADE system bot</h2>
         </div>
 
         {telegramUsername ? (
@@ -90,8 +88,8 @@ export default function Settings() {
             </p>
             {code ? (
               <div className="bg-paper-soft border border-border rounded-md p-4">
-                <div className="text-xs uppercase tracking-widest text-ink-soft mb-2">Your one-time code</div>
-                <div className="font-display text-3xl text-ink tracking-[0.3em]">{code}</div>
+                <div className="text-xs uppercase tracking-wider text-muted-foreground mb-2">Your one-time code</div>
+                <div className="text-2xl font-semibold text-ink tracking-[0.3em] tabular-nums">{code}</div>
                 <p className="text-xs text-ink-soft mt-3">
                   Open <a href="https://t.me/aiKADE_Bot" target="_blank" rel="noreferrer" className="text-primary underline">@aiKADE_Bot</a>{" "}
                   and send: <code className="bg-card px-1.5 py-0.5 rounded">/link {code}</code>
