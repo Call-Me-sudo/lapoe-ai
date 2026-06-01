@@ -268,7 +268,7 @@ export default function Bots() {
                 <span className="capitalize text-ink font-medium">{usage.plan} plan</span> · resets {resetDate}
               </div>
               {atBotCap && (
-                <Button variant="editorial" size="sm" onClick={() => (window.location.href = "/pricing")}>Upgrade plan</Button>
+                <Button size="sm" onClick={() => (window.location.href = "/pricing")}>Upgrade plan</Button>
               )}
             </div>
             <div className="grid sm:grid-cols-2 gap-4">
