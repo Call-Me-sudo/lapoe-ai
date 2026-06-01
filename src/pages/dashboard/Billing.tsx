@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
+import { SiStripe } from "react-icons/si";
 
 export default function Billing() {
   const { user } = useAuth();
@@ -45,6 +46,7 @@ export default function Billing() {
         {sub?.stripe_customer_id && (
           <div className="mt-6 pt-6 border-t border-border">
             <Button variant="outline" onClick={openPortal} disabled={loading}>
+              <SiStripe className="h-4 w-4 text-[#635BFF]" />
               {loading ? "Opening…" : "Manage subscription"}
             </Button>
           </div>

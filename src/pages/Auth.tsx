@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { autoLinkTelegramIfPossible } from "@/lib/telegram";
+import { FcGoogle } from "react-icons/fc";
 
 const schema = z.object({
   email: z.string().trim().email("Enter a valid email").max(255),
@@ -104,7 +105,7 @@ export default function Auth() {
           </p>
 
           <Button variant="warm" className="w-full" onClick={handleGoogle} disabled={loading}>
-            <svg className="h-4 w-4" viewBox="0 0 24 24"><path fill="currentColor" d="M21.35 11.1h-9.17v2.9h5.27c-.23 1.4-1.6 4.1-5.27 4.1-3.17 0-5.76-2.62-5.76-5.85s2.59-5.85 5.76-5.85c1.81 0 3.02.77 3.71 1.43l2.53-2.43C16.83 3.92 14.7 3 12.18 3 7.05 3 3 7.05 3 12s4.05 9 9.18 9c5.3 0 8.82-3.72 8.82-8.96 0-.6-.07-1.06-.15-1.94z"/></svg>
+            <FcGoogle className="h-4 w-4" />
             Continue with Google
           </Button>
 
