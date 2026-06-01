@@ -2,7 +2,7 @@ import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { ReactNode, useState } from "react";
 import {
   LayoutDashboard, Bot, Users, BookOpen, MessageSquare, CreditCard, Settings,
-  LogOut, Menu, X, Search, Bell, ChevronDown, Sparkles, HelpCircle,
+  LogOut, Menu, X, Bell, Sparkles, HelpCircle, QrCode,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,8 @@ import {
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import BottomNav from "@/components/BottomNav";
+import { cn } from "@/lib/utils";
 
 type NavItem = { to: string; icon: typeof Bot; label: string; end?: boolean };
 
@@ -61,15 +63,15 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
   const Sidebar = (
     <div className="flex h-full flex-col">
-      <div className="h-14 flex items-center justify-between px-4 border-b border-border">
+      <div className="h-16 flex items-center justify-between px-5">
         <Link to="/dashboard" onClick={() => setMobileOpen(false)} className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-md bg-primary text-primary-foreground grid place-items-center">
+          <span className="h-8 w-8 rounded-full bg-foreground text-background grid place-items-center">
             <Sparkles className="h-4 w-4" />
-          </div>
-          <span className="font-semibold tracking-tight text-ink">KADE</span>
+          </span>
+          <span className="font-display text-lg font-bold tracking-tight text-foreground">KADE</span>
         </Link>
         <button
-          className="md:hidden p-2 -mr-2 text-muted-foreground hover:text-ink"
+          className="md:hidden p-2 -mr-2 text-muted-foreground hover:text-foreground"
           onClick={() => setMobileOpen(false)}
           aria-label="Close menu"
         >
@@ -77,13 +79,13 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         </button>
       </div>
 
-      <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-6">
+      <nav className="flex-1 overflow-y-auto px-3 py-2 space-y-5">
         {navGroups.map((g) => (
           <div key={g.label}>
-            <div className="px-2 mb-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+            <div className="px-3 mb-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
               {g.label}
             </div>
-            <div className="space-y-0.5">
+            <div className="space-y-1">
               {g.items.map((n) => (
                 <NavLink
                   key={n.to}
@@ -91,11 +93,12 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                   end={n.end}
                   onClick={() => setMobileOpen(false)}
                   className={({ isActive }) =>
-                    `group flex items-center gap-2.5 rounded-md px-2.5 py-2 text-sm transition-colors ${
+                    cn(
+                      "group flex items-center gap-3 rounded-full px-3 py-2 text-sm font-medium transition-colors",
                       isActive
-                        ? "bg-primary/10 text-primary font-medium"
-                        : "text-ink-soft hover:text-ink hover:bg-accent"
-                    }`
+                        ? "bg-foreground text-background shadow-pill"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted",
+                    )
                   }
                 >
                   <n.icon className="h-4 w-4 shrink-0" />
@@ -107,10 +110,10 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         ))}
       </nav>
 
-      <div className="border-t border-border p-3">
+      <div className="p-3">
         <a
           href="mailto:support@kade.app"
-          className="flex items-center gap-2 rounded-md px-2.5 py-2 text-sm text-ink-soft hover:text-ink hover:bg-accent"
+          className="flex items-center gap-3 rounded-full px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted"
         >
           <HelpCircle className="h-4 w-4" /> Help & support
         </a>
@@ -119,28 +122,30 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   );
 
   return (
-    <div className="min-h-screen bg-paper-soft">
-      <div className="md:grid md:grid-cols-[248px_1fr] md:min-h-screen">
-        {/* Desktop sidebar */}
-        <aside className="hidden md:block border-r border-border bg-card sticky top-0 h-screen">
-          {Sidebar}
+    <div className="min-h-screen bg-background">
+      <div className="md:grid md:grid-cols-[260px_1fr] md:min-h-screen">
+        {/* Desktop sidebar — floating white pill rail */}
+        <aside className="hidden md:block sticky top-0 h-screen p-4">
+          <div className="h-full bg-card rounded-3xl shadow-card overflow-hidden flex flex-col">
+            {Sidebar}
+          </div>
         </aside>
 
         {/* Mobile drawer */}
         {mobileOpen && (
           <>
             <div className="md:hidden fixed inset-0 z-40 bg-foreground/40" onClick={() => setMobileOpen(false)} />
-            <aside className="md:hidden fixed inset-y-0 left-0 z-50 w-[82%] max-w-xs bg-card border-r border-border animate-in slide-in-from-left">
+            <aside className="md:hidden fixed inset-y-3 left-3 z-50 w-[80%] max-w-xs bg-card rounded-3xl shadow-lift animate-in slide-in-from-left overflow-hidden flex flex-col">
               {Sidebar}
             </aside>
           </>
         )}
 
         <div className="flex flex-col min-w-0">
-          {/* App header */}
-          <header className="sticky top-0 z-30 h-14 flex items-center gap-2 px-3 md:px-6 border-b border-border bg-card/80 backdrop-blur">
+          {/* App header — light, no border */}
+          <header className="sticky top-0 z-30 h-16 flex items-center gap-2 px-4 md:px-8 bg-background/80 backdrop-blur">
             <button
-              className="md:hidden p-2 -ml-2 text-ink"
+              className="md:hidden p-2 -ml-2 text-foreground"
               onClick={() => setMobileOpen(true)}
               aria-label="Open menu"
             >
@@ -148,29 +153,26 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             </button>
 
             <div className="flex items-center gap-2 min-w-0">
-              <h1 className="text-sm md:text-base font-semibold text-ink truncate">{pageTitle}</h1>
+              <h1 className="font-display text-lg md:text-xl font-bold text-foreground truncate">{pageTitle}</h1>
             </div>
 
-            <div className="ml-auto flex items-center gap-1.5 md:gap-2">
-              <div className="hidden md:flex items-center gap-2 h-9 px-3 rounded-md border border-border bg-background text-sm text-muted-foreground w-64">
-                <Search className="h-4 w-4" />
-                <span className="truncate">Search…</span>
-              </div>
-
-              <Button variant="ghost" size="icon" aria-label="Notifications" className="text-ink-soft">
+            <div className="ml-auto flex items-center gap-2">
+              <button className="hidden sm:grid place-items-center h-10 w-10 rounded-full bg-card shadow-card text-foreground hover:shadow-lift transition" aria-label="QR">
+                <QrCode className="h-4 w-4" />
+              </button>
+              <button className="grid place-items-center h-10 w-10 rounded-full bg-card shadow-card text-foreground hover:shadow-lift transition" aria-label="Notifications">
                 <Bell className="h-4 w-4" />
-              </Button>
+              </button>
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="flex items-center gap-2 rounded-md pl-1 pr-2 py-1 hover:bg-accent transition">
-                    <Avatar className="h-7 w-7">
-                      <AvatarFallback className="text-xs bg-primary text-primary-foreground">{initials}</AvatarFallback>
+                  <button className="grid place-items-center h-10 w-10 rounded-full overflow-hidden hover:opacity-90 transition" aria-label="Account">
+                    <Avatar className="h-10 w-10">
+                      <AvatarFallback className="text-sm bg-tile-pink text-tile-pink-foreground font-semibold">{initials}</AvatarFallback>
                     </Avatar>
-                    <ChevronDown className="h-3.5 w-3.5 text-muted-foreground hidden sm:block" />
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuContent align="end" className="w-56 rounded-2xl">
                   <DropdownMenuLabel className="truncate font-normal text-xs text-muted-foreground">
                     {user?.email}
                   </DropdownMenuLabel>
@@ -190,11 +192,13 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             </div>
           </header>
 
-          <main className="flex-1 overflow-x-hidden">
-            <div className="px-4 md:px-6 lg:px-8 py-6 md:py-8 max-w-7xl w-full mx-auto">{children}</div>
+          <main className="flex-1 overflow-x-hidden pb-28 md:pb-8">
+            <div className="px-4 md:px-8 py-4 md:py-6 max-w-6xl w-full mx-auto">{children}</div>
           </main>
         </div>
       </div>
+
+      <BottomNav />
     </div>
   );
 }
