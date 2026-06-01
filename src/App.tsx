@@ -56,6 +56,7 @@ const App = () => (
             <Route path="/admin/bots" element={<ProtectedRoute ownerOnly><AdminBots /></ProtectedRoute>} />
             <Route path="/admin/messages" element={<ProtectedRoute ownerOnly><AdminMessages /></ProtectedRoute>} />
             <Route path="/admin/moderation" element={<ProtectedRoute ownerOnly><AdminModeration /></ProtectedRoute>} />
+            <Route path="/admin/notifications" element={<ProtectedRoute ownerOnly><AdminNotifications /></ProtectedRoute>} />
             <Route path="/admin/activity" element={<ProtectedRoute ownerOnly><AdminActivity /></ProtectedRoute>} />
 
             <Route path="*" element={<NotFound />} />
