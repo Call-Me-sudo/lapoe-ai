@@ -356,6 +356,29 @@ export default function Bots() {
           })}
         </div>
       )}
+
+      <Dialog open={!!deleteBot} onOpenChange={(o) => { if (!o) setDeleteBot(null); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Delete “{deleteBot?.name}”?</DialogTitle>
+            <DialogDescription>
+              This will permanently remove the bot, its groups, rules and logs.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="rounded-md border border-border bg-paper-soft p-3 text-xs text-ink-soft flex items-start gap-2">
+            <AlertCircle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+            <div>
+              <span className="text-ink font-medium">Your monthly message count will not reset.</span>{" "}
+              Messages already sent this month are tied to your account, not this bot.
+              They reset on the 1st of each month.
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteBot(null)}>Cancel</Button>
+            <Button variant="destructive" onClick={remove}>Delete bot</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }
