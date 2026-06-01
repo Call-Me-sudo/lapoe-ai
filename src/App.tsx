@@ -15,6 +15,7 @@ import Bots from "./pages/dashboard/Bots";
 import Groups from "./pages/dashboard/Groups";
 import Knowledge from "./pages/dashboard/Knowledge";
 import Messages from "./pages/dashboard/Messages";
+import Playground from "./pages/dashboard/Playground";
 import Billing from "./pages/dashboard/Billing";
 import Settings from "./pages/dashboard/Settings";
 import AdminDashboard from "./pages/admin/AdminDashboard";
