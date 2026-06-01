@@ -65,7 +65,7 @@ export default function Settings() {
 
       <div className="border border-border rounded-lg bg-card p-6 max-w-lg">
         <div className="flex items-center gap-2 mb-3">
-          <Send className="h-4 w-4 text-primary" />
+          <SiTelegram className="h-4 w-4 text-[#229ED9]" />
           <h2 className="text-base font-semibold text-ink">Telegram — KADE system bot</h2>
         </div>
 
