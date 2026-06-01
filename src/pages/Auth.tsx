@@ -76,55 +76,42 @@ export default function Auth() {
   };
 
   return (
-    <div className="min-h-screen bg-paper grid md:grid-cols-2">
-      {/* Left — editorial */}
-      <div className="hidden md:flex flex-col justify-between p-12 bg-gradient-warm border-r border-border">
-        <Link to="/" className="font-display text-2xl text-ink">KADE</Link>
-        <div>
-          <h2 className="font-display text-4xl text-ink text-balance leading-tight">
-            "It reads the room before it speaks."
-          </h2>
-          <p className="text-ink-soft mt-4 max-w-md">
-            A communications desk that sits politely behind your community, ready to help.
-          </p>
-        </div>
-        <div className="text-xs text-ink-soft uppercase tracking-widest">Knowledge · Acquisition · Dynamic · Engagement</div>
-      </div>
+    <div className="min-h-screen bg-background grid place-items-center px-4 py-10">
+      <div className="w-full max-w-md">
+        <Link to="/" className="flex items-center justify-center gap-2 mb-6">
+          <span className="h-8 w-8 rounded-full bg-foreground text-background grid place-items-center font-bold">K</span>
+          <span className="font-display text-xl font-bold text-foreground">KADE</span>
+        </Link>
 
-      {/* Right — form */}
-      <div className="flex flex-col justify-center p-8 md:p-16">
-        <div className="md:hidden mb-8">
-          <Link to="/" className="font-display text-2xl text-ink">KADE</Link>
-        </div>
-        <div className="max-w-sm w-full mx-auto">
-          <h1 className="font-display text-3xl text-ink mb-2">
+        <div className="bg-card rounded-3xl shadow-card p-7 md:p-9">
+          <h1 className="font-display text-2xl md:text-3xl font-bold text-foreground text-center tracking-tight">
             {mode === "signup" ? "Create your workspace" : "Welcome back"}
           </h1>
-          <p className="text-ink-soft text-sm mb-8">
+          <p className="text-muted-foreground text-sm text-center mt-2 mb-7">
             {mode === "signup" ? "Start in seconds. No card required." : "Sign in to your dashboard."}
           </p>
 
-          <Button variant="warm" className="w-full" onClick={handleGoogle} disabled={loading}>
-            <FcGoogle className="h-4 w-4" />
+          <Button variant="warm" className="w-full" size="lg" onClick={handleGoogle} disabled={loading}>
+            <FcGoogle className="h-5 w-5" />
             Continue with Google
           </Button>
 
-          <div className="my-6 flex items-center gap-3 text-xs uppercase tracking-widest text-ink-soft">
+          <div className="my-6 flex items-center gap-3 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
             <span className="h-px flex-1 bg-border" />or<span className="h-px flex-1 bg-border" />
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {mode === "signup" && (
-              <div>
+              <div className="space-y-1.5">
                 <Label htmlFor="name">Display name</Label>
-                <Input id="name" value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="Jane Doe" maxLength={80} />
+                <Input id="name" value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="Jane Doe" maxLength={80} className="rounded-full h-11 px-4 bg-muted border-transparent" />
               </div>
             )}
-            <div>
+            <div className="space-y-1.5">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@company.com" maxLength={255} required />
+              <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@company.com" maxLength={255} required className="rounded-full h-11 px-4 bg-muted border-transparent" />
             </div>
-            <div>
+            <div className="space-y-1.5">
               <div className="flex items-center justify-between">
                 <Label htmlFor="password">Password</Label>
                 {mode === "login" && (
@@ -138,30 +125,32 @@ export default function Auth() {
                       if (error) toast.error(error.message);
                       else toast.success("Reset link sent. Check your inbox.");
                     }}
-                    className="text-xs text-primary hover:underline"
+                    className="text-xs text-foreground hover:underline font-medium"
                   >
                     Forgot?
                   </button>
                 )}
               </div>
-              <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" minLength={6} maxLength={72} required />
+              <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" minLength={6} maxLength={72} required className="rounded-full h-11 px-4 bg-muted border-transparent" />
             </div>
-            <Button type="submit" variant="editorial" className="w-full" size="lg" disabled={loading}>
+            <Button type="submit" variant="default" className="w-full" size="lg" disabled={loading}>
               {loading ? "Please wait…" : mode === "signup" ? "Create account" : "Sign in"}
             </Button>
           </form>
 
-          <p className="text-sm text-ink-soft mt-6 text-center">
+          <p className="text-sm text-muted-foreground mt-6 text-center">
             {mode === "signup" ? "Already have an account?" : "New to KADE?"}{" "}
-            <button onClick={() => setMode(mode === "signup" ? "login" : "signup")} className="text-primary underline-offset-4 hover:underline">
+            <button onClick={() => setMode(mode === "signup" ? "login" : "signup")} className="text-foreground font-semibold hover:underline">
               {mode === "signup" ? "Sign in" : "Create one"}
             </button>
           </p>
-          <p className="text-xs text-ink-soft mt-4 text-center">
-            Telegram login coming soon.
-          </p>
         </div>
+
+        <p className="text-xs text-muted-foreground mt-6 text-center">
+          Telegram login coming soon.
+        </p>
       </div>
     </div>
   );
 }
+

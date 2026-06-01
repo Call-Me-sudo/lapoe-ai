@@ -53,32 +53,33 @@ export default function Pricing() {
   };
 
   return (
-    <div className="min-h-screen bg-paper">
+    <div className="min-h-screen bg-background">
       <SiteHeader />
-      <section className="container py-20">
-        <div className="max-w-2xl">
-          <div className="text-xs uppercase tracking-[0.18em] text-primary mb-3">Pricing</div>
-          <h1 className="font-display text-5xl text-ink text-balance">Simple plans. Grow when you're ready.</h1>
-          <p className="text-ink-soft mt-4">AI replies are included on every plan — no API keys to manage.</p>
+      <section className="container max-w-6xl py-16 md:py-24">
+        <div className="max-w-2xl mx-auto text-center">
+          <div className="text-xs uppercase tracking-[0.16em] text-muted-foreground mb-3 font-semibold">Pricing</div>
+          <h1 className="font-display text-4xl md:text-5xl font-bold text-foreground text-balance tracking-tight">Simple plans. Grow when you're ready.</h1>
+          <p className="text-muted-foreground mt-4">AI replies are included on every plan — no API keys to manage.</p>
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mt-12">
           {plans.map((p) => (
-            <div key={p.id} className={`rounded-xl border p-6 flex flex-col ${p.featured ? "border-primary bg-card shadow-lift" : "border-border bg-card"}`}>
-              {p.featured && <div className="text-xs uppercase tracking-widest text-primary mb-2">Most popular</div>}
-              <h3 className="font-display text-2xl text-ink">{p.name}</h3>
-              <div className="mt-3"><span className="font-display text-4xl text-ink">{p.price}</span> <span className="text-ink-soft text-sm">{p.per}</span></div>
-              <p className="text-sm text-ink-soft mt-2">{p.desc}</p>
+            <div key={p.id} className={`rounded-3xl p-7 flex flex-col ${p.featured ? "bg-foreground text-background shadow-pill" : "bg-card shadow-card"}`}>
+              {p.featured && <div className="text-[10px] uppercase tracking-[0.16em] mb-2 font-semibold opacity-80">Most popular</div>}
+              <h3 className="font-display text-xl font-bold">{p.name}</h3>
+              <div className="mt-3"><span className="font-display text-4xl font-bold">{p.price}</span> <span className={`text-sm ${p.featured ? "opacity-70" : "text-muted-foreground"}`}>{p.per}</span></div>
+              <p className={`text-sm mt-2 ${p.featured ? "opacity-80" : "text-muted-foreground"}`}>{p.desc}</p>
               <ul className="mt-5 space-y-2 flex-1">
                 {p.features.map((f) => (
-                  <li key={f} className="flex items-start gap-2 text-sm text-ink"><Check className="h-4 w-4 text-primary mt-0.5 shrink-0" /> {f}</li>
+                  <li key={f} className="flex items-start gap-2 text-sm"><Check className={`h-4 w-4 mt-0.5 shrink-0 ${p.featured ? "" : "text-tile-green-foreground"}`} /> {f}</li>
                 ))}
               </ul>
               <Button
                 onClick={() => choose(p.id)}
                 disabled={loading === p.id}
-                variant={p.featured ? "editorial" : "warm"}
+                variant={p.featured ? "warm" : "default"}
                 className="mt-6 w-full"
+                size="lg"
               >
                 {loading === p.id ? "Loading…" : p.cta}
               </Button>
@@ -86,11 +87,12 @@ export default function Pricing() {
           ))}
         </div>
 
-        <p className="text-xs text-ink-soft text-center mt-8">
-          Stripe billing — cancel anytime. <Link to="/auth" className="text-primary hover:underline">Already a customer?</Link>
+        <p className="text-xs text-muted-foreground text-center mt-8">
+          Stripe billing — cancel anytime. <Link to="/auth" className="text-foreground hover:underline font-medium">Already a customer?</Link>
         </p>
       </section>
       <SiteFooter />
     </div>
   );
 }
+

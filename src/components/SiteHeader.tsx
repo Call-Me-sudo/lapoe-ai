@@ -1,37 +1,36 @@
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
+import { Sparkles } from "lucide-react";
 
 export default function SiteHeader() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
 
   return (
-    <header className="border-b border-border/60 bg-paper/80 backdrop-blur sticky top-0 z-40">
-      <div className="container flex h-16 items-center justify-between">
+    <header className="sticky top-4 z-40 px-4">
+      <div className="container max-w-5xl bg-card rounded-full shadow-card border border-border/40 flex h-14 items-center justify-between px-4 pl-5">
         <Link to="/" className="flex items-center gap-2">
-          <span className="font-display text-2xl font-semibold tracking-tight text-ink">
-            KADE
+          <span className="h-7 w-7 rounded-full bg-foreground text-background grid place-items-center">
+            <Sparkles className="h-3.5 w-3.5" />
           </span>
-          <span className="hidden sm:inline text-xs text-ink-soft uppercase tracking-widest">
-            · The communications desk
-          </span>
+          <span className="font-display text-lg font-bold tracking-tight text-foreground">KADE</span>
         </Link>
-        <nav className="hidden md:flex items-center gap-7 text-sm text-ink-soft">
-          <Link to="/#features" className="hover:text-ink transition">Features</Link>
-          <Link to="/#how" className="hover:text-ink transition">How it works</Link>
-          <Link to="/pricing" className="hover:text-ink transition">Pricing</Link>
+        <nav className="hidden md:flex items-center gap-7 text-sm font-medium text-muted-foreground">
+          <Link to="/#features" className="hover:text-foreground transition">Features</Link>
+          <Link to="/#how" className="hover:text-foreground transition">How it works</Link>
+          <Link to="/pricing" className="hover:text-foreground transition">Pricing</Link>
         </nav>
         <div className="flex items-center gap-2">
           {user ? (
             <>
               <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")}>Dashboard</Button>
-              <Button variant="outline" size="sm" onClick={async () => { await signOut(); navigate("/"); }}>Sign out</Button>
+              <Button variant="default" size="sm" onClick={async () => { await signOut(); navigate("/"); }}>Sign out</Button>
             </>
           ) : (
             <>
-              <Button variant="ghost" size="sm" onClick={() => navigate("/auth")}>Log in</Button>
-              <Button variant="editorial" size="sm" onClick={() => navigate("/auth?mode=signup")}>Get started</Button>
+              <Button variant="ghost" size="sm" onClick={() => navigate("/auth")} className="hidden sm:inline-flex">Log in</Button>
+              <Button variant="default" size="sm" onClick={() => navigate("/auth?mode=signup")}>Get started</Button>
             </>
           )}
         </div>
