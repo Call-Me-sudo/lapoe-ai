@@ -160,12 +160,12 @@ export default function AdminDashboard() {
   }, []);
 
   const kpis = [
-    { icon: DollarSign, label: "MRR", value: `$${stats.mrr.toLocaleString()}`, sub: `${stats.subs} paying`, to: "/admin/users", accent: "primary" },
-    { icon: Users, label: "Users", value: stats.users.toLocaleString(), sub: `${stats.usersDelta >= 0 ? "+" : ""}${stats.usersDelta} this week`, delta: stats.usersDelta, to: "/admin/users", accent: "accent" },
-    { icon: Bot, label: "Bots", value: stats.bots.toLocaleString(), sub: `${stats.activeBots} active`, to: "/admin/bots", accent: "primary" },
-    { icon: MessageSquare, label: "Messages", value: stats.messages.toLocaleString(), sub: `${stats.messagesToday} today`, to: "/admin/messages", accent: "accent" },
-    { icon: AlertTriangle, label: "Moderation", value: stats.modActions.toLocaleString(), sub: `${stats.modToday} today`, to: "/admin/moderation", accent: "primary" },
-    { icon: BookOpen, label: "Knowledge", value: stats.knowledge.toLocaleString(), sub: `${stats.groups} groups`, to: "/admin/bots", accent: "accent" },
+    { icon: DollarSign, label: "MRR", value: `$${stats.mrr.toLocaleString()}`, sub: `${stats.subs} paying`, to: "/admin/users" },
+    { icon: Users, label: "Users", value: stats.users.toLocaleString(), sub: `${stats.usersDelta >= 0 ? "+" : ""}${stats.usersDelta} this week`, delta: stats.usersDelta, to: "/admin/users" },
+    { icon: Bot, label: "Bots", value: stats.bots.toLocaleString(), sub: `${stats.activeBots} active`, to: "/admin/bots" },
+    { icon: MessageSquare, label: "Messages", value: stats.messages.toLocaleString(), sub: `${stats.messagesToday} today`, to: "/admin/messages" },
+    { icon: AlertTriangle, label: "Moderation", value: stats.modActions.toLocaleString(), sub: `${stats.modToday} today`, to: "/admin/moderation" },
+    { icon: BookOpen, label: "Knowledge", value: stats.knowledge.toLocaleString(), sub: `${stats.groups} groups`, to: "/admin/bots" },
   ];
 
   const refresh = () => { loadAll(); toast.success("Refreshed"); };
@@ -173,9 +173,9 @@ export default function AdminDashboard() {
   return (
     <AdminLayout>
       {/* Header */}
-      <div className="mb-8 flex items-start justify-between flex-wrap gap-3">
+      <div className="mb-6 flex items-start justify-between flex-wrap gap-3">
         <div>
-          <div className="text-xs uppercase tracking-[0.18em] text-primary">Owner control room</div>
+          <div className="text-xs uppercase tracking-[0.18em] text-ink-soft">Owner control room</div>
           <h1 className="font-display text-3xl sm:text-4xl text-ink mt-1">Mission control</h1>
           <p className="text-ink-soft text-sm mt-2">Everything across every workspace, in real time.</p>
         </div>
@@ -186,17 +186,16 @@ export default function AdminDashboard() {
       </div>
 
       {/* KPI grid */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
         {kpis.map((c) => (
           <Link key={c.label} to={c.to}
-            className={`group relative overflow-hidden border border-border/50 rounded-xl p-4 bg-card hover:border-primary/40 hover:shadow-lg hover:-translate-y-0.5 transition-all`}>
-            <div className={`absolute -top-8 -right-8 h-20 w-20 rounded-full bg-${c.accent}/10 blur-2xl group-hover:bg-${c.accent}/20 transition`} />
-            <c.icon className={`h-4 w-4 text-${c.accent} mb-3 relative`} />
-            <div className="font-display text-2xl text-ink tracking-tight relative">{c.value}</div>
-            <div className="text-[10px] uppercase tracking-widest text-ink-soft mt-1 relative">{c.label}</div>
-            <div className="text-[11px] text-ink-soft mt-2 flex items-center gap-1 relative">
+            className="surface-card p-4 hover:shadow-lift hover:-translate-y-0.5 transition-all">
+            <c.icon className="h-4 w-4 text-ink-soft mb-3" />
+            <div className="font-display text-2xl text-ink tracking-tight">{c.value}</div>
+            <div className="text-[10px] uppercase tracking-widest text-ink-soft mt-1">{c.label}</div>
+            <div className="text-[11px] text-ink-soft mt-2 flex items-center gap-1">
               {typeof c.delta === "number" && c.delta !== 0 && (
-                c.delta > 0 ? <ArrowUpRight className="h-3 w-3 text-primary" /> : <ArrowDownRight className="h-3 w-3 text-destructive" />
+                c.delta > 0 ? <ArrowUpRight className="h-3 w-3 text-ink" /> : <ArrowDownRight className="h-3 w-3 text-destructive" />
               )}
               {c.sub}
             </div>
