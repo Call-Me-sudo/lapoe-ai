@@ -11,7 +11,7 @@ const features = [
   { icon: BookOpen, tone: "green" as const, title: "Reads your blogs & docs", body: "Point it at your sources. It cites them when it answers." },
   { icon: Shield, tone: "pink" as const, title: "Group administration", body: "Add, remove, mute, warn, pin, schedule — enforce rules everywhere." },
   { icon: Users, tone: "violet" as const, title: "Multi-bot, multi-group", body: "One workspace for every community you run." },
-  { icon: Sparkles, tone: "amber" as const, title: "Bring your own AI key", body: "Connect your OpenAI key — your usage, your model, your control." },
+  { icon: Sparkles, tone: "amber" as const, title: "AI included, no setup", body: "Powerful models built in — nothing to configure, just turn it on." },
   { icon: Settings2, tone: "gray" as const, title: "Live admin desk", body: "Watch replies in real time. Step in, take over, hand back." },
 ];
 
@@ -41,7 +41,7 @@ export default function Index() {
               <Link to="/pricing">See pricing</Link>
             </Button>
           </div>
-          <p className="mt-4 text-sm text-muted-foreground">Free plan · No card required · Bring your own OpenAI key</p>
+          <p className="mt-4 text-sm text-muted-foreground">Free plan · No card required · AI included</p>
         </div>
 
         {/* Phone-style preview card */}
