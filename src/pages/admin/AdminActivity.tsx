@@ -49,13 +49,13 @@ export default function AdminActivity() {
 
     const ch = supabase.channel("admin-activity-firehose")
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "bot_messages" }, (p) =>
-        setEvents(prev => [{ kind: "msg", at: Date.now(), payload: p.new }, ...prev].slice(0, 100)))
+        setEvents(prev => [{ kind: "msg" as const, at: Date.now(), payload: p.new }, ...prev].slice(0, 100)))
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "moderation_actions" }, (p) =>
-        setEvents(prev => [{ kind: "mod", at: Date.now(), payload: p.new }, ...prev].slice(0, 100)))
+        setEvents(prev => [{ kind: "mod" as const, at: Date.now(), payload: p.new }, ...prev].slice(0, 100)))
       .on("postgres_changes", { event: "*", schema: "public", table: "bots" }, (p) =>
-        setEvents(prev => [{ kind: "bot", at: Date.now(), payload: p.new }, ...prev].slice(0, 100)))
+        setEvents(prev => [{ kind: "bot" as const, at: Date.now(), payload: p.new }, ...prev].slice(0, 100)))
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "profiles" }, (p) =>
-        setEvents(prev => [{ kind: "user", at: Date.now(), payload: p.new }, ...prev].slice(0, 100)))
+        setEvents(prev => [{ kind: "user" as const, at: Date.now(), payload: p.new }, ...prev].slice(0, 100)))
       .subscribe();
     return () => { supabase.removeChannel(ch); };
   }, []);
