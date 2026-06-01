@@ -217,10 +217,11 @@ Deno.serve(async (req) => {
       offset = upd.update_id + 1;
       const msg = upd.message;
       if (!msg || !msg.text) continue;
-      // System bot is command-only. Ignore any non-command text silently —
-      // no chatbot/AI replies in DMs or groups. Use /help to see options.
+      // System bot DMs are command-only: no chatbot replies to free-form text.
+      // In groups, behave normally (commands still work).
       const text = msg.text.trim();
-      if (!text.startsWith("/")) continue;
+      const isPrivate = msg.chat?.type === "private";
+      if (isPrivate && !text.startsWith("/")) continue;
       try {
         await handleCommand(supabase, token, msg);
       } catch (e) {
