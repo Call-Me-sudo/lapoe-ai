@@ -10,7 +10,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Bot as BotIcon, Trash2, Edit3, ShieldAlert, CheckCircle2, AlertCircle, AtSign, Sparkles } from "lucide-react";
+import { Plus, Bot as BotIcon, Trash2, Edit3, ShieldAlert, CheckCircle2, AlertCircle, AtSign, ChevronDown } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
 
@@ -59,7 +60,7 @@ export default function Bots() {
     name: "", description: "", telegram_bot_token: "",
     tone: "friendly", personality: "", house_rules: "", welcome_message: "",
     default_instructions: "", banned_words: "",
-    anti_flood_enabled: false, anti_spam_enabled: false, flood_sensitivity: 5,
+    anti_flood_enabled: true, anti_spam_enabled: true, flood_sensitivity: 5,
   });
 
   const load = useCallback(async () => {
@@ -80,7 +81,7 @@ export default function Bots() {
     setForm({
       name: "", description: "", telegram_bot_token: "", tone: "friendly", personality: "",
       house_rules: "", welcome_message: "", default_instructions: "", banned_words: "",
-      anti_flood_enabled: false, anti_spam_enabled: false, flood_sensitivity: 5
+      anti_flood_enabled: true, anti_spam_enabled: true, flood_sensitivity: 5
     });
     setEditing(null);
   };
@@ -165,91 +166,92 @@ export default function Bots() {
             <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>{editing ? "Edit bot" : "Create a bot"}</DialogTitle>
-                <DialogDescription>Configure tone, rules and protection. Changes apply on save.</DialogDescription>
+                <DialogDescription>
+                  Just a name and a Telegram token to start — sensible defaults handle the rest. You can fine-tune anytime from Telegram (<code className="text-[11px]">/help</code>) or in Advanced.
+                </DialogDescription>
               </DialogHeader>
-            <div className="space-y-4">
-              <div><Label htmlFor="bot-name">Name</Label><Input id="bot-name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} maxLength={80} /></div>
-              <div><Label htmlFor="bot-description">Short description</Label><Textarea id="bot-description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} maxLength={500} rows={2} /></div>
-              <div>
-                <Label htmlFor="bot-token">Telegram Bot Token</Label>
-                <Input id="bot-token" value={form.telegram_bot_token} onChange={(e) => setForm({ ...form, telegram_bot_token: e.target.value })} placeholder="123456:ABC-DEF…" />
-                <p className="text-xs text-ink-soft mt-1">From @BotFather on Telegram.</p>
-              </div>
-              <div>
-                <Label htmlFor="bot-tone">Tone</Label>
-                <Select value={form.tone} onValueChange={(v) => setForm({ ...form, tone: v })}>
-                  <SelectTrigger id="bot-tone"><SelectValue /></SelectTrigger>
-                  <SelectContent>{TONES.map(t => <SelectItem key={t} value={t} className="capitalize">{t}</SelectItem>)}</SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="bot-personality">Personality (one line)</Label>
-                <Input id="bot-personality" value={form.personality} onChange={(e) => setForm({ ...form, personality: e.target.value })} maxLength={500} placeholder="Sassy librarian who loves indie rock" />
-              </div>
-              <div>
-                <Label htmlFor="bot-rules">House rules</Label>
-                <Textarea id="bot-rules" value={form.house_rules} onChange={(e) => setForm({ ...form, house_rules: e.target.value })} rows={3} maxLength={2000} placeholder="Be kind. No spam. English only." />
-              </div>
-              <div>
-                <Label htmlFor="bot-banned">Banned words (comma separated)</Label>
-                <Textarea id="bot-banned" value={form.banned_words} onChange={(e) => setForm({ ...form, banned_words: e.target.value })} rows={2} maxLength={1000} placeholder="spam, crypto, nigerian prince" />
-              </div>
-              <div>
-                <Label htmlFor="bot-welcome">Welcome message (use {"{name}"} for new member)</Label>
-                <Textarea id="bot-welcome" value={form.welcome_message} onChange={(e) => setForm({ ...form, welcome_message: e.target.value })} rows={2} maxLength={1000} placeholder="Hey {name}, welcome to the group!" />
-              </div>
-              <div>
-                <Label htmlFor="bot-instructions">Extra instructions (optional)</Label>
-                <Textarea id="bot-instructions" value={form.default_instructions} onChange={(e) => setForm({ ...form, default_instructions: e.target.value })} rows={3} maxLength={2000} />
-              </div>
-
-              <div className="pt-4 border-t border-border">
-                <div className="flex items-center gap-2 mb-4">
-                  <ShieldAlert className="h-4 w-4 text-primary" />
-                  <span className="font-display text-lg">Protection</span>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="bot-name">Name</Label>
+                  <Input id="bot-name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} maxLength={80} placeholder="e.g. Acme Support" />
+                </div>
+                <div>
+                  <Label htmlFor="bot-token">Telegram Bot Token</Label>
+                  <Input id="bot-token" value={form.telegram_bot_token} onChange={(e) => setForm({ ...form, telegram_bot_token: e.target.value })} placeholder="123456:ABC-DEF…" />
+                  <p className="text-xs text-ink-soft mt-1">Get one free from <a href="https://t.me/BotFather" target="_blank" rel="noreferrer" className="text-primary underline">@BotFather</a>.</p>
+                </div>
+                <div>
+                  <Label htmlFor="bot-description">What does this bot help with? <span className="text-ink-soft font-normal">(optional)</span></Label>
+                  <Input id="bot-description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} maxLength={200} placeholder="Customer support for our SaaS" />
                 </div>
 
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label htmlFor="anti-spam">Anti-Spam</Label>
-                      <p className="text-xs text-ink-soft">Delete identical consecutive messages</p>
-                    </div>
-                    <Switch
-                      id="anti-spam"
-                      checked={form.anti_spam_enabled}
-                      onCheckedChange={(v) => setForm({ ...form, anti_spam_enabled: v })}
-                    />
+                <div className="rounded-md border border-border bg-paper-soft p-3 text-xs text-ink-soft flex items-start gap-2">
+                  <ShieldAlert className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                  <div>
+                    <span className="text-ink font-medium">Defaults applied:</span> friendly tone, anti-spam & anti-flood on, moderation on, replies in the user's language. Edit later in Advanced or via <code className="text-[11px]">/settone</code>, <code className="text-[11px]">/setrules</code>… on Telegram.
                   </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label htmlFor="anti-flood">Anti-Flood</Label>
-                      <p className="text-xs text-ink-soft">Delete rapid bursts of messages</p>
-                    </div>
-                    <Switch
-                      id="anti-flood"
-                      checked={form.anti_flood_enabled}
-                      onCheckedChange={(v) => setForm({ ...form, anti_flood_enabled: v })}
-                    />
-                  </div>
-
-                  {form.anti_flood_enabled && (
-                    <div className="space-y-2">
-                      <Label htmlFor="flood-sensitivity">Flood Sensitivity (max msgs / 10s)</Label>
-                      <Input
-                        id="flood-sensitivity"
-                        type="number"
-                        min={1}
-                        max={20}
-                        value={form.flood_sensitivity}
-                        onChange={(e) => setForm({ ...form, flood_sensitivity: parseInt(e.target.value) || 5 })}
-                      />
-                    </div>
-                  )}
                 </div>
+
+                <Collapsible>
+                  <CollapsibleTrigger className="flex items-center gap-2 text-sm text-ink-soft hover:text-ink group">
+                    <ChevronDown className="h-4 w-4 transition-transform group-data-[state=open]:rotate-180" />
+                    Advanced (tone, persona, rules, protection)
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="space-y-4 pt-4">
+                    <div>
+                      <Label htmlFor="bot-tone">Tone</Label>
+                      <Select value={form.tone} onValueChange={(v) => setForm({ ...form, tone: v })}>
+                        <SelectTrigger id="bot-tone"><SelectValue /></SelectTrigger>
+                        <SelectContent>{TONES.map(t => <SelectItem key={t} value={t} className="capitalize">{t}</SelectItem>)}</SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="bot-personality">Personality (one line)</Label>
+                      <Input id="bot-personality" value={form.personality} onChange={(e) => setForm({ ...form, personality: e.target.value })} maxLength={500} placeholder="Sassy librarian who loves indie rock" />
+                    </div>
+                    <div>
+                      <Label htmlFor="bot-rules">House rules</Label>
+                      <Textarea id="bot-rules" value={form.house_rules} onChange={(e) => setForm({ ...form, house_rules: e.target.value })} rows={3} maxLength={2000} placeholder="Be kind. No spam. English only." />
+                    </div>
+                    <div>
+                      <Label htmlFor="bot-banned">Banned words (comma separated)</Label>
+                      <Textarea id="bot-banned" value={form.banned_words} onChange={(e) => setForm({ ...form, banned_words: e.target.value })} rows={2} maxLength={1000} placeholder="spam, crypto, nigerian prince" />
+                    </div>
+                    <div>
+                      <Label htmlFor="bot-welcome">Welcome message (use {"{name}"} for new member)</Label>
+                      <Textarea id="bot-welcome" value={form.welcome_message} onChange={(e) => setForm({ ...form, welcome_message: e.target.value })} rows={2} maxLength={1000} placeholder="Hey {name}, welcome to the group!" />
+                    </div>
+                    <div>
+                      <Label htmlFor="bot-instructions">Extra instructions (optional)</Label>
+                      <Textarea id="bot-instructions" value={form.default_instructions} onChange={(e) => setForm({ ...form, default_instructions: e.target.value })} rows={3} maxLength={2000} />
+                    </div>
+
+                    <div className="pt-2 border-t border-border space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-0.5">
+                          <Label htmlFor="anti-spam">Anti-spam</Label>
+                          <p className="text-xs text-ink-soft">Delete identical consecutive messages</p>
+                        </div>
+                        <Switch id="anti-spam" checked={form.anti_spam_enabled} onCheckedChange={(v) => setForm({ ...form, anti_spam_enabled: v })} />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-0.5">
+                          <Label htmlFor="anti-flood">Anti-flood</Label>
+                          <p className="text-xs text-ink-soft">Delete rapid bursts of messages</p>
+                        </div>
+                        <Switch id="anti-flood" checked={form.anti_flood_enabled} onCheckedChange={(v) => setForm({ ...form, anti_flood_enabled: v })} />
+                      </div>
+                      {form.anti_flood_enabled && (
+                        <div className="space-y-2">
+                          <Label htmlFor="flood-sensitivity">Flood sensitivity (max msgs / 10s)</Label>
+                          <Input id="flood-sensitivity" type="number" min={1} max={20} value={form.flood_sensitivity} onChange={(e) => setForm({ ...form, flood_sensitivity: parseInt(e.target.value) || 5 })} />
+                        </div>
+                      )}
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
               </div>
-            </div>
+
               <DialogFooter>
                 <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
                 <Button onClick={save}>{editing ? "Save changes" : "Create bot"}</Button>
