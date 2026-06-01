@@ -81,7 +81,7 @@ export default function Bots() {
     setForm({
       name: "", description: "", telegram_bot_token: "", tone: "friendly", personality: "",
       house_rules: "", welcome_message: "", default_instructions: "", banned_words: "",
-      anti_flood_enabled: false, anti_spam_enabled: false, flood_sensitivity: 5
+      anti_flood_enabled: true, anti_spam_enabled: true, flood_sensitivity: 5
     });
     setEditing(null);
   };
