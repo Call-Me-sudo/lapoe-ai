@@ -327,6 +327,63 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_reads: {
+        Row: {
+          notification_id: string
+          read_at: string
+          user_id: string
+        }
+        Insert: {
+          notification_id: string
+          read_at?: string
+          user_id: string
+        }
+        Update: {
+          notification_id?: string
+          read_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          audience: string
+          body: string
+          created_at: string
+          created_by: string | null
+          id: string
+          link: string | null
+          plan: Database["public"]["Enums"]["plan_tier"] | null
+          title: string
+          type: string
+          user_id: string | null
+        }
+        Insert: {
+          audience?: string
+          body: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          link?: string | null
+          plan?: Database["public"]["Enums"]["plan_tier"] | null
+          title: string
+          type?: string
+          user_id?: string | null
+        }
+        Update: {
+          audience?: string
+          body?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          link?: string | null
+          plan?: Database["public"]["Enums"]["plan_tier"] | null
+          title?: string
+          type?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null

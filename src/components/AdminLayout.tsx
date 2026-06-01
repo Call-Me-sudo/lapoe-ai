@@ -2,7 +2,7 @@ import { Link, NavLink, useNavigate } from "react-router-dom";
 import { ReactNode, useState } from "react";
 import {
   Shield, LayoutDashboard, Users, Bot as BotIcon, MessageSquare,
-  Activity, AlertTriangle, LogOut, Menu, X,
+  Activity, AlertTriangle, LogOut, Menu, X, Megaphone,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ const nav = [
   { to: "/admin/users", icon: Users, label: "Users" },
   { to: "/admin/bots", icon: BotIcon, label: "Bots" },
   { to: "/admin/messages", icon: MessageSquare, label: "Messages" },
+  { to: "/admin/notifications", icon: Megaphone, label: "Notifications" },
   { to: "/admin/moderation", icon: AlertTriangle, label: "Moderation" },
   { to: "/admin/activity", icon: Activity, label: "Live activity" },
 ];
