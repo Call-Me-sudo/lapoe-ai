@@ -112,12 +112,15 @@ export type Database = {
       }
       bots: {
         Row: {
+          anti_flood_enabled: boolean
+          anti_spam_enabled: boolean
           banned_words: string[] | null
           bot_telegram_id: number | null
           bot_username: string | null
           created_at: string
           default_instructions: string | null
           description: string | null
+          flood_sensitivity: number
           house_rules: string | null
           id: string
           moderation_enabled: boolean
@@ -133,12 +136,15 @@ export type Database = {
           welcome_message: string | null
         }
         Insert: {
+          anti_flood_enabled?: boolean
+          anti_spam_enabled?: boolean
           banned_words?: string[] | null
           bot_telegram_id?: number | null
           bot_username?: string | null
           created_at?: string
           default_instructions?: string | null
           description?: string | null
+          flood_sensitivity?: number
           house_rules?: string | null
           id?: string
           moderation_enabled?: boolean
@@ -154,12 +160,15 @@ export type Database = {
           welcome_message?: string | null
         }
         Update: {
+          anti_flood_enabled?: boolean
+          anti_spam_enabled?: boolean
           banned_words?: string[] | null
           bot_telegram_id?: number | null
           bot_username?: string | null
           created_at?: string
           default_instructions?: string | null
           description?: string | null
+          flood_sensitivity?: number
           house_rules?: string | null
           id?: string
           moderation_enabled?: boolean
