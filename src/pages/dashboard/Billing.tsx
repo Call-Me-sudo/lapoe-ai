@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
+import PageHeader from "@/components/dashboard/PageHeader";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -30,19 +31,16 @@ export default function Billing() {
 
   return (
     <DashboardLayout>
-      <div className="mb-8">
-        <div className="text-xs uppercase tracking-[0.18em] text-ink-soft">Billing</div>
-        <h1 className="font-display text-3xl sm:text-4xl text-ink mt-2">Plan & billing</h1>
-      </div>
+      <PageHeader title="Billing" description="Manage your plan and subscription." />
 
-      <div className="border border-border rounded-lg bg-card p-8 max-w-2xl">
+      <div className="border border-border rounded-lg bg-card p-6 max-w-2xl">
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
           <div>
-            <div className="text-xs uppercase tracking-widest text-ink-soft">Current plan</div>
-            <div className="font-display text-3xl text-ink mt-1 capitalize">{sub?.plan ?? "free"}</div>
-            <div className="text-sm text-ink-soft mt-1">Status: <span className="capitalize">{sub?.status ?? "active"}</span></div>
+            <div className="text-xs uppercase tracking-wider text-muted-foreground">Current plan</div>
+            <div className="text-2xl font-semibold text-ink mt-1 capitalize">{sub?.plan ?? "free"}</div>
+            <div className="text-sm text-muted-foreground mt-1">Status: <span className="capitalize">{sub?.status ?? "active"}</span></div>
           </div>
-          <Button asChild variant="editorial"><Link to="/pricing">Change plan</Link></Button>
+          <Button asChild><Link to="/pricing">Change plan</Link></Button>
         </div>
         {sub?.stripe_customer_id && (
           <div className="mt-6 pt-6 border-t border-border">

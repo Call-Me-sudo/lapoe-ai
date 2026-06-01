@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
+import PageHeader from "@/components/dashboard/PageHeader";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -47,11 +48,10 @@ export default function Groups() {
 
   return (
     <DashboardLayout>
-      <div className="mb-8">
-        <div className="text-xs uppercase tracking-[0.18em] text-ink-soft">Groups</div>
-        <h1 className="font-display text-3xl sm:text-4xl text-ink mt-2">Telegram groups</h1>
-        <p className="text-sm text-ink-soft mt-2">Add your bot to a Telegram group from inside Telegram. KADE detects it automatically and lists it here.</p>
-      </div>
+      <PageHeader
+        title="Telegram groups"
+        description="Add your bot to a Telegram group from inside Telegram. KADE detects it automatically and lists it here."
+      />
 
       <div className="border border-primary/20 bg-primary/5 rounded-lg p-4 mb-6 flex gap-3">
         <Info className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
@@ -102,7 +102,7 @@ export default function Groups() {
 
       <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
         <DialogContent>
-          <DialogHeader><DialogTitle className="font-display">Configure {editing?.name}</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>Configure {editing?.name}</DialogTitle></DialogHeader>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <Label>Moderation enabled</Label>
@@ -119,7 +119,7 @@ export default function Groups() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditing(null)}>Cancel</Button>
-            <Button variant="editorial" onClick={save}>Save</Button>
+            <Button onClick={save}>Save</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

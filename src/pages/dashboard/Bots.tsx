@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
+import PageHeader from "@/components/dashboard/PageHeader";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -150,21 +151,19 @@ export default function Bots() {
 
   return (
     <DashboardLayout>
-      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
-        <div>
-          <div className="text-xs uppercase tracking-[0.18em] text-ink-soft">Bots</div>
-          <h1 className="font-display text-3xl sm:text-4xl text-ink mt-2">Your bots</h1>
-          <p className="text-sm text-ink-soft mt-2">Powered by KADE's shared AI. Configure tone &amp; rules here, or DM your bot with /help.</p>
-        </div>
-        <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) reset(); }}>
-          <DialogTrigger asChild>
-            <Button variant="editorial" disabled={!!quota && !quota.allowed} title={quota && !quota.allowed ? "Upgrade to create more bots" : undefined}>
-              <Plus className="h-4 w-4" />
-              New bot
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-            <DialogHeader><DialogTitle className="font-display">{editing ? "Edit bot" : "Create a bot"}</DialogTitle></DialogHeader>
+      <PageHeader
+        title="Bots"
+        description="Powered by KADE's shared AI. Configure tone & rules here, or DM your bot with /help."
+        actions={
+          <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) reset(); }}>
+            <DialogTrigger asChild>
+              <Button disabled={!!quota && !quota.allowed} title={quota && !quota.allowed ? "Upgrade to create more bots" : undefined}>
+                <Plus className="h-4 w-4" />
+                New bot
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+              <DialogHeader><DialogTitle>{editing ? "Edit bot" : "Create a bot"}</DialogTitle></DialogHeader>
             <div className="space-y-4">
               <div><Label htmlFor="bot-name">Name</Label><Input id="bot-name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} maxLength={80} /></div>
               <div><Label htmlFor="bot-description">Short description</Label><Textarea id="bot-description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} maxLength={500} rows={2} /></div>
@@ -248,13 +247,14 @@ export default function Bots() {
                 </div>
               </div>
             </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-              <Button variant="editorial" onClick={save}>{editing ? "Save changes" : "Create bot"}</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+                <Button onClick={save}>{editing ? "Save changes" : "Create bot"}</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        }
+      />
 
       {usage && (() => {
         const botPct = Math.min(100, Math.round((usage.current_bots / Math.max(1, usage.max_bots)) * 100));
@@ -268,7 +268,7 @@ export default function Bots() {
                 <span className="capitalize text-ink font-medium">{usage.plan} plan</span> · resets {resetDate}
               </div>
               {atBotCap && (
-                <Button variant="editorial" size="sm" onClick={() => (window.location.href = "/pricing")}>Upgrade plan</Button>
+                <Button size="sm" onClick={() => (window.location.href = "/pricing")}>Upgrade plan</Button>
               )}
             </div>
             <div className="grid sm:grid-cols-2 gap-4">
@@ -311,7 +311,7 @@ export default function Bots() {
             <div key={b.id} className="border border-border rounded-lg p-4 sm:p-5 bg-card flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
               <div className="flex-1 min-w-0">
                 <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-                  <h3 className="font-display text-xl text-ink">{b.name}</h3>
+                  <h3 className="text-base font-semibold text-ink">{b.name}</h3>
                   <Badge variant={b.status === "active" ? "default" : "secondary"} className="capitalize">{b.status}</Badge>
                   <Badge variant="outline" className="capitalize text-xs">{b.tone || "friendly"}</Badge>
                 </div>

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
+import PageHeader from "@/components/dashboard/PageHeader";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -56,42 +57,41 @@ export default function Knowledge() {
 
   return (
     <DashboardLayout>
-      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
-        <div>
-          <div className="text-xs uppercase tracking-[0.18em] text-ink-soft">Knowledge</div>
-          <h1 className="font-display text-3xl sm:text-4xl text-ink mt-2">What KADE can read</h1>
-          <p className="text-sm text-ink-soft mt-2">Add URLs or paste text. Each source is chunked and embedded so the bot retrieves only what's relevant.</p>
-        </div>
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild><Button variant="editorial" disabled={bots.length === 0}><Plus className="h-4 w-4" /> Add source</Button></DialogTrigger>
-          <DialogContent>
-            <DialogHeader><DialogTitle className="font-display">Add a knowledge source</DialogTitle></DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label>Bot</Label>
-                <Select value={form.bot_id} onValueChange={(v) => setForm({ ...form, bot_id: v })}>
-                  <SelectTrigger><SelectValue placeholder="Choose a bot" /></SelectTrigger>
-                  <SelectContent>{bots.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent>
-                </Select>
+      <PageHeader
+        title="Knowledge"
+        description="Add URLs or paste text. Each source is chunked and embedded so the bot retrieves only what's relevant."
+        actions={
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild><Button disabled={bots.length === 0}><Plus className="h-4 w-4" /> Add source</Button></DialogTrigger>
+            <DialogContent>
+              <DialogHeader><DialogTitle>Add a knowledge source</DialogTitle></DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <Label>Bot</Label>
+                  <Select value={form.bot_id} onValueChange={(v) => setForm({ ...form, bot_id: v })}>
+                    <SelectTrigger><SelectValue placeholder="Choose a bot" /></SelectTrigger>
+                    <SelectContent>{bots.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Type</Label>
+                  <Select value={form.kind} onValueChange={(v: any) => setForm({ ...form, kind: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent><SelectItem value="url">URL</SelectItem><SelectItem value="text">Plain text</SelectItem></SelectContent>
+                  </Select>
+                </div>
+                <div><Label>Title</Label><Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} maxLength={200} /></div>
+                {form.kind === "url" ? (
+                  <div><Label>URL</Label><Input value={form.source_url} onChange={(e) => setForm({ ...form, source_url: e.target.value })} placeholder="https://yourblog.com/article" /></div>
+                ) : (
+                  <div><Label>Content</Label><Textarea value={form.content} onChange={(e) => setForm({ ...form, content: e.target.value })} rows={6} maxLength={20000} /></div>
+                )}
               </div>
-              <div>
-                <Label>Type</Label>
-                <Select value={form.kind} onValueChange={(v: any) => setForm({ ...form, kind: v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent><SelectItem value="url">URL</SelectItem><SelectItem value="text">Plain text</SelectItem></SelectContent>
-                </Select>
-              </div>
-              <div><Label>Title</Label><Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} maxLength={200} /></div>
-              {form.kind === "url" ? (
-                <div><Label>URL</Label><Input value={form.source_url} onChange={(e) => setForm({ ...form, source_url: e.target.value })} placeholder="https://yourblog.com/article" /></div>
-              ) : (
-                <div><Label>Content</Label><Textarea value={form.content} onChange={(e) => setForm({ ...form, content: e.target.value })} rows={6} maxLength={20000} /></div>
-              )}
-            </div>
-            <DialogFooter><Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button><Button variant="editorial" onClick={save}>Add &amp; index</Button></DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </div>
+              <DialogFooter><Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button><Button onClick={save}>Add &amp; index</Button></DialogFooter>
+            </DialogContent>
+          </Dialog>
+        }
+      />
 
       {items.length === 0 ? (
         <div className="border border-dashed border-border rounded-lg p-12 text-center bg-paper-soft">
