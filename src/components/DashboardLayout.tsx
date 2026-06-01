@@ -2,7 +2,7 @@ import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { ReactNode, useState } from "react";
 import {
   LayoutDashboard, Bot, Users, BookOpen, MessageSquare, CreditCard, Settings,
-  LogOut, Menu, X, Bell, Sparkles, HelpCircle, QrCode,
+  LogOut, Menu, X, Bell, Sparkles, HelpCircle, QrCode, PlayCircle,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -25,6 +25,7 @@ const navGroups: { label: string; items: NavItem[] }[] = [
     label: "Automation",
     items: [
       { to: "/dashboard/bots", icon: Bot, label: "Bots" },
+      { to: "/dashboard/playground", icon: PlayCircle, label: "Playground" },
       { to: "/dashboard/groups", icon: Users, label: "Groups" },
       { to: "/dashboard/knowledge", icon: BookOpen, label: "Knowledge" },
     ],
@@ -45,6 +46,7 @@ const navGroups: { label: string; items: NavItem[] }[] = [
 const titles: Record<string, string> = {
   "/dashboard": "Overview",
   "/dashboard/bots": "Bots",
+  "/dashboard/playground": "Playground",
   "/dashboard/groups": "Groups",
   "/dashboard/knowledge": "Knowledge",
   "/dashboard/messages": "Messages",
