@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Bot as BotIcon, Trash2, Edit3, ShieldAlert } from "lucide-react";
+import { Plus, Bot as BotIcon, Trash2, Edit3, ShieldAlert, CheckCircle2, AlertCircle, AtSign, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
 
@@ -316,10 +316,15 @@ export default function Bots() {
                   <Badge variant="outline" className="capitalize text-xs">{b.tone || "friendly"}</Badge>
                 </div>
                 {b.description && <p className="text-sm text-ink-soft mt-1 break-words">{b.description}</p>}
-                <div className="text-xs text-ink-soft mt-3 flex flex-wrap gap-x-4 gap-y-1">
-                  <span>Token: {b.telegram_bot_token ? "✓ set" : "— missing"}</span>
-                  {b.bot_username && <span>@{b.bot_username}</span>}
-                  <span>AI: 🟢 Lovable AI</span>
+                <div className="text-xs text-ink-soft mt-3 flex flex-wrap gap-x-4 gap-y-1 items-center">
+                  <span className="inline-flex items-center gap-1">
+                    {b.telegram_bot_token
+                      ? <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                      : <AlertCircle className="h-3.5 w-3.5 text-amber-600" />}
+                    Token {b.telegram_bot_token ? "connected" : "missing"}
+                  </span>
+                  {b.bot_username && <span className="inline-flex items-center gap-1"><AtSign className="h-3.5 w-3.5" />{b.bot_username}</span>}
+                  <span className="inline-flex items-center gap-1"><Sparkles className="h-3.5 w-3.5 text-primary" />AI ready</span>
                 </div>
                 {b.bot_username && (
                   <p className="text-xs text-primary mt-2">
