@@ -24,6 +24,7 @@ import AdminBots from "./pages/admin/AdminBots";
 import AdminMessages from "./pages/admin/AdminMessages";
 import AdminModeration from "./pages/admin/AdminModeration";
 import AdminActivity from "./pages/admin/AdminActivity";
+import AdminNotifications from "./pages/admin/AdminNotifications";
 
 const queryClient = new QueryClient();
 
