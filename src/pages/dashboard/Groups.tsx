@@ -25,7 +25,21 @@ export default function Groups() {
       .eq("owner_id", user.id).order("last_seen_at", { ascending: false });
     setGroups(data ?? []);
   };
-  useEffect(() => { load(); }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+    load();
+    // Refresh group names from Telegram on mount and every 60s
+    const refresh = async () => {
+      try {
+        await supabase.functions.invoke("refresh-group-names");
+        load();
+      } catch { /* ignore */ }
+    };
+    refresh();
+    const id = setInterval(refresh, 60_000);
+    return () => clearInterval(id);
+  }, [user]);
 
   const remove = async (id: string) => {
     if (!confirm("Forget this group? KADE will pick it back up next time the bot sees a message there.")) return;
