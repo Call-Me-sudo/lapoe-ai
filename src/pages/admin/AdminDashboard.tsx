@@ -160,12 +160,12 @@ export default function AdminDashboard() {
   }, []);
 
   const kpis = [
-    { icon: DollarSign, label: "MRR", value: `$${stats.mrr.toLocaleString()}`, sub: `${stats.subs} paying`, to: "/admin/users", accent: "primary" },
-    { icon: Users, label: "Users", value: stats.users.toLocaleString(), sub: `${stats.usersDelta >= 0 ? "+" : ""}${stats.usersDelta} this week`, delta: stats.usersDelta, to: "/admin/users", accent: "accent" },
-    { icon: Bot, label: "Bots", value: stats.bots.toLocaleString(), sub: `${stats.activeBots} active`, to: "/admin/bots", accent: "primary" },
-    { icon: MessageSquare, label: "Messages", value: stats.messages.toLocaleString(), sub: `${stats.messagesToday} today`, to: "/admin/messages", accent: "accent" },
-    { icon: AlertTriangle, label: "Moderation", value: stats.modActions.toLocaleString(), sub: `${stats.modToday} today`, to: "/admin/moderation", accent: "primary" },
-    { icon: BookOpen, label: "Knowledge", value: stats.knowledge.toLocaleString(), sub: `${stats.groups} groups`, to: "/admin/bots", accent: "accent" },
+    { icon: DollarSign, label: "MRR", value: `$${stats.mrr.toLocaleString()}`, sub: `${stats.subs} paying`, to: "/admin/users" },
+    { icon: Users, label: "Users", value: stats.users.toLocaleString(), sub: `${stats.usersDelta >= 0 ? "+" : ""}${stats.usersDelta} this week`, delta: stats.usersDelta, to: "/admin/users" },
+    { icon: Bot, label: "Bots", value: stats.bots.toLocaleString(), sub: `${stats.activeBots} active`, to: "/admin/bots" },
+    { icon: MessageSquare, label: "Messages", value: stats.messages.toLocaleString(), sub: `${stats.messagesToday} today`, to: "/admin/messages" },
+    { icon: AlertTriangle, label: "Moderation", value: stats.modActions.toLocaleString(), sub: `${stats.modToday} today`, to: "/admin/moderation" },
+    { icon: BookOpen, label: "Knowledge", value: stats.knowledge.toLocaleString(), sub: `${stats.groups} groups`, to: "/admin/bots" },
   ];
 
   const refresh = () => { loadAll(); toast.success("Refreshed"); };
@@ -173,9 +173,9 @@ export default function AdminDashboard() {
   return (
     <AdminLayout>
       {/* Header */}
-      <div className="mb-8 flex items-start justify-between flex-wrap gap-3">
+      <div className="mb-6 flex items-start justify-between flex-wrap gap-3">
         <div>
-          <div className="text-xs uppercase tracking-[0.18em] text-primary">Owner control room</div>
+          <div className="text-xs uppercase tracking-[0.18em] text-ink-soft">Owner control room</div>
           <h1 className="font-display text-3xl sm:text-4xl text-ink mt-1">Mission control</h1>
           <p className="text-ink-soft text-sm mt-2">Everything across every workspace, in real time.</p>
         </div>
@@ -186,17 +186,16 @@ export default function AdminDashboard() {
       </div>
 
       {/* KPI grid */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
         {kpis.map((c) => (
           <Link key={c.label} to={c.to}
-            className={`group relative overflow-hidden border border-border/50 rounded-xl p-4 bg-card hover:border-primary/40 hover:shadow-lg hover:-translate-y-0.5 transition-all`}>
-            <div className={`absolute -top-8 -right-8 h-20 w-20 rounded-full bg-${c.accent}/10 blur-2xl group-hover:bg-${c.accent}/20 transition`} />
-            <c.icon className={`h-4 w-4 text-${c.accent} mb-3 relative`} />
-            <div className="font-display text-2xl text-ink tracking-tight relative">{c.value}</div>
-            <div className="text-[10px] uppercase tracking-widest text-ink-soft mt-1 relative">{c.label}</div>
-            <div className="text-[11px] text-ink-soft mt-2 flex items-center gap-1 relative">
+            className="surface-card p-4 hover:shadow-lift hover:-translate-y-0.5 transition-all">
+            <c.icon className="h-4 w-4 text-ink-soft mb-3" />
+            <div className="font-display text-2xl text-ink tracking-tight">{c.value}</div>
+            <div className="text-[10px] uppercase tracking-widest text-ink-soft mt-1">{c.label}</div>
+            <div className="text-[11px] text-ink-soft mt-2 flex items-center gap-1">
               {typeof c.delta === "number" && c.delta !== 0 && (
-                c.delta > 0 ? <ArrowUpRight className="h-3 w-3 text-primary" /> : <ArrowDownRight className="h-3 w-3 text-destructive" />
+                c.delta > 0 ? <ArrowUpRight className="h-3 w-3 text-ink" /> : <ArrowDownRight className="h-3 w-3 text-destructive" />
               )}
               {c.sub}
             </div>
@@ -206,7 +205,7 @@ export default function AdminDashboard() {
 
       {/* Charts row */}
       <div className="grid lg:grid-cols-3 gap-4 mb-4">
-        <div className="lg:col-span-2 border border-border/50 rounded-xl p-5 bg-card">
+        <div className="lg:col-span-2 surface-card p-5">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className="font-display text-lg text-ink flex items-center gap-2"><TrendingUp className="h-4 w-4 text-primary" /> Message volume</h2>
@@ -233,7 +232,7 @@ export default function AdminDashboard() {
           </ResponsiveContainer>
         </div>
 
-        <div className="border border-border/50 rounded-xl p-5 bg-card">
+        <div className="surface-card p-5">
           <h2 className="font-display text-lg text-ink mb-1">Plan mix</h2>
           <p className="text-xs text-ink-soft mb-3">Subscription distribution</p>
           {planDist.length === 0 ? (
@@ -254,7 +253,7 @@ export default function AdminDashboard() {
 
       {/* Growth + Hourly */}
       <div className="grid lg:grid-cols-2 gap-4 mb-4">
-        <div className="border border-border/50 rounded-xl p-5 bg-card">
+        <div className="surface-card p-5">
           <h2 className="font-display text-lg text-ink flex items-center gap-2"><Users className="h-4 w-4 text-primary" /> User growth</h2>
           <p className="text-xs text-ink-soft mb-3">Cumulative — last 30 days</p>
           <ResponsiveContainer width="100%" height={200}>
@@ -268,7 +267,7 @@ export default function AdminDashboard() {
           </ResponsiveContainer>
         </div>
 
-        <div className="border border-border/50 rounded-xl p-5 bg-card">
+        <div className="surface-card p-5">
           <h2 className="font-display text-lg text-ink flex items-center gap-2"><Clock className="h-4 w-4 text-primary" /> Today's traffic</h2>
           <p className="text-xs text-ink-soft mb-3">Messages per hour</p>
           <ResponsiveContainer width="100%" height={200}>
@@ -285,7 +284,7 @@ export default function AdminDashboard() {
 
       {/* System health + Quick actions */}
       <div className="grid lg:grid-cols-3 gap-4 mb-4">
-        <div className="border border-border/50 rounded-xl p-5 bg-card">
+        <div className="surface-card p-5">
           <h2 className="font-display text-lg text-ink flex items-center gap-2 mb-4"><Server className="h-4 w-4 text-primary" /> System health</h2>
           <div className="space-y-3">
             {[
@@ -307,7 +306,7 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        <div className="border border-border/50 rounded-xl p-5 bg-card">
+        <div className="surface-card p-5">
           <h2 className="font-display text-lg text-ink mb-4">Quick actions</h2>
           <div className="grid grid-cols-2 gap-2">
             <Button asChild variant="outline" size="sm" className="justify-start"><Link to="/admin/users"><Users className="h-3.5 w-3.5" /> Users</Link></Button>
@@ -318,7 +317,7 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        <div className="border border-border/50 rounded-xl p-5 bg-card">
+        <div className="surface-card p-5">
           <h2 className="font-display text-lg text-ink mb-4">Newest signups</h2>
           {recentSignups.length === 0 ? (
             <div className="text-sm text-ink-soft text-center py-8">No users yet.</div>
@@ -340,7 +339,7 @@ export default function AdminDashboard() {
 
       {/* Top bots + Recent moderation */}
       <div className="grid lg:grid-cols-2 gap-4">
-        <div className="border border-border/50 rounded-xl p-5 bg-card">
+        <div className="surface-card p-5">
           <h2 className="font-display text-lg text-ink mb-1">Top bots</h2>
           <p className="text-xs text-ink-soft mb-3">By message volume — last 14 days</p>
           {topBots.length === 0 ? (
@@ -368,7 +367,7 @@ export default function AdminDashboard() {
           )}
         </div>
 
-        <div className="border border-border/50 rounded-xl p-5 bg-card">
+        <div className="surface-card p-5">
           <div className="flex items-center justify-between mb-3">
             <div>
               <h2 className="font-display text-lg text-ink flex items-center gap-2"><AlertTriangle className="h-4 w-4 text-primary" /> Recent moderation</h2>
