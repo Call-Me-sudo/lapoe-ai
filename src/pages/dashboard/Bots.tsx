@@ -56,6 +56,7 @@ export default function Bots() {
   const [editing, setEditing] = useState<Bot | null>(null);
   const [quota, setQuota] = useState<BotQuota | null>(null);
   const [usage, setUsage] = useState<WorkspaceUsage | null>(null);
+  const [deleteBot, setDeleteBot] = useState<Bot | null>(null);
   const [form, setForm] = useState({
     name: "", description: "", telegram_bot_token: "",
     tone: "friendly", personality: "", house_rules: "", welcome_message: "",
