@@ -11,7 +11,7 @@ import {
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import BottomNav from "@/components/BottomNav";
+
 import { cn } from "@/lib/utils";
 
 type NavItem = { to: string; icon: typeof Bot; label: string; end?: boolean };
@@ -192,13 +192,11 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             </div>
           </header>
 
-          <main className="flex-1 overflow-x-hidden pb-28 md:pb-8">
+          <main className="flex-1 overflow-x-hidden pb-8">
             <div className="px-4 md:px-8 py-4 md:py-6 max-w-6xl w-full mx-auto">{children}</div>
           </main>
         </div>
       </div>
-
-      <BottomNav />
     </div>
   );
 }
