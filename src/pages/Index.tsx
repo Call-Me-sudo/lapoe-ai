@@ -41,7 +41,7 @@ export default function Index() {
               <Link to="/pricing">See pricing</Link>
             </Button>
           </div>
-          <p className="mt-4 text-sm text-muted-foreground">Free plan · No card required · Bring your own OpenAI key</p>
+          <p className="mt-4 text-sm text-muted-foreground">Free plan · No card required · AI included</p>
         </div>
 
         {/* Phone-style preview card */}
