@@ -205,7 +205,7 @@ export default function AdminDashboard() {
 
       {/* Charts row */}
       <div className="grid lg:grid-cols-3 gap-4 mb-4">
-        <div className="lg:col-span-2 border border-border/50 rounded-xl p-5 bg-card">
+        <div className="lg:col-span-2 surface-card p-5">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className="font-display text-lg text-ink flex items-center gap-2"><TrendingUp className="h-4 w-4 text-primary" /> Message volume</h2>
@@ -232,7 +232,7 @@ export default function AdminDashboard() {
           </ResponsiveContainer>
         </div>
 
-        <div className="border border-border/50 rounded-xl p-5 bg-card">
+        <div className="surface-card p-5">
           <h2 className="font-display text-lg text-ink mb-1">Plan mix</h2>
           <p className="text-xs text-ink-soft mb-3">Subscription distribution</p>
           {planDist.length === 0 ? (
@@ -253,7 +253,7 @@ export default function AdminDashboard() {
 
       {/* Growth + Hourly */}
       <div className="grid lg:grid-cols-2 gap-4 mb-4">
-        <div className="border border-border/50 rounded-xl p-5 bg-card">
+        <div className="surface-card p-5">
           <h2 className="font-display text-lg text-ink flex items-center gap-2"><Users className="h-4 w-4 text-primary" /> User growth</h2>
           <p className="text-xs text-ink-soft mb-3">Cumulative — last 30 days</p>
           <ResponsiveContainer width="100%" height={200}>
@@ -267,7 +267,7 @@ export default function AdminDashboard() {
           </ResponsiveContainer>
         </div>
 
-        <div className="border border-border/50 rounded-xl p-5 bg-card">
+        <div className="surface-card p-5">
           <h2 className="font-display text-lg text-ink flex items-center gap-2"><Clock className="h-4 w-4 text-primary" /> Today's traffic</h2>
           <p className="text-xs text-ink-soft mb-3">Messages per hour</p>
           <ResponsiveContainer width="100%" height={200}>
@@ -284,7 +284,7 @@ export default function AdminDashboard() {
 
       {/* System health + Quick actions */}
       <div className="grid lg:grid-cols-3 gap-4 mb-4">
-        <div className="border border-border/50 rounded-xl p-5 bg-card">
+        <div className="surface-card p-5">
           <h2 className="font-display text-lg text-ink flex items-center gap-2 mb-4"><Server className="h-4 w-4 text-primary" /> System health</h2>
           <div className="space-y-3">
             {[
@@ -306,7 +306,7 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        <div className="border border-border/50 rounded-xl p-5 bg-card">
+        <div className="surface-card p-5">
           <h2 className="font-display text-lg text-ink mb-4">Quick actions</h2>
           <div className="grid grid-cols-2 gap-2">
             <Button asChild variant="outline" size="sm" className="justify-start"><Link to="/admin/users"><Users className="h-3.5 w-3.5" /> Users</Link></Button>
@@ -317,7 +317,7 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        <div className="border border-border/50 rounded-xl p-5 bg-card">
+        <div className="surface-card p-5">
           <h2 className="font-display text-lg text-ink mb-4">Newest signups</h2>
           {recentSignups.length === 0 ? (
             <div className="text-sm text-ink-soft text-center py-8">No users yet.</div>
@@ -339,7 +339,7 @@ export default function AdminDashboard() {
 
       {/* Top bots + Recent moderation */}
       <div className="grid lg:grid-cols-2 gap-4">
-        <div className="border border-border/50 rounded-xl p-5 bg-card">
+        <div className="surface-card p-5">
           <h2 className="font-display text-lg text-ink mb-1">Top bots</h2>
           <p className="text-xs text-ink-soft mb-3">By message volume — last 14 days</p>
           {topBots.length === 0 ? (
@@ -367,7 +367,7 @@ export default function AdminDashboard() {
           )}
         </div>
 
-        <div className="border border-border/50 rounded-xl p-5 bg-card">
+        <div className="surface-card p-5">
           <div className="flex items-center justify-between mb-3">
             <div>
               <h2 className="font-display text-lg text-ink flex items-center gap-2"><AlertTriangle className="h-4 w-4 text-primary" /> Recent moderation</h2>
