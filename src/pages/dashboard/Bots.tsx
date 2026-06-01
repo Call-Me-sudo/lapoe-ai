@@ -56,6 +56,7 @@ export default function Bots() {
   const [editing, setEditing] = useState<Bot | null>(null);
   const [quota, setQuota] = useState<BotQuota | null>(null);
   const [usage, setUsage] = useState<WorkspaceUsage | null>(null);
+  const [deleteBot, setDeleteBot] = useState<Bot | null>(null);
   const [form, setForm] = useState({
     name: "", description: "", telegram_bot_token: "",
     tone: "friendly", personality: "", house_rules: "", welcome_message: "",
@@ -119,11 +120,11 @@ export default function Bots() {
     setOpen(false); reset(); load();
   };
 
-  const remove = async (id: string) => {
-    if (!confirm("Delete this bot? All groups, rules and logs go with it.")) return;
-    const { error } = await supabase.from("bots").delete().eq("id", id);
+  const remove = async () => {
+    if (!deleteBot) return;
+    const { error } = await supabase.from("bots").delete().eq("id", deleteBot.id);
     if (error) return toast.error(error.message);
-    toast.success("Deleted"); load();
+    toast.success("Deleted"); setDeleteBot(null); load();
   };
 
   const toggleStatus = async (b: Bot) => {
@@ -348,13 +349,36 @@ export default function Bots() {
                 <div className="flex items-center gap-1 shrink-0">
                   <Button variant="outline" size="sm" onClick={() => toggleStatus(b)}>{b.status === "active" ? "Pause" : "Activate"}</Button>
                   <Button variant="ghost" size="icon" onClick={() => startEdit(b)} aria-label="Edit bot"><Edit3 className="h-4 w-4" /></Button>
-                  <Button variant="ghost" size="icon" onClick={() => remove(b.id)} aria-label="Delete bot"><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                  <Button variant="ghost" size="icon" onClick={() => setDeleteBot(b)} aria-label="Delete bot"><Trash2 className="h-4 w-4 text-destructive" /></Button>
                 </div>
               </div>
             );
           })}
         </div>
       )}
+
+      <Dialog open={!!deleteBot} onOpenChange={(o) => { if (!o) setDeleteBot(null); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Delete “{deleteBot?.name}”?</DialogTitle>
+            <DialogDescription>
+              This will permanently remove the bot, its groups, rules and logs.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="rounded-md border border-border bg-paper-soft p-3 text-xs text-ink-soft flex items-start gap-2">
+            <AlertCircle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+            <div>
+              <span className="text-ink font-medium">Your monthly message count will not reset.</span>{" "}
+              Messages already sent this month are tied to your account, not this bot.
+              They reset on the 1st of each month.
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteBot(null)}>Cancel</Button>
+            <Button variant="destructive" onClick={remove}>Delete bot</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }
