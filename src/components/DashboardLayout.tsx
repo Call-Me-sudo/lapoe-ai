@@ -25,6 +25,7 @@ const navGroups: { label: string; items: NavItem[] }[] = [
     label: "Automation",
     items: [
       { to: "/dashboard/bots", icon: Bot, label: "Bots" },
+      { to: "/dashboard/playground", icon: PlayCircle, label: "Playground" },
       { to: "/dashboard/groups", icon: Users, label: "Groups" },
       { to: "/dashboard/knowledge", icon: BookOpen, label: "Knowledge" },
     ],
