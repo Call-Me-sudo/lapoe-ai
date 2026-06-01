@@ -18,8 +18,8 @@
     --popover: 0 0% 100%;
     --popover-foreground: 220 15% 8%;
 
-    /* Primary stays Telegram-blue for accents */
-    --primary: 203 88% 53%;
+    /* Primary = graphite ink. Minimal, Apple-like. No blue. */
+    --primary: 220 15% 12%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 220 14% 94%;
