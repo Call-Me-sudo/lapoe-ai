@@ -11,7 +11,7 @@ import {
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import BottomNav from "@/components/BottomNav";
+
 import { cn } from "@/lib/utils";
 
 type NavItem = { to: string; icon: typeof Bot; label: string; end?: boolean };
