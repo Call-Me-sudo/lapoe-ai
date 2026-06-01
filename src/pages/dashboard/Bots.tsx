@@ -247,13 +247,14 @@ export default function Bots() {
                 </div>
               </div>
             </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-              <Button variant="editorial" onClick={save}>{editing ? "Save changes" : "Create bot"}</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+                <Button onClick={save}>{editing ? "Save changes" : "Create bot"}</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        }
+      />
 
       {usage && (() => {
         const botPct = Math.min(100, Math.round((usage.current_bots / Math.max(1, usage.max_bots)) * 100));
