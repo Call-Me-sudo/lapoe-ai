@@ -46,6 +46,7 @@ const navGroups: { label: string; items: NavItem[] }[] = [
 const titles: Record<string, string> = {
   "/dashboard": "Overview",
   "/dashboard/bots": "Bots",
+  "/dashboard/playground": "Playground",
   "/dashboard/groups": "Groups",
   "/dashboard/knowledge": "Knowledge",
   "/dashboard/messages": "Messages",
