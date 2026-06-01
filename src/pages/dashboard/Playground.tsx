@@ -90,7 +90,7 @@ export default function Playground() {
         <div className="rounded-3xl bg-card shadow-card overflow-hidden flex flex-col h-[calc(100vh-220px)] min-h-[480px]">
           {/* Bot picker */}
           <div className="px-4 md:px-6 py-4 flex items-center gap-3">
-            <div className="h-10 w-10 rounded-2xl bg-tile-blue text-tile-blue-foreground grid place-items-center shrink-0">
+            <div className="h-10 w-10 rounded-2xl bg-muted text-ink grid place-items-center shrink-0">
               <BotIcon className="h-5 w-5" />
             </div>
             <div className="min-w-0 flex-1">
@@ -127,7 +127,7 @@ export default function Playground() {
             {messages.map((m, i) => (
               <div key={i} className={cn("flex", m.role === "user" ? "justify-end" : "justify-start")}>
                 {m.role === "assistant" && (
-                  <div className="h-8 w-8 rounded-full bg-tile-blue text-tile-blue-foreground grid place-items-center shrink-0 mr-2 mt-0.5">
+                  <div className="h-8 w-8 rounded-full bg-muted text-ink grid place-items-center shrink-0 mr-2 mt-0.5">
                     <BotIcon className="h-4 w-4" />
                   </div>
                 )}
@@ -146,7 +146,7 @@ export default function Playground() {
 
             {sending && (
               <div className="flex justify-start">
-                <div className="h-8 w-8 rounded-full bg-tile-blue text-tile-blue-foreground grid place-items-center shrink-0 mr-2 mt-0.5">
+                <div className="h-8 w-8 rounded-full bg-muted text-ink grid place-items-center shrink-0 mr-2 mt-0.5">
                   <BotIcon className="h-4 w-4" />
                 </div>
                 <div className="px-4 py-3 text-sm text-muted-foreground inline-flex items-center gap-1.5">
