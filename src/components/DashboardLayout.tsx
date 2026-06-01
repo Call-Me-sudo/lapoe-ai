@@ -163,9 +163,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
               <button className="hidden sm:grid place-items-center h-10 w-10 rounded-full bg-card shadow-card text-foreground hover:shadow-lift transition" aria-label="QR">
                 <QrCode className="h-4 w-4" />
               </button>
-              <button className="grid place-items-center h-10 w-10 rounded-full bg-card shadow-card text-foreground hover:shadow-lift transition" aria-label="Notifications">
-                <Bell className="h-4 w-4" />
-              </button>
+              <NotificationsPopover />
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
