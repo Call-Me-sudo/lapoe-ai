@@ -706,6 +706,12 @@ async function processBot(supabase: any, bot: any, deadline: number) {
       }
 
       try {
+        // Show "typing…" immediately so the user knows the bot is working.
+        // Fire-and-forget — never block on it.
+        tg(bot.telegram_bot_token, "sendChatAction", {
+          chat_id: msg.chat.id, action: "typing",
+        }).catch(() => {});
+
         const cleanText = isGroup ? stripBotName(text, bot, me) : text.trim();
         const [knowledgeResult, kExists] = await Promise.all([
           autoKnowledge ? Promise.resolve(autoKnowledge) : ragSnippets(supabase, bot.id, cleanText, 6),
@@ -716,11 +722,12 @@ async function processBot(supabase: any, bot: any, deadline: number) {
         const reply = await askAI(system, cleanText);
 
         if (reply) {
+          // Send the reply first, log after — don't make the user wait for the DB write.
           await send(bot.telegram_bot_token, msg.chat.id, reply, msg.message_id);
-          await supabase.from("bot_messages").insert({
+          supabase.from("bot_messages").insert({
             bot_id: bot.id, owner_id: bot.owner_id, direction: "outbound",
             content: reply, telegram_user: msg.from?.username || null,
-          });
+          }).then(() => {}, () => {});
         }
       } catch (e) {
         console.error(`bot ${bot.name} reply failed:`, (e as Error).message);
