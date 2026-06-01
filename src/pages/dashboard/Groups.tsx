@@ -116,7 +116,10 @@ export default function Groups() {
 
       <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Configure {editing?.name}</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle>Configure {editing?.name}</DialogTitle>
+            <DialogDescription>Update group-specific rules, welcome message and moderation.</DialogDescription>
+          </DialogHeader>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <Label>Moderation enabled</Label>
