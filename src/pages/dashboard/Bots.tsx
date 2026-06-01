@@ -311,7 +311,7 @@ export default function Bots() {
             <div key={b.id} className="border border-border rounded-lg p-4 sm:p-5 bg-card flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
               <div className="flex-1 min-w-0">
                 <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-                  <h3 className="font-display text-xl text-ink">{b.name}</h3>
+                  <h3 className="text-base font-semibold text-ink">{b.name}</h3>
                   <Badge variant={b.status === "active" ? "default" : "secondary"} className="capitalize">{b.status}</Badge>
                   <Badge variant="outline" className="capitalize text-xs">{b.tone || "friendly"}</Badge>
                 </div>
