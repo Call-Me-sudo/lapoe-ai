@@ -46,6 +46,7 @@ export default function Billing() {
         {sub?.stripe_customer_id && (
           <div className="mt-6 pt-6 border-t border-border">
             <Button variant="outline" onClick={openPortal} disabled={loading}>
+              <SiStripe className="h-4 w-4 text-[#635BFF]" />
               {loading ? "Opening…" : "Manage subscription"}
             </Button>
           </div>
