@@ -6,7 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Users, Settings as SettingsIcon, Trash2, Info } from "lucide-react";
 import { toast } from "sonner";
@@ -116,7 +116,10 @@ export default function Groups() {
 
       <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Configure {editing?.name}</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle>Configure {editing?.name}</DialogTitle>
+            <DialogDescription>Update group-specific rules, welcome message and moderation.</DialogDescription>
+          </DialogHeader>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <Label>Moderation enabled</Label>

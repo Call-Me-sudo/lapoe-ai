@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Plus, BookOpen, Trash2, RefreshCw } from "lucide-react";
@@ -64,7 +64,10 @@ export default function Knowledge() {
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild><Button disabled={bots.length === 0}><Plus className="h-4 w-4" /> Add source</Button></DialogTrigger>
             <DialogContent>
-              <DialogHeader><DialogTitle>Add a knowledge source</DialogTitle></DialogHeader>
+              <DialogHeader>
+                <DialogTitle>Add a knowledge source</DialogTitle>
+                <DialogDescription>The content will be chunked, embedded and used to answer questions.</DialogDescription>
+              </DialogHeader>
               <div className="space-y-4">
                 <div>
                   <Label>Bot</Label>
