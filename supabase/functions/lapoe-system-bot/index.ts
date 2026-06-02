@@ -27,11 +27,22 @@ async function tg(token: string, method: string, body: unknown) {
   return res.json();
 }
 async function send(token: string, chatId: number | string, text: string, replyTo?: number) {
-  return tg(token, "sendMessage", {
+  const res = await tg(token, "sendMessage", {
     chat_id: chatId, text, parse_mode: "Markdown",
     reply_to_message_id: replyTo,
     disable_web_page_preview: true,
   });
+  // Telegram rejects messages with unmatched Markdown entities (common with
+  // underscores in bot/user names). Fall back to plain text so commands like
+  // /mybots, /status still produce a visible reply instead of silently failing.
+  if (res && res.ok === false) {
+    return tg(token, "sendMessage", {
+      chat_id: chatId, text,
+      reply_to_message_id: replyTo,
+      disable_web_page_preview: true,
+    });
+  }
+  return res;
 }
 async function isChatAdmin(token: string, chatId: number, userId: number): Promise<boolean> {
   const r = await tg(token, "getChatMember", { chat_id: chatId, user_id: userId });
