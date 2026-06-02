@@ -662,8 +662,8 @@ async function processBot(supabase: any, bot: any, deadline: number) {
       const isPrivate = msg.chat.type === "private";
       const isGroup = msg.chat.type === "group" || msg.chat.type === "supergroup";
 
-      // 1) Owner DM commands
-      if (isPrivate && await handleOwnerDM(supabase, bot, bot.telegram_bot_token, msg)) {
+      // 1) DM general commands (NO owner config in DMs — see policy above)
+      if (isPrivate && await handleDmGeneral(supabase, bot, bot.telegram_bot_token, msg)) {
         processed++; continue;
       }
 
