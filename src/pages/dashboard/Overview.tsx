@@ -91,7 +91,7 @@ export default function Overview() {
   const quickActions = [
     { icon: MessageSquare, label: "Live conversations", value: `${stats.groups} connected`, to: "/dashboard/messages" },
     { icon: Inbox, label: "Inbound questions", value: `${unanswered} this month`, to: "/dashboard/messages" },
-    { icon: Bot, label: "KADE AI agent", value: `${stats.bots} active`, to: "/dashboard/bots" },
+    { icon: Bot, label: "LaPoe AI agent", value: `${stats.bots} active`, to: "/dashboard/bots" },
     { icon: BookOpen, label: "Knowledge sources", value: `${stats.knowledge} indexed`, to: "/dashboard/knowledge" },
     { icon: Users, label: "Telegram groups", value: `${stats.groups} linked`, to: "/dashboard/groups" },
   ];
@@ -108,7 +108,7 @@ export default function Overview() {
       <div className="mb-5 flex items-center gap-3 rounded-lg border border-primary/20 bg-primary/5 px-4 py-2.5">
         <Library className="h-4 w-4 text-primary shrink-0" />
         <p className="text-sm text-ink flex-1">
-          KADE can answer in 40+ languages and learn from your blogs. Add more knowledge to boost reply quality.
+          LaPoe can answer in 40+ languages and learn from your blogs. Add more knowledge to boost reply quality.
         </p>
         <Button asChild size="sm" variant="default" className="hidden sm:inline-flex">
           <Link to="/dashboard/knowledge">Add knowledge</Link>
@@ -153,7 +153,7 @@ export default function Overview() {
 
             <div className="grid grid-cols-3 divide-x divide-border border-b border-border">
               <Metric label="Inbound" value={totalInbound} hint="Questions received" />
-              <Metric label="Replies" value={totalOutbound} hint="Sent by KADE" />
+              <Metric label="Replies" value={totalOutbound} hint="Sent by LaPoe" />
               <Metric label="Resolution rate" value={`${resolutionRate}%`} hint="Replied / inbound" />
             </div>
 
@@ -196,7 +196,7 @@ export default function Overview() {
             <h3 className="text-sm font-semibold text-ink mb-3">Tips & updates</h3>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {[
-                { icon: Library, title: "Train KADE on your blog", body: "Paste a URL — KADE will index and cite it.", to: "/dashboard/knowledge", cta: "Add a source" },
+                { icon: Library, title: "Train LaPoe on your blog", body: "Paste a URL — LaPoe will index and cite it.", to: "/dashboard/knowledge", cta: "Add a source" },
                 { icon: Activity, title: "See replies in real time", body: "Every reply is logged with full context.", to: "/dashboard/messages", cta: "Open inbox" },
                 { icon: TrendingUp, title: "Scale your community", body: "Upgrade to lift bot and message limits.", to: "/pricing", cta: "See plans" },
               ].map((c) => (

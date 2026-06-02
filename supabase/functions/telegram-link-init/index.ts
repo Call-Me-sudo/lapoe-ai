@@ -1,5 +1,5 @@
 // Verifies Telegram WebApp initData and links the Telegram identity to the
-// currently signed-in KADE user. Called from the Auth/Settings page when KADE
+// currently signed-in LaPoe user. Called from the Auth/Settings page when LaPoe
 // is opened inside Telegram as a Mini App.
 //
 // Uses HMAC verification per https://core.telegram.org/bots/webapps#validating-data-received-via-the-mini-app

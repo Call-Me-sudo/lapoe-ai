@@ -80,7 +80,7 @@ export default function Auth() {
       <div className="w-full max-w-md">
         <Link to="/" className="flex items-center justify-center gap-2 mb-6">
           <span className="h-8 w-8 rounded-full bg-foreground text-background grid place-items-center font-bold">K</span>
-          <span className="font-display text-xl font-bold text-foreground">KADE</span>
+          <span className="font-display text-xl font-bold text-foreground">LaPoe</span>
         </Link>
 
         <div className="bg-card rounded-3xl shadow-card p-7 md:p-9">
@@ -139,7 +139,7 @@ export default function Auth() {
           </form>
 
           <p className="text-sm text-muted-foreground mt-6 text-center">
-            {mode === "signup" ? "Already have an account?" : "New to KADE?"}{" "}
+            {mode === "signup" ? "Already have an account?" : "New to LaPoe?"}{" "}
             <button onClick={() => setMode(mode === "signup" ? "login" : "signup")} className="text-foreground font-semibold hover:underline">
               {mode === "signup" ? "Sign in" : "Create one"}
             </button>

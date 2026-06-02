@@ -14,7 +14,7 @@ export default function SiteHeader() {
           <span className="h-7 w-7 rounded-full bg-foreground text-background grid place-items-center">
             <Sparkles className="h-3.5 w-3.5" />
           </span>
-          <span className="font-display text-lg font-bold tracking-tight text-foreground">KADE</span>
+          <span className="font-display text-lg font-bold tracking-tight text-foreground">LaPoe</span>
         </Link>
         <nav className="hidden md:flex items-center gap-7 text-sm font-medium text-muted-foreground">
           <Link to="/#features" className="hover:text-foreground transition">Features</Link>

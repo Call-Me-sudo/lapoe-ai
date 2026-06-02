@@ -11,7 +11,7 @@ import { toast } from "sonner";
 const plans = [
   {
     id: "free", name: "Free", price: "$0", per: "forever",
-    desc: "Try KADE on a single small group.",
+    desc: "Try LaPoe on a single small group.",
     features: ["1 bot", "1 group", "100 messages logged", "AI replies included"],
     cta: "Start free",
   },

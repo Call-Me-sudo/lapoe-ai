@@ -10,9 +10,9 @@ const corsHeaders = {
 
 // Plan -> price configuration. Replace amounts with your actual Stripe prices.
 const PLAN_PRICES: Record<string, { name: string; amount: number }> = {
-  starter: { name: "KADE Starter", amount: 1900 },
-  pro: { name: "KADE Pro", amount: 4900 },
-  business: { name: "KADE Business", amount: 14900 },
+  starter: { name: "LaPoe Starter", amount: 1900 },
+  pro: { name: "LaPoe Pro", amount: 4900 },
+  business: { name: "LaPoe Business", amount: 14900 },
 };
 
 Deno.serve(async (req) => {

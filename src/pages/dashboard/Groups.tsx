@@ -70,7 +70,7 @@ export default function Groups() {
     <DashboardLayout>
       <PageHeader
         title="Telegram groups"
-        description="Add your bot to a Telegram group from inside Telegram. KADE detects it automatically and lists it here."
+        description="Add your bot to a Telegram group from inside Telegram. LaPoe detects it automatically and lists it here."
       />
 
       <div className="border border-primary/20 bg-primary/5 rounded-lg p-4 mb-6 flex gap-3">

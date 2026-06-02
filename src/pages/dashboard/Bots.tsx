@@ -143,7 +143,7 @@ export default function Bots() {
     <DashboardLayout>
       <PageHeader
         title="Bots"
-        description="Powered by KADE's shared AI. Configure tone & rules here, or DM your bot with /help."
+        description="Powered by LaPoe's shared AI. Configure tone & rules here, or DM your bot with /help."
         actions={
           <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) reset(); }}>
             <DialogTrigger asChild>
