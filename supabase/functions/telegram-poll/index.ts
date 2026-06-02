@@ -782,9 +782,15 @@ async function processBot(supabase: any, bot: any, deadline: number) {
       // Built-in info commands
       const text = msg.text.trim();
       if (text === "/start" || text.startsWith("/start ")) {
-        const reply = isPrivate
-          ? `👋 Hi! I'm *${bot.name}*. ${bot.personality || "Ask me anything."}\n\nIf you're my owner, send /help for the controls.`
-          : `👋 Hello everyone, I'm *${bot.name}*.`;
+        let reply: string;
+        if (isPrivate) {
+          const ownerHere = await isBotOwner(supabase, bot, msg.from?.id);
+          reply = ownerHere
+            ? `👋 Hi! I'm *${bot.name}*. ${bot.personality || "Ask me anything."}\n\nYou're my owner — send /help for the controls.`
+            : `👋 Hi! I'm *${bot.name}*. ${bot.personality || "Ask me anything."}\n\nI'm a private bot managed by my owner. Want one of your own? https://lapoe.app`;
+        } else {
+          reply = `👋 Hello everyone, I'm *${bot.name}*.`;
+        }
         await send(bot.telegram_bot_token, msg.chat.id, reply, msg.message_id);
         processed++; continue;
       }
