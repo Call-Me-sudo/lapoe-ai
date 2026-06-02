@@ -12,7 +12,7 @@ const corsHeaders = {
 const MAX_RUNTIME_MS = 50_000;
 const LOVABLE_AI_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
 const EMBED_URL = "https://ai.gateway.lovable.dev/v1/embeddings";
-const DEFAULT_MODEL = "google/gemini-3-flash-preview";
+const DEFAULT_MODEL = "google/gemini-3.5-flash";
 const EMBED_MODEL = "google/text-embedding-004";
 
 // ---------- In-memory rate limiting + backoff ----------
