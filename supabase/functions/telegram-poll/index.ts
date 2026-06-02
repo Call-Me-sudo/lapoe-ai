@@ -232,6 +232,7 @@ Reply rules:
 async function askAI(system: string, userText: string): Promise<string> {
   const apiKey = Deno.env.get("LOVABLE_API_KEY");
   if (!apiKey) throw new Error("LOVABLE_API_KEY not configured");
+  if (aiBackoffUntil.t > Date.now()) throw new Error("AI backoff active");
   const res = await fetch(LOVABLE_AI_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
@@ -243,8 +244,17 @@ async function askAI(system: string, userText: string): Promise<string> {
       ],
     }),
   });
-  if (res.status === 429) throw new Error("AI rate limit");
-  if (res.status === 402) throw new Error("AI credits exhausted");
+  if (res.status === 429) {
+    aiBackoffUntil.t = Date.now() + 30_000;
+    throw new Error("AI rate limit");
+  }
+  if (res.status === 402) {
+    aiBackoffUntil.t = Date.now() + 60_000;
+    throw new Error("AI credits exhausted");
+  }
+  if (res.status >= 500) {
+    aiBackoffUntil.t = Date.now() + 10_000;
+  }
   const data = await res.json();
   if (!res.ok) throw new Error(data?.error?.message || "Lovable AI error");
   return data.choices?.[0]?.message?.content?.trim() || "";
