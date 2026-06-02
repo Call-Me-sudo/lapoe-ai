@@ -764,7 +764,10 @@ async function processBot(supabase: any, bot: any, deadline: number) {
         ]);
 
         const system = buildSystemPrompt(bot, group, knowledgeResult, kExists);
-        const reply = await askAI(system, cleanText);
+        const rawReply = await askAI(system, cleanText);
+        const allowedCtx = [knowledgeResult, bot.house_rules, bot.default_instructions, bot.personality]
+          .filter(Boolean).join("\n");
+        const reply = sanitizeReply(rawReply, allowedCtx);
 
         if (reply) {
           // Send the reply first, log after — don't make the user wait for the DB write.
