@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import SEO from "@/components/SEO";
 import SiteFooter from "@/components/SiteFooter";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -336,6 +337,12 @@ export default function Docs() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO
+        title="Documentation — LaPoe Telegram Bot Platform"
+        description="Learn how to build, train, moderate, and deploy AI Telegram bots with LaPoe. Setup guides, knowledge base, moderation, billing, and API."
+        path="/docs"
+        keywords="LaPoe docs, Telegram bot documentation, how to build Telegram bot, AI bot setup, knowledge base, moderation"
+      />
       {/* Clean top bar instead of full SiteHeader */}
       <header className="sticky top-0 z-50 bg-background/80 backdrop-blur border-b">
         <div className="container max-w-6xl flex items-center justify-between h-14">

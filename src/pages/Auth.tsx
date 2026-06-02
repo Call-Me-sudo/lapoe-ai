@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import SEO from "@/components/SEO";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
@@ -77,6 +78,12 @@ export default function Auth() {
 
   return (
     <div className="min-h-screen bg-background grid place-items-center px-4 py-10">
+      <SEO
+        title="Sign in — LaPoe"
+        description="Sign in or create your LaPoe account to build AI Telegram bots."
+        path="/auth"
+        noindex
+      />
       <div className="w-full max-w-md">
         <Link to="/" className="flex items-center justify-center gap-2 mb-6">
           <img src="/bot-icon.png" alt="LaPoe" className="h-9 w-9 rounded-full object-cover" />
