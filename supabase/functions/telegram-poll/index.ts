@@ -391,15 +391,27 @@ async function checkFlood(supabase: any, botId: string, telegramUser: string, se
 }
 
 async function checkSpam(supabase: any, botId: string, telegramUser: string, content: string): Promise<boolean> {
+  // Only flag actual repetition: ignore short messages (greetings like "hi", "ok"),
+  // and require 2+ identical PRIOR messages within the last 60s (the current one is
+  // already logged as inbound before this check runs, so we skip the most recent row).
+  const trimmed = (content || "").trim();
+  if (trimmed.length < 12) return false;
+
+  const sinceIso = new Date(Date.now() - 60_000).toISOString();
   const { data } = await supabase
     .from("bot_messages")
-    .select("content")
+    .select("content,created_at")
     .eq("bot_id", botId)
     .eq("telegram_user", telegramUser)
     .eq("direction", "inbound")
+    .gte("created_at", sinceIso)
     .order("created_at", { ascending: false })
-    .limit(1);
-  return data?.[0]?.content === content;
+    .limit(5);
+
+  // Drop the just-inserted current message, then count prior identical ones.
+  const prior = (data || []).slice(1);
+  const identical = prior.filter((r: any) => (r.content || "").trim() === trimmed).length;
+  return identical >= 2;
 }
 
 async function ensureGroup(supabase: any, bot: any, msg: any) {
