@@ -15,6 +15,47 @@ const EMBED_URL = "https://ai.gateway.lovable.dev/v1/embeddings";
 const DEFAULT_MODEL = "google/gemini-3-flash-preview";
 const EMBED_MODEL = "google/text-embedding-004";
 
+// ---------- In-memory rate limiting + backoff ----------
+// Lives per warm edge instance. Resets on cold start; not shared across instances.
+// Token-bucket: refill `rate` tokens per second, capacity = `burst`.
+type Bucket = { tokens: number; updated: number };
+const userBuckets = new Map<string, Bucket>();
+const groupBuckets = new Map<string, Bucket>();
+const chatCooldown = new Map<string, number>(); // key -> epoch ms until silent
+const aiBackoffUntil = { t: 0 };                // global AI backoff after 429 / credits
+
+function takeToken(map: Map<string, Bucket>, key: string, rate: number, burst: number): boolean {
+  const now = Date.now();
+  const b = map.get(key) ?? { tokens: burst, updated: now };
+  const elapsed = (now - b.updated) / 1000;
+  b.tokens = Math.min(burst, b.tokens + elapsed * rate);
+  b.updated = now;
+  if (b.tokens >= 1) {
+    b.tokens -= 1;
+    map.set(key, b);
+    return true;
+  }
+  map.set(key, b);
+  return false;
+}
+
+function inCooldown(key: string): boolean {
+  const until = chatCooldown.get(key) ?? 0;
+  if (until > Date.now()) return true;
+  if (until) chatCooldown.delete(key);
+  return false;
+}
+function setCooldown(key: string, ms: number) {
+  chatCooldown.set(key, Date.now() + ms);
+}
+function gcBuckets() {
+  const now = Date.now();
+  const stale = 10 * 60_000;
+  for (const [k, b] of userBuckets) if (now - b.updated > stale) userBuckets.delete(k);
+  for (const [k, b] of groupBuckets) if (now - b.updated > stale) groupBuckets.delete(k);
+  for (const [k, t] of chatCooldown) if (t < now) chatCooldown.delete(k);
+}
+
 const TONES: Record<string, string> = {
   friendly: "Warm, casual, like a helpful community member. Contractions OK. Short sentences. No corporate fluff.",
   professional: "Clear, courteous, business-appropriate. No emoji unless the user uses them first.",
@@ -191,6 +232,7 @@ Reply rules:
 async function askAI(system: string, userText: string): Promise<string> {
   const apiKey = Deno.env.get("LOVABLE_API_KEY");
   if (!apiKey) throw new Error("LOVABLE_API_KEY not configured");
+  if (aiBackoffUntil.t > Date.now()) throw new Error("AI backoff active");
   const res = await fetch(LOVABLE_AI_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
@@ -202,8 +244,17 @@ async function askAI(system: string, userText: string): Promise<string> {
       ],
     }),
   });
-  if (res.status === 429) throw new Error("AI rate limit");
-  if (res.status === 402) throw new Error("AI credits exhausted");
+  if (res.status === 429) {
+    aiBackoffUntil.t = Date.now() + 30_000;
+    throw new Error("AI rate limit");
+  }
+  if (res.status === 402) {
+    aiBackoffUntil.t = Date.now() + 60_000;
+    throw new Error("AI credits exhausted");
+  }
+  if (res.status >= 500) {
+    aiBackoffUntil.t = Date.now() + 10_000;
+  }
   const data = await res.json();
   if (!res.ok) throw new Error(data?.error?.message || "Lovable AI error");
   return data.choices?.[0]?.message?.content?.trim() || "";
@@ -714,40 +765,53 @@ async function processBot(supabase: any, bot: any, deadline: number) {
         if (!shouldReply) continue;
       }
 
-      // ----- Subscription quota + per-user rate limit -----
+      // ----- Subscription quota + per-user / per-group rate limit (token-bucket, in-memory) -----
+      const chatKey = `${bot.id}:${msg.chat.id}`;
+      if (inCooldown(chatKey)) { processed++; continue; }
+
       try {
         const { data: usage } = await supabase.rpc("bot_usage_status", { _bot_id: bot.id });
         const u = Array.isArray(usage) ? usage[0] : usage;
         if (u && u.monthly_messages >= u.max_monthly_messages) {
-          // Soft-warn the user once, but don't spam the channel.
           await send(bot.telegram_bot_token, msg.chat.id,
             `🛑 Monthly message limit reached on this workspace (${u.max_monthly_messages}). Owner needs to upgrade the plan.`,
             msg.message_id);
+          setCooldown(chatKey, 5 * 60_000);
           processed++; continue;
         }
 
-        // Per-user, per-bot rate limit (last 60s).
-        const tgUser = msg.from?.username || msg.from?.first_name || String(msg.from?.id || "");
-        if (tgUser && u?.max_msgs_per_minute) {
-          const sinceIso = new Date(Date.now() - 60_000).toISOString();
-          const { count: recentCount } = await supabase
-            .from("bot_messages")
-            .select("id", { count: "exact", head: true })
-            .eq("bot_id", bot.id)
-            .eq("telegram_user", tgUser)
-            .gte("created_at", sinceIso);
-          if ((recentCount ?? 0) > u.max_msgs_per_minute) {
-            // Stay silent in groups to avoid spam; warn once in DM.
-            if (isPrivate) {
-              await send(bot.telegram_bot_token, msg.chat.id,
-                `Slow down a sec — you're sending faster than the plan allows (${u.max_msgs_per_minute}/min).`,
-                msg.message_id);
-            }
-            processed++; continue;
+        const planPerMin = Math.max(1, u?.max_msgs_per_minute || 20);
+        const userRate = planPerMin / 60;                  // tokens/sec per user
+        const userBurst = Math.min(planPerMin, 5);
+        const groupRate = (planPerMin * 2) / 60;           // group is more permissive
+        const groupBurst = Math.min(planPerMin * 2, 10);
+
+        const userId = String(msg.from?.id || msg.from?.username || "anon");
+        if (!takeToken(userBuckets, `${bot.id}:u:${userId}`, userRate, userBurst)) {
+          // Backoff this user in this chat for a few seconds
+          setCooldown(`${chatKey}:u:${userId}`, 8_000);
+          if (isPrivate) {
+            await send(bot.telegram_bot_token, msg.chat.id,
+              `Easy there — give me a sec, you're sending faster than the plan allows (${planPerMin}/min).`,
+              msg.message_id);
           }
+          processed++; continue;
+        }
+        if (inCooldown(`${chatKey}:u:${userId}`)) { processed++; continue; }
+
+        if (isGroup && !takeToken(groupBuckets, `${bot.id}:g:${msg.chat.id}`, groupRate, groupBurst)) {
+          // Whole group is flooding — silence the bot briefly to let things cool.
+          setCooldown(chatKey, 15_000);
+          processed++; continue;
         }
       } catch (e) {
         console.error("quota check failed:", (e as Error).message);
+      }
+
+      // Skip AI calls if we're in a global AI backoff window.
+      if (aiBackoffUntil.t > Date.now()) {
+        setCooldown(chatKey, Math.min(15_000, aiBackoffUntil.t - Date.now()));
+        processed++; continue;
       }
 
       try {
@@ -791,6 +855,7 @@ async function processBot(supabase: any, bot: any, deadline: number) {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  gcBuckets();
 
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
