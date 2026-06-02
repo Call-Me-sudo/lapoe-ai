@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, BookOpen, Trash2, RefreshCw } from "lucide-react";
+import { Plus, BookOpen, Trash2, RefreshCw, HelpCircle, Link as LinkIcon, Pin } from "lucide-react";
 import { toast } from "sonner";
 
 export default function Knowledge() {
@@ -119,9 +119,45 @@ export default function Knowledge() {
       />
 
       {items.length === 0 ? (
-        <div className="border border-dashed border-border rounded-lg p-12 text-center bg-paper-soft">
+        <div className="border border-dashed border-border rounded-lg p-8 sm:p-12 text-center bg-paper-soft">
           <BookOpen className="h-8 w-8 text-ink-soft mx-auto mb-3" />
-          <p className="text-ink-soft">No sources yet.</p>
+          <p className="text-ink-soft mb-1">No sources yet.</p>
+          <p className="text-xs text-ink-soft mb-5">
+            Without knowledge, your bot can only chat in persona — it will politely decline factual questions.
+          </p>
+          {bots.length === 0 ? (
+            <p className="text-xs text-ink-soft">Create a bot first to add knowledge.</p>
+          ) : (
+            <div className="grid sm:grid-cols-3 gap-2 max-w-xl mx-auto">
+              <button
+                type="button"
+                onClick={() => { setForm({ bot_id: bots[0].id, kind: "text", title: "Frequently asked questions", content: "Q: \nA: \n\nQ: \nA: ", source_url: "" }); setOpen(true); }}
+                className="rounded-lg border border-border bg-card p-3 text-left hover:shadow-card transition"
+              >
+                <HelpCircle className="h-4 w-4 text-primary mb-2" />
+                <div className="text-sm font-medium text-ink">Paste an FAQ</div>
+                <div className="text-xs text-ink-soft">Question + answer pairs.</div>
+              </button>
+              <button
+                type="button"
+                onClick={() => { setForm({ bot_id: bots[0].id, kind: "url", title: "Website", content: "", source_url: "https://" }); setOpen(true); }}
+                className="rounded-lg border border-border bg-card p-3 text-left hover:shadow-card transition"
+              >
+                <LinkIcon className="h-4 w-4 text-primary mb-2" />
+                <div className="text-sm font-medium text-ink">Add your website</div>
+                <div className="text-xs text-ink-soft">We'll index the page.</div>
+              </button>
+              <button
+                type="button"
+                onClick={() => { setForm({ bot_id: bots[0].id, kind: "text", title: "Group pinned message", content: "", source_url: "" }); setOpen(true); }}
+                className="rounded-lg border border-border bg-card p-3 text-left hover:shadow-card transition"
+              >
+                <Pin className="h-4 w-4 text-primary mb-2" />
+                <div className="text-sm font-medium text-ink">Pinned message</div>
+                <div className="text-xs text-ink-soft">Rules, intro, links.</div>
+              </button>
+            </div>
+          )}
         </div>
       ) : (
         <div className="grid gap-3">
