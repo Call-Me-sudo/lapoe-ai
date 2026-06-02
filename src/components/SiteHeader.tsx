@@ -17,6 +17,7 @@ export default function SiteHeader() {
           <Link to="/#features" className="hover:text-foreground transition">Features</Link>
           <Link to="/#how" className="hover:text-foreground transition">How it works</Link>
           <Link to="/pricing" className="hover:text-foreground transition">Pricing</Link>
+          <Link to="/docs" className="hover:text-foreground transition">Docs</Link>
         </nav>
         <div className="flex items-center gap-2">
           {user ? (
