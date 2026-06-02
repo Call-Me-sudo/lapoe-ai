@@ -480,6 +480,174 @@ export type Database = {
         }
         Relationships: []
       }
+      system_bot_filters: {
+        Row: {
+          chat_id: number
+          created_at: string
+          created_by: number | null
+          id: string
+          keyword: string
+          reply: string
+        }
+        Insert: {
+          chat_id: number
+          created_at?: string
+          created_by?: number | null
+          id?: string
+          keyword: string
+          reply: string
+        }
+        Update: {
+          chat_id?: number
+          created_at?: string
+          created_by?: number | null
+          id?: string
+          keyword?: string
+          reply?: string
+        }
+        Relationships: []
+      }
+      system_bot_flood: {
+        Row: {
+          chat_id: number
+          count: number
+          user_id: number
+          window_start: string
+        }
+        Insert: {
+          chat_id: number
+          count?: number
+          user_id: number
+          window_start?: string
+        }
+        Update: {
+          chat_id?: number
+          count?: number
+          user_id?: number
+          window_start?: string
+        }
+        Relationships: []
+      }
+      system_bot_groups: {
+        Row: {
+          added_by_tg: number | null
+          anti_flood_enabled: boolean
+          banned_words: string[]
+          captcha_enabled: boolean
+          chat_id: number
+          created_at: string
+          flood_limit: number
+          goodbye_message: string | null
+          is_active: boolean
+          language: string
+          moderation_enabled: boolean
+          rules: string | null
+          title: string | null
+          type: string | null
+          updated_at: string
+          warn_limit: number
+          welcome_message: string | null
+        }
+        Insert: {
+          added_by_tg?: number | null
+          anti_flood_enabled?: boolean
+          banned_words?: string[]
+          captcha_enabled?: boolean
+          chat_id: number
+          created_at?: string
+          flood_limit?: number
+          goodbye_message?: string | null
+          is_active?: boolean
+          language?: string
+          moderation_enabled?: boolean
+          rules?: string | null
+          title?: string | null
+          type?: string | null
+          updated_at?: string
+          warn_limit?: number
+          welcome_message?: string | null
+        }
+        Update: {
+          added_by_tg?: number | null
+          anti_flood_enabled?: boolean
+          banned_words?: string[]
+          captcha_enabled?: boolean
+          chat_id?: number
+          created_at?: string
+          flood_limit?: number
+          goodbye_message?: string | null
+          is_active?: boolean
+          language?: string
+          moderation_enabled?: boolean
+          rules?: string | null
+          title?: string | null
+          type?: string | null
+          updated_at?: string
+          warn_limit?: number
+          welcome_message?: string | null
+        }
+        Relationships: []
+      }
+      system_bot_mod_log: {
+        Row: {
+          action: string
+          chat_id: number
+          created_at: string
+          id: string
+          performed_by: number | null
+          reason: string | null
+          target_user_id: number | null
+          target_username: string | null
+        }
+        Insert: {
+          action: string
+          chat_id: number
+          created_at?: string
+          id?: string
+          performed_by?: number | null
+          reason?: string | null
+          target_user_id?: number | null
+          target_username?: string | null
+        }
+        Update: {
+          action?: string
+          chat_id?: number
+          created_at?: string
+          id?: string
+          performed_by?: number | null
+          reason?: string | null
+          target_user_id?: number | null
+          target_username?: string | null
+        }
+        Relationships: []
+      }
+      system_bot_notes: {
+        Row: {
+          chat_id: number
+          content: string
+          created_at: string
+          created_by: number | null
+          id: string
+          name: string
+        }
+        Insert: {
+          chat_id: number
+          content: string
+          created_at?: string
+          created_by?: number | null
+          id?: string
+          name: string
+        }
+        Update: {
+          chat_id?: number
+          content?: string
+          created_at?: string
+          created_by?: number | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       system_bot_state: {
         Row: {
           id: number
@@ -495,6 +663,36 @@ export type Database = {
           id?: number
           update_offset?: number
           updated_at?: string
+        }
+        Relationships: []
+      }
+      system_bot_warnings: {
+        Row: {
+          chat_id: number
+          created_at: string
+          id: string
+          issued_by: number | null
+          reason: string | null
+          user_id: number
+          username: string | null
+        }
+        Insert: {
+          chat_id: number
+          created_at?: string
+          id?: string
+          issued_by?: number | null
+          reason?: string | null
+          user_id: number
+          username?: string | null
+        }
+        Update: {
+          chat_id?: number
+          created_at?: string
+          id?: string
+          issued_by?: number | null
+          reason?: string | null
+          user_id?: number
+          username?: string | null
         }
         Relationships: []
       }
