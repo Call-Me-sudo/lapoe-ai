@@ -260,8 +260,8 @@ export default function Bots() {
           {bots.map((b) => {
             const connected = !!b.telegram_bot_token;
             return (
-              <div key={b.id} className="border border-border rounded-lg p-4 bg-card flex items-start justify-between gap-3">
-                <div className="flex items-start gap-3 min-w-0 flex-1">
+              <div key={b.id} className="border border-border rounded-lg p-4 bg-card">
+                <div className="flex items-start gap-3">
                   <div className="h-9 w-9 rounded-md bg-primary/10 text-primary grid place-items-center shrink-0">
                     <BotIcon className="h-4 w-4" />
                   </div>
@@ -270,29 +270,33 @@ export default function Bots() {
                       <h3 className="text-sm font-semibold text-ink truncate">{b.name}</h3>
                       <Badge variant={b.status === "active" ? "default" : "secondary"} className="capitalize text-[10px]">{b.status}</Badge>
                     </div>
-                    <div className="text-xs text-muted-foreground mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5">
+                    <div className="text-xs text-muted-foreground mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
                       {b.bot_username ? (
                         <a href={`https://t.me/${b.bot_username}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 hover:text-primary">
                           <AtSign className="h-3 w-3" />{b.bot_username}
                         </a>
+                      ) : connected ? (
+                        <span className="inline-flex items-center gap-1" title="Waiting for Telegram to confirm the bot — usually takes a few seconds after first activation.">
+                          <AlertCircle className="h-3 w-3 text-amber-600" /> Linking to Telegram…
+                        </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1">
-                          <AlertCircle className="h-3 w-3 text-amber-600" /> not connected
+                        <span className="inline-flex items-center gap-1" title="Add a BotFather token to bring this bot online.">
+                          <AlertCircle className="h-3 w-3 text-amber-600" /> No token yet
                         </span>
                       )}
                       <span className="inline-flex items-center gap-1">
                         {connected
                           ? <CheckCircle2 className="h-3 w-3 text-emerald-600" />
                           : <AlertCircle className="h-3 w-3 text-amber-600" />}
-                        {connected ? "Token ok" : "Token missing"}
+                        {connected ? "Token saved" : "Token missing"}
                       </span>
                       <span className="capitalize">{b.tone || "friendly"}</span>
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-1 shrink-0">
+                <div className="mt-3 flex flex-wrap items-center gap-1.5 sm:justify-end">
                   <Button variant="outline" size="sm" onClick={() => toggleStatus(b)}>{b.status === "active" ? "Pause" : "Activate"}</Button>
-                  <Button variant="ghost" size="icon" onClick={() => startEdit(b)} aria-label="Edit bot"><Edit3 className="h-4 w-4" /></Button>
+                  <Button variant="ghost" size="sm" onClick={() => startEdit(b)} className="gap-1"><Edit3 className="h-4 w-4" /> Edit</Button>
                   <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard/groups')} className="gap-1"><Settings2 className="h-4 w-4" /> Groups</Button>
                   <Button variant="ghost" size="icon" onClick={() => setDeleteBot(b)} aria-label="Delete bot"><Trash2 className="h-4 w-4 text-destructive" /></Button>
                 </div>
@@ -300,6 +304,7 @@ export default function Bots() {
             );
           })}
         </div>
+
       )}
 
       <Dialog open={!!deleteBot} onOpenChange={(o) => { if (!o) setDeleteBot(null); }}>
