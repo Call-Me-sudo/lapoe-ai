@@ -41,11 +41,6 @@ export default function Groups() {
     return () => clearInterval(id);
   }, [user]);
 
-  const remove = async (id: string) => {
-    if (!confirm("Forget this group? KADE will pick it back up next time the bot sees a message there.")) return;
-    await supabase.from("telegram_groups").delete().eq("id", id);
-    load();
-  };
 
   const startEdit = (g: any) => {
     setEditing(g);
