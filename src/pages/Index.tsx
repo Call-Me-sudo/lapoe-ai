@@ -4,14 +4,14 @@ import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import ActionRow from "@/components/ActionRow";
 import IconTile from "@/components/IconTile";
-import { MessagesSquare, Shield, BookOpen, Users, Sparkles, Settings2, ArrowUpRight, QrCode } from "lucide-react";
+import { MessagesSquare, Shield, BookOpen, Users, Brain, Settings2, ArrowUpRight, QrCode } from "lucide-react";
 
 const features = [
   { icon: MessagesSquare, tone: "blue" as const, title: "Conversations, not commands", body: "Reads context, replies like a thoughtful teammate, knows when to stay quiet." },
   { icon: BookOpen, tone: "green" as const, title: "Reads your blogs & docs", body: "Point it at your sources. It cites them when it answers." },
   { icon: Shield, tone: "pink" as const, title: "Group administration", body: "Add, remove, mute, warn, pin, schedule — enforce rules everywhere." },
   { icon: Users, tone: "violet" as const, title: "Multi-bot, multi-group", body: "One workspace for every community you run." },
-  { icon: Sparkles, tone: "amber" as const, title: "AI included, no setup", body: "Powerful models built in — nothing to configure, just turn it on." },
+  { icon: Brain, tone: "amber" as const, title: "AI included, no setup", body: "Powerful models built in — nothing to configure, just turn it on." },
   { icon: Settings2, tone: "gray" as const, title: "Live admin desk", body: "Watch replies in real time. Step in, take over, hand back." },
 ];
 

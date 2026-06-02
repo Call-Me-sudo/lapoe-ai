@@ -6,7 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import {
   Bot, Users, MessageSquare, BookOpen, Inbox, Ticket, Activity,
   CheckCircle2, AlertTriangle, Link2, ChevronRight, BarChart3, TrendingUp,
-  Sparkles, ArrowUpRight, Zap, HelpCircle,
+  Library, ArrowUpRight, Zap, HelpCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -106,7 +106,7 @@ export default function Overview() {
     <DashboardLayout>
       {/* Top banner */}
       <div className="mb-5 flex items-center gap-3 rounded-lg border border-primary/20 bg-primary/5 px-4 py-2.5">
-        <Sparkles className="h-4 w-4 text-primary shrink-0" />
+        <Library className="h-4 w-4 text-primary shrink-0" />
         <p className="text-sm text-ink flex-1">
           KADE can answer in 40+ languages and learn from your blogs. Add more knowledge to boost reply quality.
         </p>
@@ -196,7 +196,7 @@ export default function Overview() {
             <h3 className="text-sm font-semibold text-ink mb-3">Tips & updates</h3>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {[
-                { icon: Sparkles, title: "Train KADE on your blog", body: "Paste a URL — KADE will index and cite it.", to: "/dashboard/knowledge", cta: "Add a source" },
+                { icon: Library, title: "Train KADE on your blog", body: "Paste a URL — KADE will index and cite it.", to: "/dashboard/knowledge", cta: "Add a source" },
                 { icon: Activity, title: "See replies in real time", body: "Every reply is logged with full context.", to: "/dashboard/messages", cta: "Open inbox" },
                 { icon: TrendingUp, title: "Scale your community", body: "Upgrade to lift bot and message limits.", to: "/pricing", cta: "See plans" },
               ].map((c) => (
