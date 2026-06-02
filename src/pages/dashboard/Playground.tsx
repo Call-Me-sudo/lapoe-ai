@@ -83,16 +83,14 @@ export default function Playground() {
 
       {bots.length === 0 ? (
         <div className="rounded-3xl bg-card shadow-card p-12 text-center">
-          <BotIcon className="h-8 w-8 text-muted-foreground mx-auto mb-3" />
+          <img src="/bot-icon.png" alt="LaPoe" className="h-10 w-10 rounded-full object-cover mx-auto mb-3" />
           <p className="text-muted-foreground">Create a bot first, then come back to preview it here.</p>
         </div>
       ) : (
         <div className="rounded-3xl bg-card shadow-card overflow-hidden flex flex-col h-[calc(100vh-220px)] min-h-[480px]">
           {/* Bot picker */}
           <div className="px-4 md:px-6 py-4 flex items-center gap-3">
-            <div className="h-10 w-10 rounded-2xl bg-muted text-ink grid place-items-center shrink-0">
-              <BotIcon className="h-5 w-5" />
-            </div>
+            <img src="/bot-icon.png" alt="LaPoe" className="h-10 w-10 rounded-2xl object-cover shrink-0" />
             <div className="min-w-0 flex-1">
               <Select value={botId} onValueChange={setBotId}>
                 <SelectTrigger className="border-0 shadow-none bg-transparent px-0 h-auto font-semibold text-base text-foreground focus:ring-0">
