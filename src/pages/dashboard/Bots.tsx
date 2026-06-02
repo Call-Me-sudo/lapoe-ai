@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
 import PageHeader from "@/components/dashboard/PageHeader";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Bot as BotIcon, Trash2, Edit3, ShieldAlert, CheckCircle2, AlertCircle, AtSign } from "lucide-react";
+import { Plus, Bot as BotIcon, Trash2, Edit3, ShieldAlert, CheckCircle2, AlertCircle, AtSign, Settings2 } from "lucide-react";
 import { toast } from "sonner";
 
 type Bot = {
@@ -49,6 +50,7 @@ const TONES = ["friendly", "professional", "witty", "strict", "hype"];
 
 export default function Bots() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [bots, setBots] = useState<Bot[]>([]);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Bot | null>(null);
@@ -189,7 +191,7 @@ export default function Bots() {
                 <div className="rounded-md border border-border bg-paper-soft p-3 text-xs text-ink-soft flex items-start gap-2">
                   <ShieldAlert className="h-4 w-4 text-primary shrink-0 mt-0.5" />
                   <div>
-                    <span className="text-ink font-medium">Smart defaults applied:</span> anti-spam & anti-flood on, moderation on, replies in the user's language. Per-group rules, banned words and welcome message live in <strong>Groups → Configure</strong>.
+                    <span className="text-ink font-medium">Smart defaults applied:</span> anti-spam & anti-flood on, moderation on, replies in the user's language. Per-group rules, banned words and welcome message live in <button type="button" onClick={() => { setOpen(false); navigate('/dashboard/groups'); }} className="font-semibold text-primary underline hover:text-primary/80">Groups → Configure</button>.
                   </div>
                 </div>
               </div>
@@ -291,6 +293,7 @@ export default function Bots() {
                 <div className="flex items-center gap-1 shrink-0">
                   <Button variant="outline" size="sm" onClick={() => toggleStatus(b)}>{b.status === "active" ? "Pause" : "Activate"}</Button>
                   <Button variant="ghost" size="icon" onClick={() => startEdit(b)} aria-label="Edit bot"><Edit3 className="h-4 w-4" /></Button>
+                  <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard/groups')} className="gap-1"><Settings2 className="h-4 w-4" /> Groups</Button>
                   <Button variant="ghost" size="icon" onClick={() => setDeleteBot(b)} aria-label="Delete bot"><Trash2 className="h-4 w-4 text-destructive" /></Button>
                 </div>
               </div>
