@@ -71,7 +71,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           <Menu className="h-5 w-5" />
         </button>
         <div className="flex items-center gap-2">
-          <Shield className="h-4 w-4 text-foreground" />
+          <img src="/bot-icon.png" alt="LaPoe" className="h-6 w-6 rounded-full object-cover" />
           <span className="font-display text-base font-bold text-foreground">LaPoe Admin</span>
         </div>
         <div className="w-10" />
