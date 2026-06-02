@@ -2,7 +2,7 @@ import { Link, NavLink, useNavigate } from "react-router-dom";
 import { ReactNode, useState } from "react";
 import {
   Shield, LayoutDashboard, Users, Bot as BotIcon, MessageSquare,
-  Activity, AlertTriangle, LogOut, Menu, X, Megaphone, Sparkles,
+  Activity, AlertTriangle, LogOut, Menu, X, Megaphone, Crown,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
