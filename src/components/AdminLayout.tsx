@@ -29,9 +29,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       <div className="p-5">
         <div className="flex items-center justify-between">
           <Link to="/admin" className="flex items-center gap-2" onClick={() => setMobileOpen(false)}>
-            <span className="h-8 w-8 rounded-full bg-foreground text-background grid place-items-center">
-              <Shield className="h-4 w-4" />
-            </span>
+            <img src="/bot-icon.png" alt="LaPoe" className="h-8 w-8 rounded-full object-cover" />
             <div>
               <div className="font-display text-lg font-bold text-foreground leading-none">LaPoe</div>
               <div className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground mt-1">Control room</div>
