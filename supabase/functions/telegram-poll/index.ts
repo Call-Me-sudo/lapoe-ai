@@ -765,40 +765,53 @@ async function processBot(supabase: any, bot: any, deadline: number) {
         if (!shouldReply) continue;
       }
 
-      // ----- Subscription quota + per-user rate limit -----
+      // ----- Subscription quota + per-user / per-group rate limit (token-bucket, in-memory) -----
+      const chatKey = `${bot.id}:${msg.chat.id}`;
+      if (inCooldown(chatKey)) { processed++; continue; }
+
       try {
         const { data: usage } = await supabase.rpc("bot_usage_status", { _bot_id: bot.id });
         const u = Array.isArray(usage) ? usage[0] : usage;
         if (u && u.monthly_messages >= u.max_monthly_messages) {
-          // Soft-warn the user once, but don't spam the channel.
           await send(bot.telegram_bot_token, msg.chat.id,
             `🛑 Monthly message limit reached on this workspace (${u.max_monthly_messages}). Owner needs to upgrade the plan.`,
             msg.message_id);
+          setCooldown(chatKey, 5 * 60_000);
           processed++; continue;
         }
 
-        // Per-user, per-bot rate limit (last 60s).
-        const tgUser = msg.from?.username || msg.from?.first_name || String(msg.from?.id || "");
-        if (tgUser && u?.max_msgs_per_minute) {
-          const sinceIso = new Date(Date.now() - 60_000).toISOString();
-          const { count: recentCount } = await supabase
-            .from("bot_messages")
-            .select("id", { count: "exact", head: true })
-            .eq("bot_id", bot.id)
-            .eq("telegram_user", tgUser)
-            .gte("created_at", sinceIso);
-          if ((recentCount ?? 0) > u.max_msgs_per_minute) {
-            // Stay silent in groups to avoid spam; warn once in DM.
-            if (isPrivate) {
-              await send(bot.telegram_bot_token, msg.chat.id,
-                `Slow down a sec — you're sending faster than the plan allows (${u.max_msgs_per_minute}/min).`,
-                msg.message_id);
-            }
-            processed++; continue;
+        const planPerMin = Math.max(1, u?.max_msgs_per_minute || 20);
+        const userRate = planPerMin / 60;                  // tokens/sec per user
+        const userBurst = Math.min(planPerMin, 5);
+        const groupRate = (planPerMin * 2) / 60;           // group is more permissive
+        const groupBurst = Math.min(planPerMin * 2, 10);
+
+        const userId = String(msg.from?.id || msg.from?.username || "anon");
+        if (!takeToken(userBuckets, `${bot.id}:u:${userId}`, userRate, userBurst)) {
+          // Backoff this user in this chat for a few seconds
+          setCooldown(`${chatKey}:u:${userId}`, 8_000);
+          if (isPrivate) {
+            await send(bot.telegram_bot_token, msg.chat.id,
+              `Easy there — give me a sec, you're sending faster than the plan allows (${planPerMin}/min).`,
+              msg.message_id);
           }
+          processed++; continue;
+        }
+        if (inCooldown(`${chatKey}:u:${userId}`)) { processed++; continue; }
+
+        if (isGroup && !takeToken(groupBuckets, `${bot.id}:g:${msg.chat.id}`, groupRate, groupBurst)) {
+          // Whole group is flooding — silence the bot briefly to let things cool.
+          setCooldown(chatKey, 15_000);
+          processed++; continue;
         }
       } catch (e) {
         console.error("quota check failed:", (e as Error).message);
+      }
+
+      // Skip AI calls if we're in a global AI backoff window.
+      if (aiBackoffUntil.t > Date.now()) {
+        setCooldown(chatKey, Math.min(15_000, aiBackoffUntil.t - Date.now()));
+        processed++; continue;
       }
 
       try {
