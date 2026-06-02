@@ -19,6 +19,21 @@ const features = [
 export default function Index() {
   return (
     <div className="min-h-screen bg-background">
+      <SEO
+        title="LaPoe — Intelligent Telegram Assistant & Group Bot"
+        description="LaPoe builds AI Telegram bots that moderate groups, answer from your knowledge base, and chat in your brand's tone. Free to start."
+        path="/"
+        keywords="Telegram bot, AI Telegram assistant, group moderation bot, Telegram chatbot, knowledge base bot, no-code Telegram bot, community management, LaPoe"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "SoftwareApplication",
+          name: "LaPoe",
+          applicationCategory: "BusinessApplication",
+          operatingSystem: "Web, Telegram",
+          url: "https://lapoe-ai.vercel.app/",
+          offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+        }}
+      />
       <SiteHeader />
 
       {/* HERO */}
