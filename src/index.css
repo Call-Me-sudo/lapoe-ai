@@ -18,25 +18,25 @@
     --popover: 0 0% 100%;
     --popover-foreground: 220 15% 8%;
 
-    /* Primary = graphite ink. Minimal, Apple-like. No blue. */
-    --primary: 220 15% 12%;
+    /* Primary = balanced green. Fresh accent against dark ink surfaces. */
+    --primary: 152 55% 36%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 220 14% 94%;
-    --secondary-foreground: 220 15% 8%;
+    --secondary: 150 30% 94%;
+    --secondary-foreground: 152 45% 18%;
 
     --muted: 220 14% 94%;
     --muted-foreground: 220 9% 46%;
 
-    --accent: 220 14% 92%;
-    --accent-foreground: 220 15% 8%;
+    --accent: 150 45% 90%;
+    --accent-foreground: 152 50% 22%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
     --border: 220 13% 91%;
     --input: 220 13% 91%;
-    --ring: 220 15% 8%;
+    --ring: 152 55% 36%;
 
     --radius: 1rem;
 
@@ -46,6 +46,8 @@
     --paper: 0 0% 100%;          /* card surface */
     --paper-soft: 220 14% 96%;   /* canvas */
     --gold: 36 65% 52%;
+    --brand-green: 152 55% 36%;
+    --brand-green-soft: 150 45% 90%;
 
     /* Tinted icon-tile palette (mobile-fintech) */
     --tile-blue: 220 14% 94%;
@@ -85,19 +87,19 @@
     --card-foreground: 0 0% 98%;
     --popover: 220 15% 10%;
     --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 220 15% 8%;
+    --primary: 152 60% 48%;
+    --primary-foreground: 220 15% 6%;
     --secondary: 220 15% 14%;
     --secondary-foreground: 0 0% 98%;
     --muted: 220 15% 14%;
     --muted-foreground: 220 9% 65%;
-    --accent: 220 15% 18%;
-    --accent-foreground: 0 0% 98%;
+    --accent: 152 45% 20%;
+    --accent-foreground: 150 60% 88%;
     --destructive: 0 65% 55%;
     --destructive-foreground: 0 0% 98%;
     --border: 220 15% 18%;
     --input: 220 15% 18%;
-    --ring: 0 0% 98%;
+    --ring: 152 60% 48%;
     --ink: 0 0% 98%;
     --ink-soft: 220 9% 65%;
     --paper: 220 15% 10%;
