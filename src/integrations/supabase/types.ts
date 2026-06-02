@@ -14,6 +14,44 @@ export type Database = {
   }
   public: {
     Tables: {
+      bot_feedback: {
+        Row: {
+          bot_id: string | null
+          created_at: string
+          id: string
+          message: string
+          source: string
+          telegram_user_id: number | null
+          telegram_username: string | null
+        }
+        Insert: {
+          bot_id?: string | null
+          created_at?: string
+          id?: string
+          message: string
+          source?: string
+          telegram_user_id?: number | null
+          telegram_username?: string | null
+        }
+        Update: {
+          bot_id?: string | null
+          created_at?: string
+          id?: string
+          message?: string
+          source?: string
+          telegram_user_id?: number | null
+          telegram_username?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bot_feedback_bot_id_fkey"
+            columns: ["bot_id"]
+            isOneToOne: false
+            referencedRelation: "bots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bot_messages: {
         Row: {
           bot_id: string
