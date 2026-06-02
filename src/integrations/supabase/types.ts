@@ -622,6 +622,54 @@ export type Database = {
           },
         ]
       }
+      unanswered_questions: {
+        Row: {
+          answer: string | null
+          answered_at: string | null
+          ask_count: number
+          asker: string | null
+          bot_id: string
+          created_at: string
+          group_id: string | null
+          id: string
+          normalized_question: string
+          owner_id: string
+          question: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          answer?: string | null
+          answered_at?: string | null
+          ask_count?: number
+          asker?: string | null
+          bot_id: string
+          created_at?: string
+          group_id?: string | null
+          id?: string
+          normalized_question: string
+          owner_id: string
+          question: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          answer?: string | null
+          answered_at?: string | null
+          ask_count?: number
+          asker?: string | null
+          bot_id?: string
+          created_at?: string
+          group_id?: string | null
+          id?: string
+          normalized_question?: string
+          owner_id?: string
+          question?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
