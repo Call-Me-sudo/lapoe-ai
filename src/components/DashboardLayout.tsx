@@ -2,7 +2,7 @@ import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { ReactNode, useState } from "react";
 import {
   LayoutDashboard, Bot, Users, BookOpen, MessageSquare, CreditCard, Settings,
-  LogOut, Menu, X, Bell, Sparkles, HelpCircle, QrCode, PlayCircle, Inbox as InboxIcon,
+  LogOut, Menu, X, Bell, HelpCircle, QrCode, PlayCircle, Inbox as InboxIcon,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
