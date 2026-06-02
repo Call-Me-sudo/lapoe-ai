@@ -50,7 +50,7 @@ Deno.serve(async (req) => {
     }
     if (!code) throw new Error("Could not generate code");
 
-    return new Response(JSON.stringify({ code, expires_in_minutes: 15, bot_username: "aiKADE_Bot" }), {
+    return new Response(JSON.stringify({ code, expires_in_minutes: 15, bot_username: "LaPoe_bot" }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {

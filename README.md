@@ -110,4 +110,4 @@ MIT — free to use, fork, and build on.
 
 ---
 
-Your community deserves a calm, well-read desk clerk. [Try LaPoe free →](https://kade-ai.vercel.app)
+Your community deserves a calm, well-read desk clerk. [Try LaPoe free →](https://lapoe-ai.vercel.app)
