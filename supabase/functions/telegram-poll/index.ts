@@ -709,31 +709,23 @@ async function processBot(supabase: any, bot: any, deadline: number) {
         }
       }
 
-      // Built-in info commands
+      // Built-in info commands (group only — DMs are handled by handleDmGeneral)
       const text = msg.text.trim();
-      if (text === "/start" || text.startsWith("/start ")) {
-        let reply: string;
-        if (isPrivate) {
-          const ownerHere = await isBotOwner(supabase, bot, msg.from?.id);
-          reply = ownerHere
-            ? `👋 Hi! I'm *${bot.name}*. ${bot.personality || "Ask me anything."}\n\nYou're my owner — send /help for the controls.`
-            : `👋 Hi! I'm *${bot.name}*. ${bot.personality || "Ask me anything."}\n\nI'm a private bot managed by my owner. Want one of your own? https://lapoe.app`;
-        } else {
-          reply = `👋 Hello everyone, I'm *${bot.name}*.`;
-        }
-        await send(bot.telegram_bot_token, msg.chat.id, reply, msg.message_id);
+      if (isGroup && (text === "/start" || text.startsWith("/start "))) {
+        await send(bot.telegram_bot_token, msg.chat.id, `👋 Hello everyone, I'm *${bot.name}*.`, msg.message_id);
         processed++; continue;
       }
-      if (text === "/status") {
+      if (isGroup && text === "/status") {
         await send(bot.telegram_bot_token, msg.chat.id,
           `*${bot.name}* — ${bot.status === "active" ? "🟢 active" : "🟡 paused"} · AI 🟢`, msg.message_id);
         processed++; continue;
       }
-      if (text === "/help" && !isPrivate) {
+      if (isGroup && text === "/help") {
         await send(bot.telegram_bot_token, msg.chat.id,
-          `Mention me, reply to my messages, or just say my name to chat. Admins can use /ban /kick /mute /del /pin (reply to a user's message).`, msg.message_id);
+          `Mention me, reply to my messages, or just say my name to chat. Admins can use /ban /kick /mute /del /pin (reply to a user's message). To configure me, my owner uses the LaPoe dashboard.`, msg.message_id);
         processed++; continue;
       }
+
 
       if (bot.status !== "active") continue;
 
