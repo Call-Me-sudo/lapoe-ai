@@ -440,18 +440,36 @@ Groups:
 /status — health check
 /help — this menu`;
 
-async function handleOwnerDM(supabase: any, bot: any, token: string, msg: any): Promise<boolean> {
-  // Only the bot owner (linked Telegram) can configure here.
-  const fromId = msg.from?.id;
+const OWNER_COMMANDS = new Set([
+  "/help","/settone","/setpersona","/setrules","/setwelcome","/setinstructions",
+  "/addknow","/addurl","/banword","/unbanword","/banwords","/modon","/modoff","/groups",
+]);
+
+async function isBotOwner(supabase: any, bot: any, fromId: number | undefined): Promise<boolean> {
   if (!fromId) return false;
   const { data: profile } = await supabase.from("profiles").select("id")
     .eq("telegram_user_id", fromId).eq("id", bot.owner_id).maybeSingle();
-  if (!profile) return false;
+  return !!profile;
+}
 
+async function handleOwnerDM(supabase: any, bot: any, token: string, msg: any): Promise<boolean> {
+  const fromId = msg.from?.id;
   const text = (msg.text || "").trim();
   const [cmdRaw, ...rest] = text.split(/\s+/);
-  const cmd = cmdRaw.split("@")[0].toLowerCase();
+  const cmd = (cmdRaw || "").split("@")[0].toLowerCase();
   const arg = text.slice(cmdRaw.length).trim();
+
+  const isOwner = await isBotOwner(supabase, bot, fromId);
+  if (!isOwner) {
+    // Non-owner tried a configuration command — be explicit, don't silently fall through.
+    if (OWNER_COMMANDS.has(cmd)) {
+      await send(token, msg.chat.id,
+        `🔒 Only *${bot.name}*'s owner can change my settings.\n\nWant a bot like me? Create your own at https://lapoe.app — it takes about a minute.`,
+        msg.message_id);
+      return true;
+    }
+    return false;
+  }
 
   const ack = (m: string) => send(token, msg.chat.id, m, msg.message_id);
 
@@ -764,9 +782,15 @@ async function processBot(supabase: any, bot: any, deadline: number) {
       // Built-in info commands
       const text = msg.text.trim();
       if (text === "/start" || text.startsWith("/start ")) {
-        const reply = isPrivate
-          ? `👋 Hi! I'm *${bot.name}*. ${bot.personality || "Ask me anything."}\n\nIf you're my owner, send /help for the controls.`
-          : `👋 Hello everyone, I'm *${bot.name}*.`;
+        let reply: string;
+        if (isPrivate) {
+          const ownerHere = await isBotOwner(supabase, bot, msg.from?.id);
+          reply = ownerHere
+            ? `👋 Hi! I'm *${bot.name}*. ${bot.personality || "Ask me anything."}\n\nYou're my owner — send /help for the controls.`
+            : `👋 Hi! I'm *${bot.name}*. ${bot.personality || "Ask me anything."}\n\nI'm a private bot managed by my owner. Want one of your own? https://lapoe.app`;
+        } else {
+          reply = `👋 Hello everyone, I'm *${bot.name}*.`;
+        }
         await send(bot.telegram_bot_token, msg.chat.id, reply, msg.message_id);
         processed++; continue;
       }
