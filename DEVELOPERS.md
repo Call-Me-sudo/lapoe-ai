@@ -54,7 +54,7 @@ In practice this means:
 - `supabase/functions/telegram-poll/index.ts` → `handleDmGeneral` only accepts:
   - `/start`, `/help` → friendly intro
   - `/feedback <text>` → stored in `bot_feedback`
-  - `/stars` → link to leave a review
+  - `/donate` → support the bot owner (coming soon)
 - Any legacy owner command (`/settone`, `/setrules`, `/addknow`, `/banword`, …) sent in DM is explicitly rejected with a pointer to the dashboard or `@LaPoe_bot`.
 - The bot does **not** branch its `/start` reply based on whether the sender is the owner. DMs look the same to everyone.
 
@@ -83,7 +83,7 @@ Keep this list short and product-defined. As of today:
 | `/start` | Friendly intro + pointer to `https://lapoe.app` |
 | `/help` | Same intro |
 | `/feedback <message>` | Inserts into `bot_feedback`. Owners read it in their dashboard. |
-| `/stars` | Link to the GitHub stars page |
+| `/donate` | Support the bot owner (coming soon) |
 
 Anything else in DM falls through to AI chat (with the bot's persona, knowledge, and quota), or the explicit "I don't take configuration in DMs" reply for known legacy admin commands.
 
