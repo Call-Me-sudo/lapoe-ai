@@ -209,6 +209,34 @@ async function askAI(system: string, userText: string): Promise<string> {
   return data.choices?.[0]?.message?.content?.trim() || "";
 }
 
+// Belt-and-braces: even with strict prompting, scrub fabricated URLs.
+// Strips any URL that doesn't appear verbatim in the grounded context,
+// and removes orphan "Reference:" / "Source:" / "Docs:" / "See:" lines.
+function sanitizeReply(reply: string, allowedContext: string): string {
+  if (!reply) return reply;
+  const haystack = (allowedContext || "").toLowerCase();
+  const urlRe = /\bhttps?:\/\/[^\s)\]>"']+/gi;
+
+  // 1) Strip whole lines whose only purpose is a reference label + URL.
+  let out = reply.replace(
+    /^[ \t>*_~`-]*\[?(reference|references|source|sources|docs?|documentation|see|see also|more info|read more|link|links?|url)s?\]?\s*[:：-]\s*.*$/gim,
+    "",
+  );
+
+  // 2) Remove markdown links pointing to URLs not present in the context.
+  out = out.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/gi, (_m, label, url) =>
+    haystack.includes(String(url).toLowerCase()) ? `[${label}](${url})` : label,
+  );
+
+  // 3) Strip bare URLs not present in the context.
+  out = out.replace(urlRe, (url) =>
+    haystack.includes(url.toLowerCase()) ? url : "",
+  );
+
+  // 4) Collapse blank lines created by the scrub.
+  return out.replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
+}
+
 async function getMe(token: string, bot: any, supabase: any): Promise<{ username: string | null; id: number | null }> {
   if (bot.bot_username && bot.bot_telegram_id) {
     return { username: bot.bot_username, id: Number(bot.bot_telegram_id) };
