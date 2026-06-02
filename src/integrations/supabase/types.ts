@@ -166,6 +166,7 @@ export type Database = {
           openai_api_key: string | null
           owner_id: string
           personality: string | null
+          poll_locked_until: string | null
           status: Database["public"]["Enums"]["bot_status"]
           telegram_bot_token: string | null
           tone: string | null
@@ -191,6 +192,7 @@ export type Database = {
           openai_api_key?: string | null
           owner_id: string
           personality?: string | null
+          poll_locked_until?: string | null
           status?: Database["public"]["Enums"]["bot_status"]
           telegram_bot_token?: string | null
           tone?: string | null
@@ -216,6 +218,7 @@ export type Database = {
           openai_api_key?: string | null
           owner_id?: string
           personality?: string | null
+          poll_locked_until?: string | null
           status?: Database["public"]["Enums"]["bot_status"]
           telegram_bot_token?: string | null
           tone?: string | null
