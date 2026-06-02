@@ -15,6 +15,47 @@ const EMBED_URL = "https://ai.gateway.lovable.dev/v1/embeddings";
 const DEFAULT_MODEL = "google/gemini-3-flash-preview";
 const EMBED_MODEL = "google/text-embedding-004";
 
+// ---------- In-memory rate limiting + backoff ----------
+// Lives per warm edge instance. Resets on cold start; not shared across instances.
+// Token-bucket: refill `rate` tokens per second, capacity = `burst`.
+type Bucket = { tokens: number; updated: number };
+const userBuckets = new Map<string, Bucket>();
+const groupBuckets = new Map<string, Bucket>();
+const chatCooldown = new Map<string, number>(); // key -> epoch ms until silent
+const aiBackoffUntil = { t: 0 };                // global AI backoff after 429 / credits
+
+function takeToken(map: Map<string, Bucket>, key: string, rate: number, burst: number): boolean {
+  const now = Date.now();
+  const b = map.get(key) ?? { tokens: burst, updated: now };
+  const elapsed = (now - b.updated) / 1000;
+  b.tokens = Math.min(burst, b.tokens + elapsed * rate);
+  b.updated = now;
+  if (b.tokens >= 1) {
+    b.tokens -= 1;
+    map.set(key, b);
+    return true;
+  }
+  map.set(key, b);
+  return false;
+}
+
+function inCooldown(key: string): boolean {
+  const until = chatCooldown.get(key) ?? 0;
+  if (until > Date.now()) return true;
+  if (until) chatCooldown.delete(key);
+  return false;
+}
+function setCooldown(key: string, ms: number) {
+  chatCooldown.set(key, Date.now() + ms);
+}
+function gcBuckets() {
+  const now = Date.now();
+  const stale = 10 * 60_000;
+  for (const [k, b] of userBuckets) if (now - b.updated > stale) userBuckets.delete(k);
+  for (const [k, b] of groupBuckets) if (now - b.updated > stale) groupBuckets.delete(k);
+  for (const [k, t] of chatCooldown) if (t < now) chatCooldown.delete(k);
+}
+
 const TONES: Record<string, string> = {
   friendly: "Warm, casual, like a helpful community member. Contractions OK. Short sentences. No corporate fluff.",
   professional: "Clear, courteous, business-appropriate. No emoji unless the user uses them first.",
