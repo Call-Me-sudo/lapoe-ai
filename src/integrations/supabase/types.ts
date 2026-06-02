@@ -327,6 +327,27 @@ export type Database = {
         }
         Relationships: []
       }
+      monthly_usage: {
+        Row: {
+          outbound_count: number
+          owner_id: string
+          period_start: string
+          updated_at: string
+        }
+        Insert: {
+          outbound_count?: number
+          owner_id: string
+          period_start: string
+          updated_at?: string
+        }
+        Update: {
+          outbound_count?: number
+          owner_id?: string
+          period_start?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       notification_reads: {
         Row: {
           notification_id: string
