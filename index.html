@@ -3,9 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>LaPoe — Intelligent Telegram Assistant</title>
-    <meta name="description" content="LaPoe manages your Telegram groups, learns from your knowledge sources, and replies like a thoughtful teammate. Set it up in an afternoon." />
+    <title>LaPoe — Intelligent Telegram Assistant & Group Bot</title>
+    <meta name="description" content="LaPoe builds AI Telegram bots that moderate groups, answer from your knowledge base, and chat in your brand's tone. Free to start." />
     <meta name="author" content="LaPoe" />
+    <meta name="keywords" content="Telegram bot, AI Telegram assistant, group moderation bot, Telegram chatbot, AI customer support bot, knowledge base bot, no-code Telegram bot, community management, BotFather alternative, LaPoe" />
+    <link rel="canonical" href="https://lapoe-ai.vercel.app/" />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+    <meta name="googlebot" content="index, follow" />
+    <meta name="theme-color" content="#0F172A" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -26,6 +31,44 @@
     <meta name="twitter:title" content="LaPoe — Intelligent Telegram Assistant" />
     <meta name="twitter:description" content="A communications desk that sits politely behind your community, ready to help." />
     <meta name="twitter:image" content="/kade_banner.png" />
+
+    <!-- JSON-LD: Organization + SoftwareApplication for rich results & AI answer engines -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Organization",
+          "@id": "https://lapoe-ai.vercel.app/#org",
+          "name": "LaPoe",
+          "url": "https://lapoe-ai.vercel.app",
+          "logo": "https://lapoe-ai.vercel.app/favicon.png",
+          "description": "LaPoe builds AI-powered Telegram bots for community moderation, support, and knowledge-based chat."
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://lapoe-ai.vercel.app/#site",
+          "url": "https://lapoe-ai.vercel.app",
+          "name": "LaPoe",
+          "publisher": { "@id": "https://lapoe-ai.vercel.app/#org" },
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": "https://lapoe-ai.vercel.app/docs?q={search_term_string}",
+            "query-input": "required name=search_term_string"
+          }
+        },
+        {
+          "@type": "SoftwareApplication",
+          "name": "LaPoe",
+          "applicationCategory": "BusinessApplication",
+          "operatingSystem": "Web, Telegram",
+          "url": "https://lapoe-ai.vercel.app",
+          "description": "Create AI Telegram bots that moderate groups, answer questions from your knowledge base, and chat in your brand's tone.",
+          "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+        }
+      ]
+    }
+    </script>
   </head>
 
   <body>
