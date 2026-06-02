@@ -74,12 +74,20 @@ async function tg(token: string, method: string, body: unknown) {
 }
 
 async function send(token: string, chatId: number | string, text: string, replyTo?: number) {
-  return tg(token, "sendMessage", {
+  const body = {
     chat_id: chatId, text,
     reply_to_message_id: replyTo,
     parse_mode: "Markdown",
     disable_web_page_preview: true,
-  });
+  };
+  const res = await tg(token, "sendMessage", body);
+  // Markdown is fragile (underscores in @handles, stray *). On parse failure, retry as plain text
+  // so users always see a reply instead of silence.
+  if (res && res.ok === false && /can't parse entities|parse_mode/i.test(res.description || "")) {
+    console.warn("send: markdown parse failed, retrying plain:", res.description);
+    return tg(token, "sendMessage", { chat_id: chatId, text, reply_to_message_id: replyTo, disable_web_page_preview: true });
+  }
+  return res;
 }
 
 async function ragSnippets(supabase: any, botId: string, question: string, k = 6, useFallback = true): Promise<string> {
@@ -442,7 +450,7 @@ I'm a private bot here to chat. In *DMs* I only handle a few general commands:
 /stars — like me? leave a review for LaPoe
 
 To *configure me*, my owner uses the LaPoe dashboard (https://lapoe.app)
-or talks to @LaPoe_bot. I never take settings commands in DMs — not even from my owner.
+or talks to @LaPoe\\_bot. I never take settings commands in DMs — not even from my owner.
 
 Want a bot like me for your community? https://lapoe.app`;
 
