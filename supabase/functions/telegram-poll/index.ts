@@ -762,23 +762,25 @@ async function processBot(supabase: any, bot: any, deadline: number) {
 
       if (bot.status !== "active") continue;
 
-      // In groups, respond when directly called, replied-to, on greetings,
-      // when the message is a question, or when it clearly matches knowledge/group context.
+      // In groups, only respond when:
+      //  - directly @mentioned or called by name
+      //  - replying to one of the bot's own messages
+      //  - the message clearly matches the bot's knowledge base
+      //  - the message clearly relates to the group/persona context
+      // Plain greetings, generic questions, and unrelated chatter are ignored to reduce noise.
       let autoKnowledge = "";
       if (isGroup) {
         const mentionedOrNamed = messageNamesBot(text, bot, me);
         const isReply = msg.reply_to_message?.from?.id === me.id;
         let shouldReply = Boolean(mentionedOrNamed || isReply);
-        if (!shouldReply && isGreeting(text)) shouldReply = true;
 
-        // Always probe the knowledge base for substantive messages — if the bot's
-        // own notes cover this topic, it should jump in even without being tagged.
-        const probeWorthy = text.trim().length >= 4 && !/^[\/!]/.test(text);
+        // Probe knowledge base for substantive messages — only jump in if there's a real match.
+        const probeWorthy = text.trim().length >= 6 && !/^[\/!]/.test(text);
         if (!shouldReply && probeWorthy) {
           autoKnowledge = await ragSnippets(supabase, bot.id, text, 5, false);
           if (autoKnowledge) shouldReply = true;
         }
-        if (!shouldReply && (isQuestionLike(text) || isGroupRelated(text, group, bot))) {
+        if (!shouldReply && probeWorthy && isGroupRelated(text, group, bot)) {
           shouldReply = true;
         }
         if (!shouldReply) continue;
