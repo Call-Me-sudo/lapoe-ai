@@ -467,12 +467,20 @@ or talks to @LaPoe\\_bot. I never take settings commands in DMs — not even fro
 Want a bot like me for your community? https://lapoe-ai.vercel.app`;
 
 async function handleDmGeneral(supabase: any, bot: any, token: string, msg: any): Promise<boolean> {
+  // In DMs, user-created bots ONLY respond to the 4 general commands.
+  // Anything else (plain text, greetings, unknown commands) returns the help menu.
+  // This function ALWAYS returns true for DMs — there is no AI fall-through in DMs.
   const text = (msg.text || "").trim();
-  if (!text.startsWith("/")) return false;
-  const [cmdRaw, ...rest] = text.split(/\s+/);
+  const ack = (m: string) => send(token, msg.chat.id, m, msg.message_id);
+
+  if (!text.startsWith("/")) {
+    await ack(DM_HELP.replaceAll("{name}", bot.name));
+    return true;
+  }
+
+  const [cmdRaw] = text.split(/\s+/);
   const cmd = (cmdRaw || "").split("@")[0].toLowerCase();
   const arg = text.slice(cmdRaw.length).trim();
-  const ack = (m: string) => send(token, msg.chat.id, m, msg.message_id);
 
   switch (cmd) {
     case "/start":
@@ -485,13 +493,31 @@ async function handleDmGeneral(supabase: any, bot: any, token: string, msg: any)
         await ack("Send your note like: `/feedback The replies feel too long.`");
         return true;
       }
-      await supabase.from("bot_feedback").insert({
+      const note = arg.slice(0, 4000);
+      const sender = msg.from?.username ? `@${msg.from.username}` : (msg.from?.first_name || `tg:${msg.from?.id || "unknown"}`);
+
+      // Persist to bot_feedback (visible in dashboard).
+      const fb = await supabase.from("bot_feedback").insert({
         bot_id: bot.id,
         source: "user_bot_dm",
         telegram_user_id: msg.from?.id ?? null,
         telegram_username: msg.from?.username || msg.from?.first_name || null,
-        message: arg.slice(0, 4000),
+        message: note,
       });
+      // Notify the bot owner via the in-app notifications feed.
+      const nf = await supabase.from("notifications").insert({
+        title: `New feedback for ${bot.name}`,
+        body: `${sender}: ${note}`,
+        type: "system",
+        audience: "user",
+        user_id: bot.owner_id,
+        link: "/dashboard/inbox",
+      });
+      if (fb.error || nf.error) {
+        console.error("[feedback] persist failed", { fb: fb.error, nf: nf.error });
+        await ack("⚠️ Couldn't deliver feedback right now — please try again in a moment.");
+        return true;
+      }
       await ack("🙏 Thanks — your feedback was passed to my owner.");
       return true;
     }
@@ -500,15 +526,12 @@ async function handleDmGeneral(supabase: any, bot: any, token: string, msg: any)
       await ack("💎 Support is coming soon. My owner will set this up shortly!");
       return true;
 
-    // Explicitly block any legacy owner commands — even owner gets the same answer.
-    case "/settone": case "/setpersona": case "/setrules": case "/setwelcome":
-    case "/setinstructions": case "/addknow": case "/addurl":
-    case "/banword": case "/unbanword": case "/banwords":
-    case "/modon": case "/modoff": case "/groups": case "/status":
-      await ack(`🔒 I don't take configuration in DMs.\n\nManage *${bot.name}* in the dashboard: https://lapoe-ai.vercel.app/dashboard/bots\nOr use @LaPoe_bot (link your account first).`);
+    default:
+      // Any other command (including legacy owner commands) gets the help menu.
+      // No hints about admin surface area — DMs are pure end-user space.
+      await ack(DM_HELP.replaceAll("{name}", bot.name));
       return true;
   }
-  return false;
 }
 
 
