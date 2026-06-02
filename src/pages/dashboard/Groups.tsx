@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Users, Settings as SettingsIcon, Trash2, Info } from "lucide-react";
+import { Users, Settings as SettingsIcon, Info } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 
@@ -41,11 +41,6 @@ export default function Groups() {
     return () => clearInterval(id);
   }, [user]);
 
-  const remove = async (id: string) => {
-    if (!confirm("Forget this group? KADE will pick it back up next time the bot sees a message there.")) return;
-    await supabase.from("telegram_groups").delete().eq("id", id);
-    load();
-  };
 
   const startEdit = (g: any) => {
     setEditing(g);
@@ -106,7 +101,6 @@ export default function Groups() {
                 </div>
                 <div className="flex gap-1">
                   <Button variant="outline" size="sm" onClick={() => startEdit(g)}><SettingsIcon className="h-3.5 w-3.5" /> Configure</Button>
-                  <Button variant="ghost" size="icon" onClick={() => remove(g.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
                 </div>
               </div>
             </div>
