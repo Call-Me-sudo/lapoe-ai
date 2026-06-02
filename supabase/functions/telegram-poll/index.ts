@@ -172,6 +172,12 @@ STRICT SCOPE RULES — follow these above all else:
 - If a question is outside your scope, politely decline in ONE short line and redirect to what you can help with.
 - Never invent facts. If you don't have it, say so.
 
+ANTI-HALLUCINATION — links, URLs, references, citations:
+- NEVER invent, guess, autocomplete, or fabricate any URL, link, domain, path, email, phone number, handle, file name, product name, price, date, or statistic.
+- Only include a URL/link if it appears VERBATIM inside the KNOWLEDGE BASE / owner instructions / house rules above. Copy it character-for-character — do NOT modify the path, add subpages (e.g. "/knowledge-base"), or assume what a docs URL "should" be.
+- If you don't have a real source, OMIT the link entirely. Do NOT write "Reference:", "Source:", "Docs:", "See:", "More info:" or any similar line followed by a guessed URL.
+- Markdown links to invented destinations are forbidden under the same rule.
+
 Reply rules:
 - Sound like a real person, not an AI assistant. NEVER say "as an AI" or "I'm just an AI".
 - ALWAYS reply in the same language the user wrote in. Detect language from the latest message and mirror it.
@@ -201,6 +207,34 @@ async function askAI(system: string, userText: string): Promise<string> {
   const data = await res.json();
   if (!res.ok) throw new Error(data?.error?.message || "Lovable AI error");
   return data.choices?.[0]?.message?.content?.trim() || "";
+}
+
+// Belt-and-braces: even with strict prompting, scrub fabricated URLs.
+// Strips any URL that doesn't appear verbatim in the grounded context,
+// and removes orphan "Reference:" / "Source:" / "Docs:" / "See:" lines.
+function sanitizeReply(reply: string, allowedContext: string): string {
+  if (!reply) return reply;
+  const haystack = (allowedContext || "").toLowerCase();
+  const urlRe = /\bhttps?:\/\/[^\s)\]>"']+/gi;
+
+  // 1) Strip whole lines whose only purpose is a reference label + URL.
+  let out = reply.replace(
+    /^[ \t>*_~`-]*\[?(reference|references|source|sources|docs?|documentation|see|see also|more info|read more|link|links?|url)s?\]?\s*[:：-]\s*.*$/gim,
+    "",
+  );
+
+  // 2) Remove markdown links pointing to URLs not present in the context.
+  out = out.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/gi, (_m, label, url) =>
+    haystack.includes(String(url).toLowerCase()) ? `[${label}](${url})` : label,
+  );
+
+  // 3) Strip bare URLs not present in the context.
+  out = out.replace(urlRe, (url) =>
+    haystack.includes(url.toLowerCase()) ? url : "",
+  );
+
+  // 4) Collapse blank lines created by the scrub.
+  return out.replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
 }
 
 async function getMe(token: string, bot: any, supabase: any): Promise<{ username: string | null; id: number | null }> {
@@ -730,7 +764,10 @@ async function processBot(supabase: any, bot: any, deadline: number) {
         ]);
 
         const system = buildSystemPrompt(bot, group, knowledgeResult, kExists);
-        const reply = await askAI(system, cleanText);
+        const rawReply = await askAI(system, cleanText);
+        const allowedCtx = [knowledgeResult, bot.house_rules, bot.default_instructions, bot.personality]
+          .filter(Boolean).join("\n");
+        const reply = sanitizeReply(rawReply, allowedCtx);
 
         if (reply) {
           // Send the reply first, log after — don't make the user wait for the DB write.
