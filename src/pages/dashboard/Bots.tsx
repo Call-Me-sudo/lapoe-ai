@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Bot as BotIcon, Trash2, Edit3, ShieldAlert, CheckCircle2, AlertCircle, AtSign, Settings2 } from "lucide-react";
+import { Plus, Bot as BotIcon, Trash2, Edit3, ShieldAlert, CheckCircle2, AlertCircle, AtSign, Settings2, BookOpen } from "lucide-react";
 import { toast } from "sonner";
 
 type Bot = {
@@ -52,6 +52,7 @@ export default function Bots() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [bots, setBots] = useState<Bot[]>([]);
+  const [knowledgeCounts, setKnowledgeCounts] = useState<Record<string, number>>({});
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Bot | null>(null);
   const [quota, setQuota] = useState<BotQuota | null>(null);
@@ -65,14 +66,18 @@ export default function Bots() {
   const load = useCallback(async () => {
     if (!user) return;
     const client = supabase as RpcClient;
-    const [{ data }, { data: quotaRows }, { data: usageRows }] = await Promise.all([
+    const [{ data }, { data: quotaRows }, { data: usageRows }, { data: kRows }] = await Promise.all([
       supabase.from("bots").select("*").eq("owner_id", user.id).order("created_at", { ascending: false }),
       client.rpc("my_bot_quota"),
       client.rpc("my_workspace_usage"),
+      supabase.from("knowledge_sources").select("bot_id").eq("owner_id", user.id),
     ]);
     setBots(data ?? []);
     setQuota(Array.isArray(quotaRows) ? quotaRows[0] ?? null : quotaRows ?? null);
     setUsage(Array.isArray(usageRows) ? usageRows[0] ?? null : usageRows ?? null);
+    const counts: Record<string, number> = {};
+    (kRows ?? []).forEach((r: any) => { counts[r.bot_id] = (counts[r.bot_id] || 0) + 1; });
+    setKnowledgeCounts(counts);
   }, [user]);
   useEffect(() => { load(); }, [load]);
 
@@ -294,6 +299,16 @@ export default function Bots() {
                     </div>
                   </div>
                 </div>
+                {knowledgeCounts[b.id] ? null : (
+                  <div className="mt-3 flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 dark:bg-amber-950/30 p-2.5 text-xs">
+                    <BookOpen className="h-3.5 w-3.5 text-amber-700 dark:text-amber-400 shrink-0 mt-0.5" />
+                    <div className="flex-1 min-w-0">
+                      <span className="text-ink font-medium">No knowledge yet.</span>{" "}
+                      <span className="text-ink-soft">This bot can only chat in persona and will decline factual questions.</span>
+                    </div>
+                    <Button variant="outline" size="sm" className="h-7 shrink-0" onClick={() => navigate('/dashboard/knowledge')}>Add</Button>
+                  </div>
+                )}
                 <div className="mt-3 flex flex-wrap items-center gap-1.5 sm:justify-end">
                   <Button variant="outline" size="sm" onClick={() => toggleStatus(b)}>{b.status === "active" ? "Pause" : "Activate"}</Button>
                   <Button variant="ghost" size="sm" onClick={() => startEdit(b)} className="gap-1"><Edit3 className="h-4 w-4" /> Edit</Button>

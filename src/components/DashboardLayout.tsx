@@ -2,7 +2,7 @@ import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { ReactNode, useState } from "react";
 import {
   LayoutDashboard, Bot, Users, BookOpen, MessageSquare, CreditCard, Settings,
-  LogOut, Menu, X, Bell, Sparkles, HelpCircle, QrCode, PlayCircle,
+  LogOut, Menu, X, Bell, Sparkles, HelpCircle, QrCode, PlayCircle, Inbox as InboxIcon,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -33,7 +33,10 @@ const navGroups: { label: string; items: NavItem[] }[] = [
   },
   {
     label: "Activity",
-    items: [{ to: "/dashboard/messages", icon: MessageSquare, label: "Messages" }],
+    items: [
+      { to: "/dashboard/inbox", icon: InboxIcon, label: "Inbox" },
+      { to: "/dashboard/messages", icon: MessageSquare, label: "Messages" },
+    ],
   },
   {
     label: "Account",
@@ -51,6 +54,7 @@ const titles: Record<string, string> = {
   "/dashboard/groups": "Groups",
   "/dashboard/knowledge": "Knowledge",
   "/dashboard/messages": "Messages",
+  "/dashboard/inbox": "Inbox",
   "/dashboard/billing": "Billing",
   "/dashboard/settings": "Settings",
 };

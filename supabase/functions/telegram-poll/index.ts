@@ -185,6 +185,42 @@ async function hasKnowledge(supabase: any, botId: string): Promise<boolean> {
   return (count ?? 0) > 0;
 }
 
+function normalizeQuestion(q: string): string {
+  return q.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, " ").replace(/\s+/g, " ").trim().slice(0, 200);
+}
+
+async function logUnansweredQuestion(supabase: any, bot: any, group: any | null, question: string, from: any) {
+  try {
+    const norm = normalizeQuestion(question);
+    if (norm.length < 4) return;
+    const asker = from?.username ? `@${from.username}` : (from?.first_name || null);
+    const { data: existing } = await supabase
+      .from("unanswered_questions")
+      .select("id, ask_count, status")
+      .eq("bot_id", bot.id)
+      .eq("normalized_question", norm)
+      .maybeSingle();
+    if (existing) {
+      if (existing.status === "dismissed") return;
+      await supabase.from("unanswered_questions").update({
+        ask_count: (existing.ask_count || 1) + 1,
+        status: "pending",
+        updated_at: new Date().toISOString(),
+      }).eq("id", existing.id);
+    } else {
+      await supabase.from("unanswered_questions").insert({
+        owner_id: bot.owner_id, bot_id: bot.id,
+        group_id: group?.id || null,
+        question: question.slice(0, 1000),
+        normalized_question: norm,
+        asker, status: "pending",
+      });
+    }
+  } catch (e) {
+    console.error("logUnansweredQuestion failed:", (e as Error).message);
+  }
+}
+
 
 function buildSystemPrompt(bot: any, group: any | null, knowledge: string, knowledgeExists: boolean): string {
   const tone = TONES[bot.tone] || TONES.friendly;
@@ -226,7 +262,11 @@ Reply rules:
 - Never apologize unprompted. Never say "I hope this helps".
 - Keep replies under 4 short sentences unless explicitly asked for detail.
 - No bullet lists for casual chat. Save lists for actual lists.
-- NEVER claim you "are not an admin" or refuse moderation requests in chat — moderation runs through /ban /kick /mute /del /pin /warn commands. If asked to moderate in conversation, briefly tell the user to reply to the offender's message with one of those commands.`;
+- NEVER claim you "are not an admin" or refuse moderation requests in chat — moderation runs through /ban /kick /mute /del /pin /warn commands. If asked to moderate in conversation, briefly tell the user to reply to the offender's message with one of those commands.
+
+SIGNAL — IMPORTANT for owner learning:
+- If the user asked a substantive factual question that DESERVED a real answer, but you cannot answer it because it is NOT covered by the KNOWLEDGE BASE / owner instructions / house rules, append the EXACT token [NEEDS_KNOWLEDGE] on its own final line at the very end of your reply.
+- Do NOT include this token for greetings, small talk, off-topic refusals you intentionally declined, moderation requests, or questions you actually answered.`;
 }
 
 async function askAI(system: string, userText: string): Promise<string> {
@@ -829,9 +869,11 @@ async function processBot(supabase: any, bot: any, deadline: number) {
 
         const system = buildSystemPrompt(bot, group, knowledgeResult, kExists);
         const rawReply = await askAI(system, cleanText);
+        const needsKnowledge = /\[NEEDS_KNOWLEDGE\]/i.test(rawReply);
+        const stripped = rawReply.replace(/\[NEEDS_KNOWLEDGE\]/gi, "").trim();
         const allowedCtx = [knowledgeResult, bot.house_rules, bot.default_instructions, bot.personality]
           .filter(Boolean).join("\n");
-        const reply = sanitizeReply(rawReply, allowedCtx);
+        const reply = sanitizeReply(stripped, allowedCtx);
 
         if (reply) {
           // Send the reply first, log after — don't make the user wait for the DB write.
@@ -840,6 +882,11 @@ async function processBot(supabase: any, bot: any, deadline: number) {
             bot_id: bot.id, owner_id: bot.owner_id, direction: "outbound",
             content: reply, telegram_user: msg.from?.username || null,
           }).then(() => {}, () => {});
+        }
+
+        // If the AI flagged a real factual gap, log it for the owner's Inbox.
+        if (needsKnowledge && isQuestionLike(cleanText) && !isGreeting(cleanText)) {
+          logUnansweredQuestion(supabase, bot, group, cleanText, msg.from);
         }
       } catch (e) {
         console.error(`bot ${bot.name} reply failed:`, (e as Error).message);
