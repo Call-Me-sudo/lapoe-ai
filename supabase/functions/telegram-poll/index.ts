@@ -415,152 +415,82 @@ async function ensureGroup(supabase: any, bot: any, msg: any) {
   return created;
 }
 
-// ----- Owner DM commands (Rose-style) -----
-const OWNER_HELP = `*${"{name}"}* — owner controls
+// ============================================================================
+// IMPORTANT POLICY — DO NOT REMOVE
+// ----------------------------------------------------------------------------
+// User-created bots NEVER accept owner/configuration commands in their own DMs.
+// Even the bot owner cannot configure their bot through the bot's DM.
+// All configuration happens in the LaPoe dashboard (web) or via @LaPoe_bot
+// (the system bot), which authenticates linked accounts.
+//
+// Why: end-users in a bot's DM share the same Telegram surface as the owner.
+// Exposing owner controls there leaks the existence of configuration, invites
+// social-engineering, and creates a "the bot replies to itself" loop where
+// the bot is treated as an admin console. Keep DMs pure conversation.
+//
+// In DMs the bot only answers general commands (/start, /help, /feedback,
+// /stars) and AI chat. See DEVELOPERS.md → "Bot DM policy".
+// ============================================================================
 
-Setup:
-/settone <friendly|professional|witty|strict|hype>
-/setpersona <one-line character description>
-/setrules <house rules — multi-line OK>
-/setwelcome <welcome message for new members>
-/setinstructions <freeform instructions, overrides defaults>
+const DM_HELP = `*${"{name}"}* — what I can do here
 
-Knowledge:
-/addknow <text> — paste a fact or paragraph the bot should know
-/addurl <https://...> — index a page
+I'm a private bot here to chat. In *DMs* I only handle a few general commands:
 
-Moderation:
-/banword <word>
-/unbanword <word>
-/banwords — list current banned words
-/modon /modoff — toggle moderation in groups
+/start — say hi
+/help — this menu
+/feedback \`<message>\` — send my owner a note
+/stars — like me? leave a review for LaPoe
 
-Groups:
-/groups — list groups this bot is in
-/status — health check
-/help — this menu`;
+To *configure me*, my owner uses the LaPoe dashboard (https://lapoe.app)
+or talks to @LaPoe_bot. I never take settings commands in DMs — not even from my owner.
 
-const OWNER_COMMANDS = new Set([
-  "/help","/settone","/setpersona","/setrules","/setwelcome","/setinstructions",
-  "/addknow","/addurl","/banword","/unbanword","/banwords","/modon","/modoff","/groups",
-]);
+Want a bot like me for your community? https://lapoe.app`;
 
-async function isBotOwner(supabase: any, bot: any, fromId: number | undefined): Promise<boolean> {
-  if (!fromId) return false;
-  const { data: profile } = await supabase.from("profiles").select("id")
-    .eq("telegram_user_id", fromId).eq("id", bot.owner_id).maybeSingle();
-  return !!profile;
-}
-
-async function handleOwnerDM(supabase: any, bot: any, token: string, msg: any): Promise<boolean> {
-  const fromId = msg.from?.id;
+async function handleDmGeneral(supabase: any, bot: any, token: string, msg: any): Promise<boolean> {
   const text = (msg.text || "").trim();
+  if (!text.startsWith("/")) return false;
   const [cmdRaw, ...rest] = text.split(/\s+/);
   const cmd = (cmdRaw || "").split("@")[0].toLowerCase();
   const arg = text.slice(cmdRaw.length).trim();
-
-  const isOwner = await isBotOwner(supabase, bot, fromId);
-  if (!isOwner) {
-    // Non-owner tried a configuration command — be explicit, don't silently fall through.
-    if (OWNER_COMMANDS.has(cmd)) {
-      await send(token, msg.chat.id,
-        `🔒 Only *${bot.name}*'s owner can change my settings.\n\nWant a bot like me? Create your own at https://lapoe.app — it takes about a minute.`,
-        msg.message_id);
-      return true;
-    }
-    return false;
-  }
-
   const ack = (m: string) => send(token, msg.chat.id, m, msg.message_id);
 
   switch (cmd) {
-    case "/help":
     case "/start":
-      return ack(OWNER_HELP.replaceAll("{name}", bot.name)), true;
-    case "/status": {
-      const { count: kc } = await supabase.from("knowledge_chunks").select("id", { count: "exact", head: true }).eq("bot_id", bot.id);
-      const { count: gc } = await supabase.from("telegram_groups").select("id", { count: "exact", head: true }).eq("bot_id", bot.id);
-      return ack(`*${bot.name}* — health\n\n• Status: ${bot.status === "active" ? "🟢 active" : "🟡 paused"}\n• Tone: ${bot.tone || "friendly"}\n• Knowledge chunks: ${kc ?? 0}\n• Groups: ${gc ?? 0}\n• Moderation: ${bot.moderation_enabled ? "on" : "off"}\n• AI: 🟢 Lovable AI Gateway`), true;
+    case "/help":
+      await ack(DM_HELP.replaceAll("{name}", bot.name));
+      return true;
+
+    case "/feedback": {
+      if (!arg) {
+        await ack("Send your note like: `/feedback The replies feel too long.`");
+        return true;
+      }
+      await supabase.from("bot_feedback").insert({
+        bot_id: bot.id,
+        source: "user_bot_dm",
+        telegram_user_id: msg.from?.id ?? null,
+        telegram_username: msg.from?.username || msg.from?.first_name || null,
+        message: arg.slice(0, 4000),
+      });
+      await ack("🙏 Thanks — your feedback was passed to my owner.");
+      return true;
     }
-    case "/settone": {
-      const t = arg.toLowerCase();
-      if (!TONES[t]) return ack(`Tones: ${Object.keys(TONES).join(", ")}`), true;
-      await supabase.from("bots").update({ tone: t }).eq("id", bot.id);
-      return ack(`✅ Tone set to *${t}*.`), true;
-    }
-    case "/setpersona":
-      if (!arg) return ack("Usage: `/setpersona Sassy librarian who loves indie rock`"), true;
-      await supabase.from("bots").update({ personality: arg.slice(0, 500) }).eq("id", bot.id);
-      return ack("✅ Persona saved."), true;
-    case "/setrules":
-      await supabase.from("bots").update({ house_rules: arg.slice(0, 2000) }).eq("id", bot.id);
-      return ack(arg ? "✅ House rules updated." : "✅ House rules cleared."), true;
-    case "/setwelcome":
-      await supabase.from("bots").update({ welcome_message: arg.slice(0, 1000) }).eq("id", bot.id);
-      return ack(arg ? "✅ Welcome message set." : "✅ Welcome cleared."), true;
-    case "/setinstructions":
-      await supabase.from("bots").update({ default_instructions: arg.slice(0, 4000) }).eq("id", bot.id);
-      return ack(arg ? "✅ Instructions saved." : "✅ Instructions cleared."), true;
-    case "/addknow": {
-      if (!arg) return ack("Usage: `/addknow Our refund policy is 30 days no questions.`"), true;
-      const { data: src } = await supabase.from("knowledge_sources").insert({
-        bot_id: bot.id, owner_id: bot.owner_id,
-        kind: "text", title: arg.slice(0, 60), content: arg,
-      }).select("id").single();
-      // Fire-and-forget index
-      fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/index-knowledge`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
-        },
-        body: JSON.stringify({ source_id: src?.id }),
-      }).catch(() => {});
-      return ack("✅ Saved. Indexing in the background."), true;
-    }
-    case "/addurl": {
-      if (!arg.startsWith("http")) return ack("Usage: `/addurl https://example.com/post`"), true;
-      const { data: src } = await supabase.from("knowledge_sources").insert({
-        bot_id: bot.id, owner_id: bot.owner_id,
-        kind: "url", title: arg.slice(0, 80), source_url: arg,
-      }).select("id").single();
-      fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/index-knowledge`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
-        },
-        body: JSON.stringify({ source_id: src?.id }),
-      }).catch(() => {});
-      return ack("✅ URL queued. Indexing in the background."), true;
-    }
-    case "/banword": {
-      if (!arg) return ack("Usage: `/banword spammer`"), true;
-      const next = Array.from(new Set([...(bot.banned_words || []), arg.toLowerCase()]));
-      await supabase.from("bots").update({ banned_words: next }).eq("id", bot.id);
-      return ack(`✅ Added. Now banning ${next.length} word(s).`), true;
-    }
-    case "/unbanword": {
-      const next = (bot.banned_words || []).filter((w: string) => w !== arg.toLowerCase());
-      await supabase.from("bots").update({ banned_words: next }).eq("id", bot.id);
-      return ack(`✅ Removed. Now banning ${next.length} word(s).`), true;
-    }
-    case "/banwords":
-      return ack(`Banned words: ${(bot.banned_words || []).join(", ") || "—"}`), true;
-    case "/modon":
-      await supabase.from("bots").update({ moderation_enabled: true }).eq("id", bot.id);
-      return ack("✅ Moderation on."), true;
-    case "/modoff":
-      await supabase.from("bots").update({ moderation_enabled: false }).eq("id", bot.id);
-      return ack("✅ Moderation off."), true;
-    case "/groups": {
-      const { data: gs } = await supabase.from("telegram_groups").select("name,member_count").eq("bot_id", bot.id);
-      const list = (gs || []).map((g: any) => `• ${g.name}${g.member_count ? ` (${g.member_count})` : ""}`).join("\n");
-      return ack(`*Groups (${gs?.length ?? 0})*\n\n${list || "—"}`), true;
-    }
+
+    case "/stars":
+      await ack("⭐ If you enjoy chatting with me, leave a star at https://github.com/lovable-dev/lapoe — it really helps.");
+      return true;
+
+    // Explicitly block any legacy owner commands — even owner gets the same answer.
+    case "/settone": case "/setpersona": case "/setrules": case "/setwelcome":
+    case "/setinstructions": case "/addknow": case "/addurl":
+    case "/banword": case "/unbanword": case "/banwords":
+    case "/modon": case "/modoff": case "/groups": case "/status":
+      await ack(`🔒 I don't take configuration in DMs.\n\nManage *${bot.name}* in the dashboard: https://lapoe.app/dashboard/bots\nOr use @LaPoe_bot (link your account first).`);
+      return true;
   }
   return false;
 }
+
 
 // ----- Group moderation commands (admins + bot owner) -----
 async function canModerate(supabase: any, bot: any, token: string, chatId: number, fromId: number): Promise<boolean> {
