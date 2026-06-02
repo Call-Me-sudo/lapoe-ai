@@ -461,10 +461,10 @@ I'm a private bot here to chat. In *DMs* I only handle a few general commands:
 /feedback \`<message>\` — send my owner a note
 /donate — support my owner (coming soon)
 
-To *configure me*, my owner uses the LaPoe dashboard (https://lapoe.app)
+To *configure me*, my owner uses the LaPoe dashboard (https://lapoe-ai.vercel.app)
 or talks to @LaPoe\\_bot. I never take settings commands in DMs — not even from my owner.
 
-Want a bot like me for your community? https://lapoe.app`;
+Want a bot like me for your community? https://lapoe-ai.vercel.app`;
 
 async function handleDmGeneral(supabase: any, bot: any, token: string, msg: any): Promise<boolean> {
   const text = (msg.text || "").trim();
