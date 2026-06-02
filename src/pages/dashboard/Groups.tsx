@@ -132,7 +132,25 @@ export default function Groups() {
             </div>
             <div>
               <Label>Group rules (used by AI)</Label>
-              <Textarea value={form.rules} onChange={(e) => setForm({ ...form, rules: e.target.value })} rows={4} maxLength={2000} />
+              <p className="text-xs text-ink-soft mt-1 mb-1.5">These instructions guide how the AI behaves and responds in this group. Pick an example or write your own.</p>
+              <div className="flex flex-wrap gap-1.5 mb-2">
+                {[
+                  "Be friendly but firm. No off-topic discussions after 10 PM. Always greet new members by name.",
+                  "Keep conversations professional. Warn users before taking moderation actions. Answer questions in concise bullet points.",
+                  "Encourage positive vibes. Remove any toxic messages. Share a fun fact when asked.",
+                  "Strict community: no spam, no promotions. Auto-delete messages with suspicious links.",
+                ].map((ex) => (
+                  <button
+                    key={ex}
+                    type="button"
+                    onClick={() => setForm((prev: any) => ({ ...prev, rules: ex }))}
+                    className="text-[10px] px-2 py-1 rounded-full border border-border bg-paper-soft text-ink-soft hover:bg-primary/10 hover:text-primary transition-colors"
+                  >
+                    {ex.split(". ")[0]}…
+                  </button>
+                ))}
+              </div>
+              <Textarea value={form.rules} onChange={(e) => setForm({ ...form, rules: e.target.value })} rows={4} maxLength={2000} placeholder="Write your own rules, or click an example above…" />
             </div>
             <div>
               <Label>Welcome message (overrides bot default)</Label>
