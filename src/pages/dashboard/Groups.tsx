@@ -16,7 +16,7 @@ export default function Groups() {
   const { user } = useAuth();
   const [groups, setGroups] = useState<any[]>([]);
   const [editing, setEditing] = useState<any | null>(null);
-  const [form, setForm] = useState({ rules: "", welcome_message: "", moderation_enabled: true });
+  const [form, setForm] = useState({ rules: "", welcome_message: "", moderation_enabled: true, banned_words: "" });
 
   const load = async () => {
     if (!user) return;
@@ -44,12 +44,23 @@ export default function Groups() {
 
   const startEdit = (g: any) => {
     setEditing(g);
-    setForm({ rules: g.rules ?? "", welcome_message: g.welcome_message ?? "", moderation_enabled: g.moderation_enabled ?? true });
+    setForm({
+      rules: g.rules ?? "",
+      welcome_message: g.welcome_message ?? "",
+      moderation_enabled: g.moderation_enabled ?? true,
+      banned_words: (g.banned_words || []).join(", "),
+    });
   };
 
   const save = async () => {
     if (!editing) return;
-    const { error } = await supabase.from("telegram_groups").update(form).eq("id", editing.id);
+    const payload = {
+      rules: form.rules,
+      welcome_message: form.welcome_message,
+      moderation_enabled: form.moderation_enabled,
+      banned_words: form.banned_words.split(",").map(w => w.trim()).filter(Boolean),
+    };
+    const { error } = await supabase.from("telegram_groups").update(payload).eq("id", editing.id);
     if (error) return toast.error(error.message);
     toast.success("Group updated");
     setEditing(null); load();
@@ -126,6 +137,10 @@ export default function Groups() {
             <div>
               <Label>Welcome message (overrides bot default)</Label>
               <Textarea value={form.welcome_message} onChange={(e) => setForm({ ...form, welcome_message: e.target.value })} rows={2} maxLength={1000} placeholder="Hey {name}, welcome!" />
+            </div>
+            <div>
+              <Label>Banned words (comma separated)</Label>
+              <Textarea value={form.banned_words} onChange={(e) => setForm({ ...form, banned_words: e.target.value })} rows={2} maxLength={1000} placeholder="spam, crypto, scam" />
             </div>
           </div>
           <DialogFooter>
