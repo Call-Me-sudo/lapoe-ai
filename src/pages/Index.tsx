@@ -44,15 +44,15 @@ export default function Index() {
           <p className="mt-4 text-sm text-muted-foreground">Free plan · No card required · AI included</p>
         </div>
 
-        {/* Phone-style preview card */}
+        {/* Preview card */}
         <div className="mt-16 max-w-md mx-auto">
           <div className="bg-card rounded-3xl shadow-card overflow-hidden">
             <div className="px-5 pt-5 pb-3 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full bg-tile-pink text-tile-pink-foreground grid place-items-center font-bold">JW</div>
+                <div className="h-10 w-10 rounded-full bg-tile-blue text-tile-blue-foreground grid place-items-center font-bold">K</div>
                 <div>
-                  <div className="text-sm font-semibold text-foreground">Your workspace</div>
-                  <div className="text-xs text-muted-foreground">Live</div>
+                  <div className="text-sm font-semibold text-foreground">KADE Preview</div>
+                  <div className="text-xs text-muted-foreground">Demo workspace</div>
                 </div>
               </div>
               <div className="flex gap-2">
