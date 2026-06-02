@@ -35,7 +35,8 @@ export default function AdminSystemBot() {
   useEffect(() => { load(); }, []);
 
   const toggle = async (g: any, field: "is_active" | "moderation_enabled" | "anti_flood_enabled") => {
-    const { error } = await supabase.from("system_bot_groups").update({ [field]: !g[field] }).eq("chat_id", g.chat_id);
+    const patch: any = { [field]: !g[field] };
+    const { error } = await supabase.from("system_bot_groups").update(patch).eq("chat_id", g.chat_id);
     if (error) return toast.error(error.message);
     toast.success("Updated");
     load();
