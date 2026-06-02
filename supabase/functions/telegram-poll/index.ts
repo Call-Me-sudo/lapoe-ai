@@ -867,7 +867,14 @@ async function processBot(supabase: any, bot: any, deadline: number) {
   }
 
   return { bot: bot.name, processed, offset };
+  } finally {
+    // Release the lock so the next cron tick can poll immediately.
+    await supabase.from("bots")
+      .update({ poll_locked_until: null, update_offset: offset })
+      .eq("id", bot.id);
+  }
 }
+
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
