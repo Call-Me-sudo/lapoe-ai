@@ -2,7 +2,7 @@ import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { ReactNode, useState } from "react";
 import {
   LayoutDashboard, Bot, Users, BookOpen, MessageSquare, CreditCard, Settings,
-  LogOut, Menu, X, Bell, Sparkles, HelpCircle, QrCode, PlayCircle, Inbox as InboxIcon,
+  LogOut, Menu, X, Bell, HelpCircle, QrCode, PlayCircle, Inbox as InboxIcon,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -72,9 +72,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     <div className="flex h-full flex-col">
       <div className="h-16 flex items-center justify-between px-5">
         <Link to="/dashboard" onClick={() => setMobileOpen(false)} className="flex items-center gap-2">
-          <span className="h-8 w-8 rounded-full bg-tile-green text-tile-green-foreground grid place-items-center">
-            <Sparkles className="h-4 w-4" />
-          </span>
+          <img src="/bot-icon.png" alt="LaPoe" className="h-8 w-8 rounded-full object-cover" />
           <span className="font-display text-lg font-bold tracking-tight text-foreground">LaPoe</span>
         </Link>
         <button
