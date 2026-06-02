@@ -79,6 +79,18 @@
     --tile-warning: 38 90% 92%;
     --tile-warning-foreground: 38 90% 32%;
 
+    /* Aliases used by IconTile / landing / avatars */
+    --tile-blue: 215 90% 94%;
+    --tile-blue-foreground: 218 70% 38%;
+    --tile-green: 152 55% 92%;
+    --tile-green-foreground: 152 55% 26%;
+    --tile-pink: 338 88% 95%;
+    --tile-pink-foreground: 338 65% 38%;
+    --tile-amber: 38 90% 92%;
+    --tile-amber-foreground: 38 90% 32%;
+    --tile-gray: 268 20% 93%;
+    --tile-gray-foreground: 265 30% 28%;
+
     --shadow-soft: 0 1px 2px rgba(26, 10, 46, 0.04), 0 1px 3px rgba(26, 10, 46, 0.04);
     --shadow-card: 0 1px 2px rgba(26, 10, 46, 0.04), 0 4px 16px rgba(26, 10, 46, 0.05);
     --shadow-lift: 0 6px 24px -8px rgba(26, 10, 46, 0.14), 0 2px 6px rgba(26, 10, 46, 0.05);
