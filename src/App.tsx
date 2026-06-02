@@ -15,6 +15,7 @@ import Bots from "./pages/dashboard/Bots";
 import Groups from "./pages/dashboard/Groups";
 import Knowledge from "./pages/dashboard/Knowledge";
 import Messages from "./pages/dashboard/Messages";
+import Inbox from "./pages/dashboard/Inbox";
 import Playground from "./pages/dashboard/Playground";
 import Billing from "./pages/dashboard/Billing";
 import Settings from "./pages/dashboard/Settings";
@@ -47,6 +48,7 @@ const App = () => (
             <Route path="/dashboard/groups" element={<ProtectedRoute><Groups /></ProtectedRoute>} />
             <Route path="/dashboard/knowledge" element={<ProtectedRoute><Knowledge /></ProtectedRoute>} />
             <Route path="/dashboard/messages" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
+            <Route path="/dashboard/inbox" element={<ProtectedRoute><Inbox /></ProtectedRoute>} />
             <Route path="/dashboard/playground" element={<ProtectedRoute><Playground /></ProtectedRoute>} />
             <Route path="/dashboard/billing" element={<ProtectedRoute><Billing /></ProtectedRoute>} />
             <Route path="/dashboard/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
