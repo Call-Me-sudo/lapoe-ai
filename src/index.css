@@ -18,25 +18,32 @@
     --popover: 0 0% 100%;
     --popover-foreground: 220 15% 8%;
 
-    /* Primary = balanced green. Fresh accent against dark ink surfaces. */
-    --primary: 152 55% 36%;
+    /* Primary = graphite ink. Minimal, Apple-like. Keeps icons/UI neutral. */
+    --primary: 220 15% 12%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 150 30% 94%;
-    --secondary-foreground: 152 45% 18%;
+    --secondary: 220 14% 94%;
+    --secondary-foreground: 220 15% 8%;
 
     --muted: 220 14% 94%;
     --muted-foreground: 220 9% 46%;
 
+    /* Accent = balanced green. Use sparingly for brand pops, success states, CTAs. */
     --accent: 150 45% 90%;
     --accent-foreground: 152 50% 22%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
+    /* Status tokens — keep these distinct from accent green. */
+    --success: 152 55% 36%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 220 15% 8%;
+
     --border: 220 13% 91%;
     --input: 220 13% 91%;
-    --ring: 152 55% 36%;
+    --ring: 220 15% 8%;
 
     --radius: 1rem;
 
