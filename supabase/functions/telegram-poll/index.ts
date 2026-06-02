@@ -505,7 +505,7 @@ async function handleDmGeneral(supabase: any, bot: any, token: string, msg: any)
     case "/setinstructions": case "/addknow": case "/addurl":
     case "/banword": case "/unbanword": case "/banwords":
     case "/modon": case "/modoff": case "/groups": case "/status":
-      await ack(`🔒 I don't take configuration in DMs.\n\nManage *${bot.name}* in the dashboard: https://lapoe.app/dashboard/bots\nOr use @LaPoe_bot (link your account first).`);
+      await ack(`🔒 I don't take configuration in DMs.\n\nManage *${bot.name}* in the dashboard: https://lapoe-ai.vercel.app/dashboard/bots\nOr use @LaPoe_bot (link your account first).`);
       return true;
   }
   return false;
