@@ -1,6 +1,6 @@
-// LaPoe system bot (@aiKADE_Bot) — the "BotFather" for LaPoe.
+// LaPoe system bot (@LaPoe_bot) — the "BotFather" for LaPoe.
 // Lets owners control everything from Telegram, and lets users link their account
-// and check status. Uses KADE_SYSTEM_BOT_TOKEN. No per-user API key needed.
+// and check status. Uses LAPOE_SYSTEM_BOT_TOKEN. No per-user API key needed.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
@@ -76,7 +76,7 @@ async function handleCommand(supabase: any, token: string, msg: any) {
         `👋 Welcome back, *${profile.display_name || profile.email}*.\n\nYou're linked${owner ? " as *owner*" : ""}. Try /mybots or /status.\n\n${HELP}`);
     }
     return send(token, chatId,
-      `👋 *LaPoe — Knowledge Acquisition & Dynamic Engagement*\n\nI'm the system bot for LaPoe. To control your LaPoe workspace from Telegram:\n\n1. Open your dashboard at https://kade-ai.vercel.app\n2. Go to *Settings → Telegram*\n3. Generate a link code and send it here:\n   \`/link YOUR_CODE\`\n\nNo account yet? Sign up first, then come back.`);
+      `👋 *LaPoe — Knowledge Acquisition & Dynamic Engagement*\n\nI'm the system bot for LaPoe. To control your LaPoe workspace from Telegram:\n\n1. Open your dashboard at https://lapoe-ai.vercel.app\n2. Go to *Settings → Telegram*\n3. Generate a link code and send it here:\n   \`/link YOUR_CODE\`\n\nNo account yet? Sign up first, then come back.`);
   }
 
   if (cmd === "/help") {
@@ -119,7 +119,7 @@ async function handleCommand(supabase: any, token: string, msg: any) {
 
   if (cmd === "/mybots") {
     const { data: bots } = await supabase.from("bots").select("name,status").eq("owner_id", profile.id).order("created_at", { ascending: false });
-    if (!bots || bots.length === 0) return send(token, chatId, "You have no bots yet. Create one at https://kade-ai.vercel.app/dashboard/bots");
+    if (!bots || bots.length === 0) return send(token, chatId, "You have no bots yet. Create one at https://lapoe-ai.vercel.app/dashboard/bots");
     const list = bots.map((b: any) => `• *${b.name}* — ${b.status === "active" ? "🟢" : "🟡"} ${b.status}`).join("\n");
     return send(token, chatId, `*Your bots*\n\n${list}`);
   }
@@ -183,9 +183,9 @@ async function handleCommand(supabase: any, token: string, msg: any) {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
-  const token = Deno.env.get("KADE_SYSTEM_BOT_TOKEN");
+  const token = Deno.env.get("LAPOE_SYSTEM_BOT_TOKEN");
   if (!token) {
-    return new Response(JSON.stringify({ error: "KADE_SYSTEM_BOT_TOKEN not set" }), {
+    return new Response(JSON.stringify({ error: "LAPOE_SYSTEM_BOT_TOKEN not set" }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }

@@ -9,7 +9,7 @@ verify_jwt = true
 [functions.telegram-poll]
 verify_jwt = false
 
-[functions.kade-system-bot]
+[functions.lapoe-system-bot]
 verify_jwt = false
 
 [functions.generate-link-code]

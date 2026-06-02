@@ -76,7 +76,7 @@ export default function Settings() {
               <div className="text-ink font-medium">Linked as @{telegramUsername}</div>
               <p className="text-ink-soft mt-1">
                 Open Telegram and send <code className="bg-paper-soft px-1.5 py-0.5 rounded">/help</code> to{" "}
-                <a href="https://t.me/aiKADE_Bot" target="_blank" rel="noreferrer" className="text-primary underline">@aiKADE_Bot</a>
+                <a href="https://t.me/LaPoe_bot" target="_blank" rel="noreferrer" className="text-primary underline">@LaPoe_bot</a>
                 {" "}to control your LaPoe workspace.
               </p>
             </div>
@@ -85,14 +85,14 @@ export default function Settings() {
           <>
             <p className="text-sm text-ink-soft mb-4">
               Link your Telegram account to control LaPoe from your phone. Get a code, then send it to{" "}
-              <a href="https://t.me/aiKADE_Bot" target="_blank" rel="noreferrer" className="text-primary underline">@aiKADE_Bot</a>.
+              <a href="https://t.me/LaPoe_bot" target="_blank" rel="noreferrer" className="text-primary underline">@LaPoe_bot</a>.
             </p>
             {code ? (
               <div className="bg-paper-soft border border-border rounded-md p-4">
                 <div className="text-xs uppercase tracking-wider text-muted-foreground mb-2">Your one-time code</div>
                 <div className="text-2xl font-semibold text-ink tracking-[0.3em] tabular-nums">{code}</div>
                 <p className="text-xs text-ink-soft mt-3">
-                  Open <a href="https://t.me/aiKADE_Bot" target="_blank" rel="noreferrer" className="text-primary underline">@aiKADE_Bot</a>{" "}
+                  Open <a href="https://t.me/LaPoe_bot" target="_blank" rel="noreferrer" className="text-primary underline">@LaPoe_bot</a>{" "}
                   and send: <code className="bg-card px-1.5 py-0.5 rounded">/link {code}</code>
                 </p>
                 <p className="text-xs text-ink-soft mt-1">Expires in 15 minutes.</p>

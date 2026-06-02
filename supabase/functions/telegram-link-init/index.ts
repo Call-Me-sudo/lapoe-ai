@@ -68,7 +68,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const botToken = Deno.env.get("KADE_SYSTEM_BOT_TOKEN");
+    const botToken = Deno.env.get("LAPOE_SYSTEM_BOT_TOKEN");
     if (!botToken) {
       return new Response(JSON.stringify({ error: "system bot not configured" }), {
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
