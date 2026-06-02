@@ -606,8 +606,23 @@ async function handleModeration(supabase: any, bot: any, token: string, msg: any
 
 async function processBot(supabase: any, bot: any, deadline: number) {
   if (!bot.telegram_bot_token) return { bot: bot.name, skipped: "no token" };
+
+  // ---- Per-bot lock: prevent concurrent pollers (cron + manual) from racing
+  // on the same getUpdates offset, which causes duplicate replies.
+  const lockUntil = new Date(deadline + 5_000).toISOString();
+  const nowIso = new Date().toISOString();
+  const { data: claimed } = await supabase
+    .from("bots")
+    .update({ poll_locked_until: lockUntil })
+    .eq("id", bot.id)
+    .or(`poll_locked_until.is.null,poll_locked_until.lt.${nowIso}`)
+    .select("id")
+    .maybeSingle();
+  if (!claimed) return { bot: bot.name, skipped: "locked" };
+
   let offset: number = bot.update_offset || 0;
   let processed = 0;
+  try {
   const me = await getMe(bot.telegram_bot_token, bot, supabase);
 
   while (Date.now() < deadline - 3000) {
@@ -852,7 +867,14 @@ async function processBot(supabase: any, bot: any, deadline: number) {
   }
 
   return { bot: bot.name, processed, offset };
+  } finally {
+    // Release the lock so the next cron tick can poll immediately.
+    await supabase.from("bots")
+      .update({ poll_locked_until: null, update_offset: offset })
+      .eq("id", bot.id);
+  }
 }
+
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
