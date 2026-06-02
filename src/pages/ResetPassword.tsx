@@ -48,6 +48,7 @@ export default function ResetPassword() {
 
   return (
     <div className="min-h-screen grid place-items-center p-6 bg-paper-soft">
+      <SEO title="Reset password — LaPoe" description="Reset your LaPoe password." path="/reset-password" noindex />
       <form onSubmit={submit} className="w-full max-w-sm bg-card border border-border rounded-lg p-6 space-y-4">
         <h1 className="text-xl font-semibold text-ink">Set a new password</h1>
         <div>

@@ -55,6 +55,12 @@ export default function Pricing() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO
+        title="Pricing — LaPoe Telegram Bots"
+        description="Simple pricing for LaPoe Telegram bots. Start free, upgrade when your community grows. AI replies and moderation included."
+        path="/pricing"
+        keywords="LaPoe pricing, Telegram bot pricing, AI bot subscription, chatbot plans"
+      />
       <SiteHeader />
       <section className="container max-w-6xl py-16 md:py-24">
         <div className="max-w-2xl mx-auto text-center">
