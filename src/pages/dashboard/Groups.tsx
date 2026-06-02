@@ -138,6 +138,10 @@ export default function Groups() {
               <Label>Welcome message (overrides bot default)</Label>
               <Textarea value={form.welcome_message} onChange={(e) => setForm({ ...form, welcome_message: e.target.value })} rows={2} maxLength={1000} placeholder="Hey {name}, welcome!" />
             </div>
+            <div>
+              <Label>Banned words (comma separated)</Label>
+              <Textarea value={form.banned_words} onChange={(e) => setForm({ ...form, banned_words: e.target.value })} rows={2} maxLength={1000} placeholder="spam, crypto, scam" />
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditing(null)}>Cancel</Button>
