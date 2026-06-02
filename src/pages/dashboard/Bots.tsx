@@ -50,6 +50,7 @@ const TONES = ["friendly", "professional", "witty", "strict", "hype"];
 
 export default function Bots() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [bots, setBots] = useState<Bot[]>([]);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Bot | null>(null);
