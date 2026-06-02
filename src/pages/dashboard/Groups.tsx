@@ -16,7 +16,7 @@ export default function Groups() {
   const { user } = useAuth();
   const [groups, setGroups] = useState<any[]>([]);
   const [editing, setEditing] = useState<any | null>(null);
-  const [form, setForm] = useState({ rules: "", welcome_message: "", moderation_enabled: true });
+  const [form, setForm] = useState({ rules: "", welcome_message: "", moderation_enabled: true, banned_words: "" });
 
   const load = async () => {
     if (!user) return;
