@@ -91,10 +91,8 @@ export default function Bots() {
       });
     }
 
-    const payload = {
-      ...form,
-      banned_words: form.banned_words.split(",").map(w => w.trim()).filter(Boolean)
-    };
+    const payload = { ...form };
+
 
     if (editing) {
       const { error } = await supabase.from("bots").update(payload).eq("id", editing.id);
