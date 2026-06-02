@@ -44,12 +44,23 @@ export default function Groups() {
 
   const startEdit = (g: any) => {
     setEditing(g);
-    setForm({ rules: g.rules ?? "", welcome_message: g.welcome_message ?? "", moderation_enabled: g.moderation_enabled ?? true });
+    setForm({
+      rules: g.rules ?? "",
+      welcome_message: g.welcome_message ?? "",
+      moderation_enabled: g.moderation_enabled ?? true,
+      banned_words: (g.banned_words || []).join(", "),
+    });
   };
 
   const save = async () => {
     if (!editing) return;
-    const { error } = await supabase.from("telegram_groups").update(form).eq("id", editing.id);
+    const payload = {
+      rules: form.rules,
+      welcome_message: form.welcome_message,
+      moderation_enabled: form.moderation_enabled,
+      banned_words: form.banned_words.split(",").map(w => w.trim()).filter(Boolean),
+    };
+    const { error } = await supabase.from("telegram_groups").update(payload).eq("id", editing.id);
     if (error) return toast.error(error.message);
     toast.success("Group updated");
     setEditing(null); load();
