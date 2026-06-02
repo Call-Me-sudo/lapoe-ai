@@ -49,7 +49,7 @@ export default function Index() {
           <div className="bg-card rounded-3xl shadow-card overflow-hidden">
             <div className="px-5 pt-5 pb-3 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full bg-tile-blue text-tile-blue-foreground grid place-items-center font-bold">K</div>
+                <img src="/bot-icon.png" alt="LaPoe" className="h-10 w-10 rounded-full object-cover" />
                 <div>
                   <div className="text-sm font-semibold text-foreground">LaPoe Preview</div>
                   <div className="text-xs text-muted-foreground">Demo workspace</div>

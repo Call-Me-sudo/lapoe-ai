@@ -79,7 +79,7 @@ export default function Auth() {
     <div className="min-h-screen bg-background grid place-items-center px-4 py-10">
       <div className="w-full max-w-md">
         <Link to="/" className="flex items-center justify-center gap-2 mb-6">
-          <span className="h-8 w-8 rounded-full bg-foreground text-background grid place-items-center font-bold">K</span>
+          <img src="/bot-icon.png" alt="LaPoe" className="h-9 w-9 rounded-full object-cover" />
           <span className="font-display text-xl font-bold text-foreground">LaPoe</span>
         </Link>
 
