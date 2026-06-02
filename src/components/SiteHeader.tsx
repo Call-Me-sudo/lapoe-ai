@@ -8,7 +8,7 @@ export default function SiteHeader() {
 
   return (
     <header className="sticky top-4 z-40 px-4">
-      <div className="container max-w-5xl bg-card rounded-full shadow-card border border-border/40 flex h-14 items-center justify-between px-4 pl-5">
+      <div className="container max-w-5xl flex h-14 items-center justify-between px-4 pl-5">
         <Link to="/" className="flex items-center gap-2">
           <img src="/bot-icon.png" alt="LaPoe" className="h-8 w-8 rounded-full object-cover" />
           <span className="font-display text-lg font-bold tracking-tight text-foreground">LaPoe</span>

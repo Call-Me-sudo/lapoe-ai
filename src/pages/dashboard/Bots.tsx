@@ -257,7 +257,7 @@ export default function Bots() {
 
       {bots.length === 0 ? (
         <div className="border border-dashed border-border rounded-lg p-12 text-center bg-paper-soft">
-          <BotIcon className="h-8 w-8 text-ink-soft mx-auto mb-3" />
+          <img src="/bot-icon.png" alt="LaPoe" className="h-10 w-10 rounded-full object-cover mx-auto mb-3" />
           <p className="text-ink-soft">No bots yet. Create your first one.</p>
         </div>
       ) : (
@@ -267,9 +267,7 @@ export default function Bots() {
             return (
               <div key={b.id} className="border border-border rounded-lg p-4 bg-card">
                 <div className="flex items-start gap-3">
-                  <div className="h-9 w-9 rounded-md bg-primary/10 text-primary grid place-items-center shrink-0">
-                    <BotIcon className="h-4 w-4" />
-                  </div>
+                  <img src="/bot-icon.png" alt="" className="h-9 w-9 rounded-md object-cover shrink-0" />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 flex-wrap">
                       <h3 className="text-sm font-semibold text-ink truncate">{b.name}</h3>
