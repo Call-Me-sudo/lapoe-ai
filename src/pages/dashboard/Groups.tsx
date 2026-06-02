@@ -101,7 +101,6 @@ export default function Groups() {
                 </div>
                 <div className="flex gap-1">
                   <Button variant="outline" size="sm" onClick={() => startEdit(g)}><SettingsIcon className="h-3.5 w-3.5" /> Configure</Button>
-                  <Button variant="ghost" size="icon" onClick={() => remove(g.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
                 </div>
               </div>
             </div>
