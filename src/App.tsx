@@ -26,6 +26,7 @@ import AdminMessages from "./pages/admin/AdminMessages";
 import AdminModeration from "./pages/admin/AdminModeration";
 import AdminActivity from "./pages/admin/AdminActivity";
 import AdminNotifications from "./pages/admin/AdminNotifications";
+import AdminSystemBot from "./pages/admin/AdminSystemBot";
 
 const queryClient = new QueryClient();
 
@@ -56,6 +57,7 @@ const App = () => (
             <Route path="/admin" element={<ProtectedRoute ownerOnly><AdminDashboard /></ProtectedRoute>} />
             <Route path="/admin/users" element={<ProtectedRoute ownerOnly><AdminUsers /></ProtectedRoute>} />
             <Route path="/admin/bots" element={<ProtectedRoute ownerOnly><AdminBots /></ProtectedRoute>} />
+            <Route path="/admin/system-bot" element={<ProtectedRoute ownerOnly><AdminSystemBot /></ProtectedRoute>} />
             <Route path="/admin/messages" element={<ProtectedRoute ownerOnly><AdminMessages /></ProtectedRoute>} />
             <Route path="/admin/moderation" element={<ProtectedRoute ownerOnly><AdminModeration /></ProtectedRoute>} />
             <Route path="/admin/notifications" element={<ProtectedRoute ownerOnly><AdminNotifications /></ProtectedRoute>} />
