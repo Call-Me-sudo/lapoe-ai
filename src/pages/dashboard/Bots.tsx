@@ -133,13 +133,6 @@ export default function Bots() {
       telegram_bot_token: b.telegram_bot_token ?? "",
       tone: b.tone ?? "friendly",
       personality: b.personality ?? "",
-      house_rules: b.house_rules ?? "",
-      welcome_message: b.welcome_message ?? "",
-      default_instructions: b.default_instructions ?? "",
-      banned_words: (b.banned_words || []).join(", "),
-      anti_flood_enabled: b.anti_flood_enabled ?? false,
-      anti_spam_enabled: b.anti_spam_enabled ?? false,
-      flood_sensitivity: b.flood_sensitivity ?? 5,
     });
     setOpen(true);
   };
