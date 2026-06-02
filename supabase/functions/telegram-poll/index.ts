@@ -543,8 +543,15 @@ async function processBot(supabase: any, bot: any, deadline: number) {
       if (upd.my_chat_member) {
         const m = upd.my_chat_member;
         const chat = m.chat;
-        if ((chat.type === "group" || chat.type === "supergroup") && m.new_chat_member?.status === "member") {
-          await ensureGroup(supabase, bot, { chat });
+        const newStatus = m.new_chat_member?.status;
+        if (chat.type === "group" || chat.type === "supergroup") {
+          if (newStatus === "member" || newStatus === "administrator" || newStatus === "creator") {
+            await ensureGroup(supabase, bot, { chat });
+          } else if (newStatus === "left" || newStatus === "kicked") {
+            // Bot was removed from the group → auto-remove from KADE
+            await supabase.from("telegram_groups").delete()
+              .eq("bot_id", bot.id).eq("telegram_chat_id", String(chat.id));
+          }
         }
         continue;
       }
