@@ -442,7 +442,7 @@ I'm a private bot here to chat. In *DMs* I only handle a few general commands:
 /stars — like me? leave a review for LaPoe
 
 To *configure me*, my owner uses the LaPoe dashboard (https://lapoe.app)
-or talks to @LaPoe_bot. I never take settings commands in DMs — not even from my owner.
+or talks to @LaPoe\\_bot. I never take settings commands in DMs — not even from my owner.
 
 Want a bot like me for your community? https://lapoe.app`;
 
