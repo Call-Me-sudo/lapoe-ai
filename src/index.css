@@ -1,146 +1,200 @@
-@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap");
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* KADE — Mobile-fintech design system. All colors HSL. */
+/* KADE — Rose & Slate design system */
 
 @layer base {
   :root {
-    /* Soft gray canvas + white cards */
-    --background: 220 14% 96%;
-    --foreground: 220 15% 8%;
+    /* Canvas — very slightly purple-tinted white */
+    --background: 270 12% 97%;
+    --foreground: 265 40% 14%; /* deep slate, not black */
 
     --card: 0 0% 100%;
-    --card-foreground: 220 15% 8%;
+    --card-foreground: 265 40% 14%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 220 15% 8%;
+    --popover-foreground: 265 40% 14%;
 
-    /* Primary = graphite ink. Minimal, Apple-like. Keeps icons/UI neutral. */
-    --primary: 220 15% 12%;
+    /* Primary = deep slate */
+    --primary: 265 40% 14%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 220 14% 94%;
-    --secondary-foreground: 220 15% 8%;
+    --secondary: 268 20% 95%;
+    --secondary-foreground: 265 30% 28%;
 
-    --muted: 220 14% 94%;
-    --muted-foreground: 220 9% 46%;
+    --muted: 268 20% 95%;
+    --muted-foreground: 265 14% 48%;
 
-    /* Accent = balanced green. Use sparingly for brand pops, success states, CTAs. */
-    --accent: 150 45% 90%;
-    --accent-foreground: 152 50% 22%;
+    /* Accent = blush rose */
+    --accent: 338 88% 95%;
+    --accent-foreground: 338 65% 38%;
 
-    --destructive: 0 84% 60%;
+    --destructive: 0 78% 56%;
     --destructive-foreground: 0 0% 100%;
 
-    /* Status tokens — keep these distinct from accent green. */
-    --success: 152 55% 36%;
+    --success: 152 55% 30%;
     --success-foreground: 0 0% 100%;
-    --warning: 38 92% 50%;
-    --warning-foreground: 220 15% 8%;
+    --warning: 38 90% 44%;
+    --warning-foreground: 265 40% 14%;
 
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 220 15% 8%;
+    --border: 268 22% 90%;
+    --input: 268 22% 90%;
+    --ring: 338 65% 45%;
 
     --radius: 1rem;
 
-    /* Semantic surfaces used across the app */
-    --ink: 220 15% 8%;
-    --ink-soft: 220 9% 46%;
-    --paper: 0 0% 100%;          /* card surface */
-    --paper-soft: 220 14% 96%;   /* canvas */
-    --gold: 36 65% 52%;
-    --brand-green: 152 55% 36%;
-    --brand-green-soft: 150 45% 90%;
+    /* Semantic tokens */
+    --ink: 265 40% 14%;
+    --ink-mid: 265 18% 30%;
+    --ink-soft: 265 10% 44%;
+    --paper: 0 0% 100%;
+    --paper-soft: 270 12% 97%;
 
-    /* Tinted icon-tile palette (mobile-fintech) */
-    --tile-blue: 220 14% 94%;
-    --tile-blue-foreground: 220 15% 20%;
-    --tile-green: 145 60% 92%;
-    --tile-green-foreground: 150 60% 38%;
-    --tile-pink: 340 90% 95%;
-    --tile-pink-foreground: 335 75% 55%;
-    --tile-amber: 38 95% 92%;
-    --tile-amber-foreground: 30 90% 45%;
-    --tile-violet: 265 80% 95%;
-    --tile-violet-foreground: 260 70% 55%;
-    --tile-gray: 220 14% 94%;
-    --tile-gray-foreground: 220 15% 20%;
+    /* Brand — rose */
+    --brand-rose: 338 65% 45%;
+    --brand-rose-deep: 338 65% 34%;
+    --brand-rose-soft: 338 88% 95%;
 
-    --gradient-warm: linear-gradient(180deg, hsl(0 0% 100%), hsl(220 14% 97%));
-    --gradient-ink: linear-gradient(180deg, hsl(220 15% 12%), hsl(220 15% 4%));
-    --shadow-soft: 0 1px 2px rgba(16,24,40,.04), 0 1px 3px rgba(16,24,40,.04);
-    --shadow-card: 0 1px 2px rgba(16,24,40,.04), 0 4px 16px rgba(16,24,40,.04);
-    --shadow-lift: 0 6px 24px -8px rgba(16,24,40,.12), 0 2px 6px rgba(16,24,40,.05);
-    --shadow-pill: 0 8px 24px -6px rgba(16,24,40,.18);
+    /* Brand — violet (crypto / wallet) */
+    --brand-violet: 253 52% 49%;
+    --brand-violet-deep: 253 52% 37%;
+    --brand-violet-soft: 253 72% 95%;
+
+    /* Brand — slate (nav, headers, CTAs) */
+    --brand-slate: 265 40% 14%;
+    --brand-slate-mid: 265 36% 19%;
+
+    /* Tinted icon-tile palette */
+    --tile-rose: 338 88% 95%;
+    --tile-rose-foreground: 338 65% 38%;
+    --tile-violet: 253 72% 95%;
+    --tile-violet-foreground: 253 52% 42%;
+    --tile-slate: 268 20% 93%;
+    --tile-slate-foreground: 265 30% 28%;
+    --tile-success: 152 55% 92%;
+    --tile-success-foreground: 152 55% 26%;
+    --tile-warning: 38 90% 92%;
+    --tile-warning-foreground: 38 90% 32%;
+
+    --shadow-soft: 0 1px 2px rgba(26, 10, 46, 0.04), 0 1px 3px rgba(26, 10, 46, 0.04);
+    --shadow-card: 0 1px 2px rgba(26, 10, 46, 0.04), 0 4px 16px rgba(26, 10, 46, 0.05);
+    --shadow-lift: 0 6px 24px -8px rgba(26, 10, 46, 0.14), 0 2px 6px rgba(26, 10, 46, 0.05);
+    --shadow-pill: 0 8px 24px -6px rgba(192, 38, 94, 0.22);
 
     --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 220 15% 8%;
-    --sidebar-primary: 220 15% 8%;
+    --sidebar-foreground: 265 40% 14%;
+    --sidebar-primary: 265 40% 14%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 14% 94%;
-    --sidebar-accent-foreground: 220 15% 8%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 220 15% 8%;
+    --sidebar-accent: 268 20% 95%;
+    --sidebar-accent-foreground: 265 40% 14%;
+    --sidebar-border: 268 22% 90%;
+    --sidebar-ring: 338 65% 45%;
   }
 
   .dark {
-    --background: 220 15% 6%;
-    --foreground: 0 0% 98%;
-    --card: 220 15% 10%;
-    --card-foreground: 0 0% 98%;
-    --popover: 220 15% 10%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 220 15% 8%;
-    --secondary: 220 15% 14%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 220 15% 14%;
-    --muted-foreground: 220 9% 65%;
-    --accent: 152 45% 22%;
-    --accent-foreground: 150 60% 88%;
-    --destructive: 0 65% 55%;
+    --background: 265 40% 6%;
+    --foreground: 270 20% 95%;
+    --card: 265 36% 10%;
+    --card-foreground: 270 20% 95%;
+    --popover: 265 36% 10%;
+    --popover-foreground: 270 20% 95%;
+    --primary: 270 20% 95%;
+    --primary-foreground: 265 40% 10%;
+    --secondary: 265 30% 15%;
+    --secondary-foreground: 270 20% 95%;
+    --muted: 265 30% 15%;
+    --muted-foreground: 265 12% 60%;
+    --accent: 338 50% 22%;
+    --accent-foreground: 338 80% 88%;
+    --destructive: 0 65% 52%;
     --destructive-foreground: 0 0% 98%;
-    --border: 220 15% 18%;
-    --input: 220 15% 18%;
-    --ring: 0 0% 98%;
-    --ink: 0 0% 98%;
-    --ink-soft: 220 9% 65%;
-    --paper: 220 15% 10%;
-    --paper-soft: 220 15% 6%;
+    --border: 265 28% 20%;
+    --input: 265 28% 20%;
+    --ring: 338 65% 55%;
+    --ink: 270 20% 95%;
+    --ink-mid: 265 14% 72%;
+    --ink-soft: 265 10% 55%;
+    --paper: 265 36% 10%;
+    --paper-soft: 265 40% 6%;
+    --brand-rose: 338 65% 58%;
+    --brand-rose-soft: 338 50% 22%;
+    --brand-violet: 253 60% 65%;
+    --brand-violet-soft: 253 42% 20%;
   }
 }
 
 @layer base {
-  * { @apply border-border; }
-  html { font-feature-settings: "ss01", "cv11"; -webkit-font-smoothing: antialiased; }
+  * {
+    @apply border-border;
+  }
+  html {
+    font-feature-settings: "ss01", "cv11";
+    -webkit-font-smoothing: antialiased;
+  }
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: "Inter", system-ui, sans-serif;
   }
-  h1, h2, h3, h4, .font-display {
-    font-family: 'Manrope', system-ui, sans-serif;
+  h1,
+  h2,
+  h3,
+  h4,
+  .font-display {
+    font-family: "Manrope", system-ui, sans-serif;
     font-weight: 700;
     letter-spacing: -0.02em;
   }
 }
 
 @layer utilities {
-  .text-balance { text-wrap: balance; }
-  .bg-paper { background-color: hsl(var(--paper)); }
-  .bg-paper-soft { background-color: hsl(var(--paper-soft)); }
-  .text-ink { color: hsl(var(--ink)); }
-  .text-ink-soft { color: hsl(var(--ink-soft)); }
-  .shadow-soft { box-shadow: var(--shadow-soft); }
-  .shadow-card { box-shadow: var(--shadow-card); }
-  .shadow-lift { box-shadow: var(--shadow-lift); }
-  .shadow-pill { box-shadow: var(--shadow-pill); }
-  .bg-gradient-warm { background: var(--gradient-warm); }
+  .text-balance {
+    text-wrap: balance;
+  }
+  .bg-paper {
+    background-color: hsl(var(--paper));
+  }
+  .bg-paper-soft {
+    background-color: hsl(var(--paper-soft));
+  }
+  .text-ink {
+    color: hsl(var(--ink));
+  }
+  .text-ink-mid {
+    color: hsl(var(--ink-mid));
+  }
+  .text-ink-soft {
+    color: hsl(var(--ink-soft));
+  }
+  .shadow-soft {
+    box-shadow: var(--shadow-soft);
+  }
+  .shadow-card {
+    box-shadow: var(--shadow-card);
+  }
+  .shadow-lift {
+    box-shadow: var(--shadow-lift);
+  }
+  .shadow-pill {
+    box-shadow: var(--shadow-pill);
+  }
 
-  /* Card preset — reusable */
+  /* Icon tile helpers */
+  .tile-rose {
+    background-color: hsl(var(--tile-rose));
+    color: hsl(var(--tile-rose-foreground));
+  }
+  .tile-violet {
+    background-color: hsl(var(--tile-violet));
+    color: hsl(var(--tile-violet-foreground));
+  }
+  .tile-slate {
+    background-color: hsl(var(--tile-slate));
+    color: hsl(var(--tile-slate-foreground));
+  }
+
   .surface-card {
     background-color: hsl(var(--card));
     border-radius: 1.5rem;
