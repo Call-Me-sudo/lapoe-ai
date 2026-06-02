@@ -51,16 +51,16 @@ export default function AdminSystemBot() {
 
   return (
     <AdminLayout>
-      <div className="mb-6 flex items-start justify-between gap-3">
-        <div>
+      <div className="mb-6 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+        <div className="min-w-0">
           <div className="text-xs uppercase tracking-[0.18em] text-ink-soft">System bot</div>
-          <h1 className="font-display text-3xl text-ink mt-1">@LaPoe_bot</h1>
+          <h1 className="font-display text-2xl sm:text-3xl text-ink mt-1 break-all">@LaPoe_bot</h1>
           <p className="text-sm text-ink-soft mt-1">General-purpose group bot. Anyone can add it to their group.</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <Button variant="outline" size="sm" onClick={load}><RefreshCw className="h-3.5 w-3.5" /> Refresh</Button>
           <Button size="sm" asChild>
-            <a href="https://t.me/LaPoe_bot" target="_blank" rel="noreferrer"><ExternalLink className="h-3.5 w-3.5" /> Open in Telegram</a>
+            <a href="https://t.me/LaPoe_bot" target="_blank" rel="noreferrer"><ExternalLink className="h-3.5 w-3.5" /> Open</a>
           </Button>
         </div>
       </div>
