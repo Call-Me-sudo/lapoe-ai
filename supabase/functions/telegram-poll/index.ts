@@ -437,7 +437,7 @@ async function ensureGroup(supabase: any, bot: any, msg: any) {
 // the bot is treated as an admin console. Keep DMs pure conversation.
 //
 // In DMs the bot only answers general commands (/start, /help, /feedback,
-// /stars) and AI chat. See DEVELOPERS.md → "Bot DM policy".
+// /donate) and AI chat. See DEVELOPERS.md → "Bot DM policy".
 // ============================================================================
 
 const DM_HELP = `*${"{name}"}* — what I can do here
@@ -447,7 +447,7 @@ I'm a private bot here to chat. In *DMs* I only handle a few general commands:
 /start — say hi
 /help — this menu
 /feedback \`<message>\` — send my owner a note
-/stars — like me? leave a review for LaPoe
+/donate — support my owner (coming soon)
 
 To *configure me*, my owner uses the LaPoe dashboard (https://lapoe.app)
 or talks to @LaPoe\\_bot. I never take settings commands in DMs — not even from my owner.
@@ -484,8 +484,8 @@ async function handleDmGeneral(supabase: any, bot: any, token: string, msg: any)
       return true;
     }
 
-    case "/stars":
-      await ack("⭐ If you enjoy chatting with me, leave a star at https://github.com/lovable-dev/lapoe — it really helps.");
+    case "/donate":
+      await ack("💎 Support is coming soon. My owner will set this up shortly!");
       return true;
 
     // Explicitly block any legacy owner commands — even owner gets the same answer.
