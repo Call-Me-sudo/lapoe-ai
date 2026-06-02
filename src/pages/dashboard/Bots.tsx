@@ -57,22 +57,8 @@ export default function Bots() {
   const [deleteBot, setDeleteBot] = useState<Bot | null>(null);
   const [form, setForm] = useState({
     name: "", description: "", telegram_bot_token: "",
-    tone: "friendly", personality: "", house_rules: "", welcome_message: "",
-    default_instructions: "", banned_words: "",
-    anti_flood_enabled: true, anti_spam_enabled: true, flood_sensitivity: 5,
+    tone: "friendly", personality: "",
   });
-
-  const load = useCallback(async () => {
-    if (!user) return;
-    const client = supabase as RpcClient;
-    const [{ data }, { data: quotaRows }, { data: usageRows }] = await Promise.all([
-      supabase.from("bots").select("*").eq("owner_id", user.id).order("created_at", { ascending: false }),
-      client.rpc("my_bot_quota"),
-      client.rpc("my_workspace_usage"),
-    ]);
-    setBots(data ?? []);
-    setQuota(Array.isArray(quotaRows) ? quotaRows[0] ?? null : quotaRows ?? null);
-    setUsage(Array.isArray(usageRows) ? usageRows[0] ?? null : usageRows ?? null);
   }, [user]);
   useEffect(() => { load(); }, [load]);
 
