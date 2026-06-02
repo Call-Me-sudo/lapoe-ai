@@ -674,14 +674,12 @@ async function processBot(supabase: any, bot: any, deadline: number) {
       // New members → welcome
       if (msg.new_chat_members && msg.new_chat_members.length > 0) {
         const group = await ensureGroup(supabase, bot, msg);
-        const tmpl = group?.welcome_message || bot.welcome_message;
-        if (tmpl) {
-          for (const m of msg.new_chat_members) {
-            if (m.id === me.id) continue;
-            const name = m.username ? `@${m.username}` : (m.first_name || "friend");
-            await send(bot.telegram_bot_token, msg.chat.id,
-              tmpl.replaceAll("{name}", name).replaceAll("{group}", msg.chat.title || ""));
-          }
+        const tmpl = group?.welcome_message || bot.welcome_message || "Welcome {name} to {group}! 👋";
+        for (const m of msg.new_chat_members) {
+          if (m.id === me.id) continue;
+          const name = m.username ? `@${m.username}` : (m.first_name || "friend");
+          await send(bot.telegram_bot_token, msg.chat.id,
+            tmpl.replaceAll("{name}", name).replaceAll("{group}", msg.chat.title || ""));
         }
         continue;
       }
