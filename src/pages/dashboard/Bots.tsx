@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
 import PageHeader from "@/components/dashboard/PageHeader";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Bot as BotIcon, Trash2, Edit3, ShieldAlert, CheckCircle2, AlertCircle, AtSign } from "lucide-react";
+import { Plus, Bot as BotIcon, Trash2, Edit3, ShieldAlert, CheckCircle2, AlertCircle, AtSign, Settings2 } from "lucide-react";
 import { toast } from "sonner";
 
 type Bot = {
