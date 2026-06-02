@@ -869,9 +869,11 @@ async function processBot(supabase: any, bot: any, deadline: number) {
 
         const system = buildSystemPrompt(bot, group, knowledgeResult, kExists);
         const rawReply = await askAI(system, cleanText);
+        const needsKnowledge = /\[NEEDS_KNOWLEDGE\]/i.test(rawReply);
+        const stripped = rawReply.replace(/\[NEEDS_KNOWLEDGE\]/gi, "").trim();
         const allowedCtx = [knowledgeResult, bot.house_rules, bot.default_instructions, bot.personality]
           .filter(Boolean).join("\n");
-        const reply = sanitizeReply(rawReply, allowedCtx);
+        const reply = sanitizeReply(stripped, allowedCtx);
 
         if (reply) {
           // Send the reply first, log after — don't make the user wait for the DB write.
@@ -880,6 +882,11 @@ async function processBot(supabase: any, bot: any, deadline: number) {
             bot_id: bot.id, owner_id: bot.owner_id, direction: "outbound",
             content: reply, telegram_user: msg.from?.username || null,
           }).then(() => {}, () => {});
+        }
+
+        // If the AI flagged a real factual gap, log it for the owner's Inbox.
+        if (needsKnowledge && isQuestionLike(cleanText) && !isGreeting(cleanText)) {
+          logUnansweredQuestion(supabase, bot, group, cleanText, msg.from);
         }
       } catch (e) {
         console.error(`bot ${bot.name} reply failed:`, (e as Error).message);
