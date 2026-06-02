@@ -132,7 +132,8 @@ export default function Groups() {
             </div>
             <div>
               <Label>Group rules (used by AI)</Label>
-              <Textarea value={form.rules} onChange={(e) => setForm({ ...form, rules: e.target.value })} rows={4} maxLength={2000} />
+              <p className="text-xs text-ink-soft mt-1 mb-1.5">These instructions guide how the AI behaves and responds in this group. Examples: tone, topics to avoid, or special commands.</p>
+              <Textarea value={form.rules} onChange={(e) => setForm({ ...form, rules: e.target.value })} rows={4} maxLength={2000} placeholder="Be friendly but firm. No off-topic discussions after 10 PM. Always greet new members by name." />
             </div>
             <div>
               <Label>Welcome message (overrides bot default)</Label>
