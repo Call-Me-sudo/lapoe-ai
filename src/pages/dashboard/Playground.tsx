@@ -125,9 +125,7 @@ export default function Playground() {
             {messages.map((m, i) => (
               <div key={i} className={cn("flex", m.role === "user" ? "justify-end" : "justify-start")}>
                 {m.role === "assistant" && (
-                  <div className="h-8 w-8 rounded-full bg-muted text-ink grid place-items-center shrink-0 mr-2 mt-0.5">
-                    <BotIcon className="h-4 w-4" />
-                  </div>
+                  <img src="/bot-icon.png" alt="" className="h-8 w-8 rounded-full object-cover shrink-0 mr-2 mt-0.5" />
                 )}
                 <div
                   className={cn(
@@ -144,9 +142,7 @@ export default function Playground() {
 
             {sending && (
               <div className="flex justify-start">
-                <div className="h-8 w-8 rounded-full bg-muted text-ink grid place-items-center shrink-0 mr-2 mt-0.5">
-                  <BotIcon className="h-4 w-4" />
-                </div>
+                <img src="/bot-icon.png" alt="" className="h-8 w-8 rounded-full object-cover shrink-0 mr-2 mt-0.5" />
                 <div className="px-4 py-3 text-sm text-muted-foreground inline-flex items-center gap-1.5">
                   <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground animate-bounce [animation-delay:-0.3s]" />
                   <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground animate-bounce [animation-delay:-0.15s]" />
