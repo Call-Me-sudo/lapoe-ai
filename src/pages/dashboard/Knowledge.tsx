@@ -31,6 +31,28 @@ export default function Knowledge() {
   };
   useEffect(() => { load(); }, [user]);
 
+  // Realtime: auto-refresh when knowledge_sources change for this user
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel(`knowledge-sources-${user.id}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "knowledge_sources", filter: `owner_id=eq.${user.id}` },
+        () => load()
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [user]);
+
+  // Polling fallback while any source is still indexing
+  useEffect(() => {
+    const pending = items.some((i) => !i.indexed_at && !i.indexing_error);
+    if (!pending) return;
+    const t = setInterval(load, 4000);
+    return () => clearInterval(t);
+  }, [items]);
+
   const reindex = async (source_id: string) => {
     setBusy(source_id);
     const { error } = await supabase.functions.invoke("index-knowledge", { body: { source_id } });
