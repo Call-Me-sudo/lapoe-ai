@@ -13,7 +13,7 @@ export default function SiteFooter() {
             <div className="font-display text-lg font-bold text-foreground">LaPoe</div>
           </div>
           <p className="text-muted-foreground mt-3 max-w-xs">
-            Knowledge Acquisition & Dynamic Engagement — the calm desk for your Telegram community.
+            Language + Poiesis — the calm desk for your Telegram community.
           </p>
         </div>
         <div>

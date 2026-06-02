@@ -25,7 +25,7 @@ export default function Index() {
         <div className="text-center max-w-3xl mx-auto">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-card shadow-card text-xs font-medium text-muted-foreground mb-6">
             <span className="h-1.5 w-1.5 rounded-full bg-tile-green-foreground" />
-            New · Knowledge Acquisition & Dynamic Engagement
+            New · Language + Poiesis
           </div>
           <h1 className="font-display text-5xl md:text-7xl font-bold leading-[1.02] text-foreground text-balance tracking-tight">
             A calm communications desk for your <span className="text-tile-blue-foreground">Telegram</span> community.
