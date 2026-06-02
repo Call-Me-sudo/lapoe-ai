@@ -1,18 +1,18 @@
 
-# KADE
+# LaPoe
 
-![KADE Banner](./assets/kade_banner.png)
+![LaPoe Banner](./assets/kade_banner.png)
 
 > A communications desk that sits politely behind your community, ready to help.
 
-KADE is a Telegram assistant that reads the room before it speaks. It manages your groups, learns from your knowledge sources, and replies like a thoughtful teammate. Set it up in an afternoon. Refine it forever.
+LaPoe is a Telegram assistant that reads the room before it speaks. It manages your groups, learns from your knowledge sources, and replies like a thoughtful teammate. Set it up in an afternoon. Refine it forever.
 
 ---
 
-## What KADE does
+## What LaPoe does
 
 **Conversations, not just commands**
-KADE reads context, replies like a thoughtful teammate, and knows when to stay quiet.
+LaPoe reads context, replies like a thoughtful teammate, and knows when to stay quiet.
 
 **Cites its sources**
 Point it at your knowledge sources — blog URLs, house rules, tone of voice guidelines. It reads them and cites them when it answers.
@@ -36,8 +36,8 @@ Head to [@BotFather](https://t.me/BotFather) and create a new bot. Copy your bot
 **2. Train it on your knowledge**
 Drop in blog URLs, write house rules, and define your tone of voice from the dashboard.
 
-**3. Invite KADE to your group**
-Invite KADE to your Telegram group. Promote it to admin if you want moderation powers.
+**3. Invite LaPoe to your group**
+Invite LaPoe to your Telegram group. Promote it to admin if you want moderation powers.
 
 **4. Monitor and step in anytime**
 See every message and reply in your dashboard. Pause or take over at any point.
@@ -48,7 +48,7 @@ Start in seconds. No card required.
 
 ## The dashboard
 
-- Live log of every message KADE sees and sends, newest first
+- Live log of every message LaPoe sees and sends, newest first
 - Pause, edit, or take over any reply
 - Manage all your bots and groups in one workspace
 - Add knowledge sources — URLs, pasted text, or house rules
@@ -58,10 +58,10 @@ Start in seconds. No card required.
 
 ## Bot persona
 
-You can customise KADE's personality per bot. Example:
+You can customise LaPoe's personality per bot. Example:
 
 ```
-You are KADE for [Your Community]. Be warm, concise, and cite sources when you can.
+You are LaPoe for [Your Community]. Be warm, concise, and cite sources when you can.
 ```
 
 ---
@@ -72,7 +72,7 @@ Simple plans. Grow when you're ready.
 
 | Plan | Best for |
 |---|---|
-| Free | Try KADE on a single small group |
+| Free | Try LaPoe on a single small group |
 | Starter | One community manager |
 | Pro | Active multi-group communities |
 | Agency | Agencies and large workspaces |
@@ -110,4 +110,4 @@ MIT — free to use, fork, and build on.
 
 ---
 
-Your community deserves a calm, well-read desk clerk. [Try KADE free →](https://kade-ai.vercel.app)
+Your community deserves a calm, well-read desk clerk. [Try LaPoe free →](https://kade-ai.vercel.app)

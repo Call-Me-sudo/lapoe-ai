@@ -1,4 +1,4 @@
-// KADE system bot (@aiKADE_Bot) — the "BotFather" for KADE.
+// LaPoe system bot (@aiKADE_Bot) — the "BotFather" for LaPoe.
 // Lets owners control everything from Telegram, and lets users link their account
 // and check status. Uses KADE_SYSTEM_BOT_TOKEN. No per-user API key needed.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
@@ -27,11 +27,11 @@ async function send(token: string, chatId: number, text: string, replyTo?: numbe
   });
 }
 
-const HELP = `*KADE — system bot*
+const HELP = `*LaPoe — system bot*
 
 Anyone:
 /start — say hi
-/link <code> — link your KADE account (get the code in your dashboard → Settings)
+/link <code> — link your LaPoe account (get the code in your dashboard → Settings)
 /status — your account & bots health
 /mybots — list your bots
 /help — this menu
@@ -76,7 +76,7 @@ async function handleCommand(supabase: any, token: string, msg: any) {
         `👋 Welcome back, *${profile.display_name || profile.email}*.\n\nYou're linked${owner ? " as *owner*" : ""}. Try /mybots or /status.\n\n${HELP}`);
     }
     return send(token, chatId,
-      `👋 *KADE — Knowledge Acquisition & Dynamic Engagement*\n\nI'm the system bot for KADE. To control your KADE workspace from Telegram:\n\n1. Open your dashboard at https://kade-ai.vercel.app\n2. Go to *Settings → Telegram*\n3. Generate a link code and send it here:\n   \`/link YOUR_CODE\`\n\nNo account yet? Sign up first, then come back.`);
+      `👋 *LaPoe — Knowledge Acquisition & Dynamic Engagement*\n\nI'm the system bot for LaPoe. To control your LaPoe workspace from Telegram:\n\n1. Open your dashboard at https://kade-ai.vercel.app\n2. Go to *Settings → Telegram*\n3. Generate a link code and send it here:\n   \`/link YOUR_CODE\`\n\nNo account yet? Sign up first, then come back.`);
   }
 
   if (cmd === "/help") {
@@ -151,7 +151,7 @@ async function handleCommand(supabase: any, token: string, msg: any) {
       supabase.from("subscriptions").select("id", { count: "exact", head: true }).neq("plan", "free"),
     ]);
     return send(token, chatId,
-      `*KADE — system stats*\n\n• Users: ${u.count ?? 0}\n• Bots: ${b.count ?? 0}\n• Messages: ${m.count ?? 0}\n• Paying: ${s.count ?? 0}`);
+      `*LaPoe — system stats*\n\n• Users: ${u.count ?? 0}\n• Bots: ${b.count ?? 0}\n• Messages: ${m.count ?? 0}\n• Paying: ${s.count ?? 0}`);
   }
 
   if (cmd === "/activate" || cmd === "/pause") {
@@ -170,7 +170,7 @@ async function handleCommand(supabase: any, token: string, msg: any) {
     let sent = 0;
     for (const t of targets || []) {
       try {
-        await send(token, t.telegram_user_id, `📣 *Announcement from KADE*\n\n${args}`);
+        await send(token, t.telegram_user_id, `📣 *Announcement from LaPoe*\n\n${args}`);
         sent++;
       } catch { /* ignore individual failures */ }
     }

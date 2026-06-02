@@ -25,7 +25,7 @@ export default function Messages() {
     <DashboardLayout>
       <PageHeader
         title="Messages"
-        description="Live log of what KADE sees and sends. Newest first."
+        description="Live log of what LaPoe sees and sends. Newest first."
       />
 
       {msgs.length === 0 ? (

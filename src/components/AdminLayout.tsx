@@ -32,7 +32,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
               <Shield className="h-4 w-4" />
             </span>
             <div>
-              <div className="font-display text-lg font-bold text-foreground leading-none">KADE</div>
+              <div className="font-display text-lg font-bold text-foreground leading-none">LaPoe</div>
               <div className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground mt-1">Control room</div>
             </div>
           </Link>
@@ -73,7 +73,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         </button>
         <div className="flex items-center gap-2">
           <Shield className="h-4 w-4 text-foreground" />
-          <span className="font-display text-base font-bold text-foreground">KADE Admin</span>
+          <span className="font-display text-base font-bold text-foreground">LaPoe Admin</span>
         </div>
         <div className="w-10" />
       </header>

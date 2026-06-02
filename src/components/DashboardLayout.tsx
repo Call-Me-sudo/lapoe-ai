@@ -71,7 +71,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           <span className="h-8 w-8 rounded-full bg-tile-green text-tile-green-foreground grid place-items-center">
             <Sparkles className="h-4 w-4" />
           </span>
-          <span className="font-display text-lg font-bold tracking-tight text-foreground">KADE</span>
+          <span className="font-display text-lg font-bold tracking-tight text-foreground">LaPoe</span>
         </Link>
         <button
           className="md:hidden p-2 -mr-2 text-muted-foreground hover:text-foreground"
@@ -115,7 +115,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
       <div className="p-3">
         <a
-          href="mailto:support@kade.app"
+          href="mailto:support@lapoe.app"
           className="flex items-center gap-3 rounded-full px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted"
         >
           <HelpCircle className="h-4 w-4" /> Help & support

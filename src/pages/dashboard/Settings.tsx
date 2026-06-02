@@ -66,7 +66,7 @@ export default function Settings() {
       <div className="border border-border rounded-lg bg-card p-6 max-w-lg">
         <div className="flex items-center gap-2 mb-3">
           <SiTelegram className="h-4 w-4 text-[#229ED9]" />
-          <h2 className="text-base font-semibold text-ink">Telegram — KADE system bot</h2>
+          <h2 className="text-base font-semibold text-ink">Telegram — LaPoe system bot</h2>
         </div>
 
         {telegramUsername ? (
@@ -77,14 +77,14 @@ export default function Settings() {
               <p className="text-ink-soft mt-1">
                 Open Telegram and send <code className="bg-paper-soft px-1.5 py-0.5 rounded">/help</code> to{" "}
                 <a href="https://t.me/aiKADE_Bot" target="_blank" rel="noreferrer" className="text-primary underline">@aiKADE_Bot</a>
-                {" "}to control your KADE workspace.
+                {" "}to control your LaPoe workspace.
               </p>
             </div>
           </div>
         ) : (
           <>
             <p className="text-sm text-ink-soft mb-4">
-              Link your Telegram account to control KADE from your phone. Get a code, then send it to{" "}
+              Link your Telegram account to control LaPoe from your phone. Get a code, then send it to{" "}
               <a href="https://t.me/aiKADE_Bot" target="_blank" rel="noreferrer" className="text-primary underline">@aiKADE_Bot</a>.
             </p>
             {code ? (

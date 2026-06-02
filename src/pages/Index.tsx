@@ -31,7 +31,7 @@ export default function Index() {
             A calm communications desk for your <span className="text-tile-blue-foreground">Telegram</span> community.
           </h1>
           <p className="mt-6 text-lg text-muted-foreground max-w-2xl mx-auto text-balance">
-            KADE answers from your blog and group history, moderates with rules you set, and works alongside you — not in place of you.
+            LaPoe answers from your blog and group history, moderates with rules you set, and works alongside you — not in place of you.
           </p>
           <div className="mt-10 flex flex-wrap gap-3 justify-center">
             <Button asChild variant="default" size="xl">
@@ -51,7 +51,7 @@ export default function Index() {
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 rounded-full bg-tile-blue text-tile-blue-foreground grid place-items-center font-bold">K</div>
                 <div>
-                  <div className="text-sm font-semibold text-foreground">KADE Preview</div>
+                  <div className="text-sm font-semibold text-foreground">LaPoe Preview</div>
                   <div className="text-xs text-muted-foreground">Demo workspace</div>
                 </div>
               </div>
@@ -98,9 +98,9 @@ export default function Index() {
           </div>
           <div className="bg-card rounded-3xl shadow-card divide-y divide-border/60 overflow-hidden">
             {[
-              ["01", "Create your bot in Telegram", "Paste the bot token into KADE — that's it.", "blue"],
+              ["01", "Create your bot in Telegram", "Paste the bot token into LaPoe — that's it.", "blue"],
               ["02", "Add knowledge & rules", "Drop blog URLs, write house rules, define tone.", "green"],
-              ["03", "Add to a group", "Invite KADE. Promote to admin for moderation.", "pink"],
+              ["03", "Add to a group", "Invite LaPoe. Promote to admin for moderation.", "pink"],
               ["04", "Watch the desk", "See every message in your dashboard. Step in anytime.", "violet"],
             ].map(([n, t, d, tone]) => (
               <div key={n as string} className="flex items-center gap-4 px-5 py-4">
@@ -122,7 +122,7 @@ export default function Index() {
             Your community deserves a calm, well-read desk clerk.
           </h2>
           <p className="text-background/70 mt-4 max-w-xl mx-auto">
-            Try KADE free. Upgrade when your community grows.
+            Try LaPoe free. Upgrade when your community grows.
           </p>
           <Button asChild variant="warm" size="xl" className="mt-8">
             <Link to="/auth?mode=signup">Create your workspace <ArrowUpRight className="h-4 w-4" /></Link>

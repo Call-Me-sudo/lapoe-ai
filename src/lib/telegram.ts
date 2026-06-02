@@ -1,5 +1,5 @@
 // Detect Telegram Mini App context and auto-link the Telegram identity to the
-// signed-in KADE profile. Safe to call on any page after auth.
+// signed-in LaPoe profile. Safe to call on any page after auth.
 import { supabase } from "@/integrations/supabase/client";
 
 export function getTelegramInitData(): string | null {

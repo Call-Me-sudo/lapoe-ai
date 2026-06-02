@@ -10,7 +10,7 @@ export default function SiteFooter() {
             <span className="h-7 w-7 rounded-full bg-foreground text-background grid place-items-center">
               <Sparkles className="h-3.5 w-3.5" />
             </span>
-            <div className="font-display text-lg font-bold text-foreground">KADE</div>
+            <div className="font-display text-lg font-bold text-foreground">LaPoe</div>
           </div>
           <p className="text-muted-foreground mt-3 max-w-xs">
             Knowledge Acquisition & Dynamic Engagement — the calm desk for your Telegram community.
@@ -31,7 +31,7 @@ export default function SiteFooter() {
           </ul>
         </div>
         <div className="text-muted-foreground md:text-right">
-          © {new Date().getFullYear()} KADE
+          © {new Date().getFullYear()} LaPoe
         </div>
       </div>
     </footer>
