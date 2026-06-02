@@ -12,7 +12,7 @@ const nav = [
   { to: "/admin", icon: LayoutDashboard, label: "Overview", end: true },
   { to: "/admin/users", icon: Users, label: "Users" },
   { to: "/admin/bots", icon: BotIcon, label: "User bots" },
-  { to: "/admin/system-bot", icon: Sparkles, label: "System bot" },
+  { to: "/admin/system-bot", icon: Crown, label: "System bot" },
   { to: "/admin/messages", icon: MessageSquare, label: "Messages" },
   { to: "/admin/notifications", icon: Megaphone, label: "Notifications" },
   { to: "/admin/moderation", icon: AlertTriangle, label: "Moderation" },
