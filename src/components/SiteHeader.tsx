@@ -1,7 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
-import { Sparkles } from "lucide-react";
 
 export default function SiteHeader() {
   const { user, signOut } = useAuth();
@@ -11,9 +10,7 @@ export default function SiteHeader() {
     <header className="sticky top-4 z-40 px-4">
       <div className="container max-w-5xl bg-card rounded-full shadow-card border border-border/40 flex h-14 items-center justify-between px-4 pl-5">
         <Link to="/" className="flex items-center gap-2">
-          <span className="h-7 w-7 rounded-full bg-foreground text-background grid place-items-center">
-            <Sparkles className="h-3.5 w-3.5" />
-          </span>
+          <img src="/bot-icon.png" alt="LaPoe" className="h-8 w-8 rounded-full object-cover" />
           <span className="font-display text-lg font-bold tracking-tight text-foreground">LaPoe</span>
         </Link>
         <nav className="hidden md:flex items-center gap-7 text-sm font-medium text-muted-foreground">
