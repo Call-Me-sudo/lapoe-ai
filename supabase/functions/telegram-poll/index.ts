@@ -773,6 +773,8 @@ async function processBot(supabase: any, bot: any, deadline: number) {
         const mentionedOrNamed = messageNamesBot(text, bot, me);
         const isReply = msg.reply_to_message?.from?.id === me.id;
         let shouldReply = Boolean(mentionedOrNamed || isReply);
+        if (!shouldReply && isGreeting(text)) shouldReply = true;
+
 
         // Probe knowledge base for substantive messages — only jump in if there's a real match.
         const probeWorthy = text.trim().length >= 6 && !/^[\/!]/.test(text);
