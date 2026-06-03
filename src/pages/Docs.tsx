@@ -377,11 +377,7 @@ export default function Docs() {
                     : "text-muted-foreground hover:text-foreground hover:bg-muted",
                 )}
               >
-                {s.brand ? (
-                  <img src="/bot-icon.png" alt="" className="h-4 w-4 shrink-0" />
-                ) : (
-                  <s.icon className="h-4 w-4 shrink-0" />
-                )}
+                <s.icon className="h-4 w-4 shrink-0" />
                 {s.title}
               </button>
             ))}
