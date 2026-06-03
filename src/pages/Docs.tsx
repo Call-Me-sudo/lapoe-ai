@@ -324,6 +324,17 @@ export default function Docs() {
         description="Everything you need to set up, train, and run LaPoe in your Telegram community. Quickstart guides, moderation, knowledge base, plans, and FAQs."
         path="/docs"
         keywords="LaPoe help, Telegram bot guide, community moderation, knowledge base, support"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: [
+            { "@type": "Question", name: "Will my bot reply to every \"hi\"?", acceptedAnswer: { "@type": "Answer", text: "No. Short greetings are safe and never flagged. LaPoe only replies when it has something useful to add." } },
+            { "@type": "Question", name: "Can I customize the welcome message?", acceptedAnswer: { "@type": "Answer", text: "Yes. Set a custom welcome per bot or per group in your dashboard. Otherwise a friendly default is used." } },
+            { "@type": "Question", name: "Can I configure my bot by chatting with it privately?", acceptedAnswer: { "@type": "Answer", text: "No — by design. All configuration lives in the dashboard or in @LaPoe_bot, so settings stay safe and auditable." } },
+            { "@type": "Question", name: "Is my community's data private?", acceptedAnswer: { "@type": "Answer", text: "Yes. Your knowledge, conversations, and settings are yours. We don't share them or use them to train shared models." } },
+            { "@type": "Question", name: "How do I get help?", acceptedAnswer: { "@type": "Answer", text: "Email support@lapoe.app. We reply within one business day." } },
+          ],
+        }}
       />
 
       {/* Top bar */}
@@ -403,12 +414,15 @@ export default function Docs() {
           </p>
 
           <div className="mt-8 max-w-xl mx-auto relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <label htmlFor="docs-search" className="sr-only">Search the help center</label>
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
             <input
-              type="text"
+              id="docs-search"
+              type="search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search the help center…"
+              aria-label="Search the help center"
               className="w-full h-12 pl-11 pr-4 rounded-full bg-card border border-border/60 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40"
             />
           </div>
