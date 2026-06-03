@@ -12,6 +12,19 @@
 
 **Never use the Lucide `Sparkles` icon (or any other generic Lucide icon) to represent LaPoe, a user's bot, or "the assistant".** Anywhere the icon stands for LaPoe itself or a bot — section headers about LaPoe, empty states for a bot, dashboard avatars, chat bubbles, intro tiles — use the project bot favicon `<img src="/bot-icon.png" alt="LaPoe" />`. Lucide icons are only allowed for non-brand category meaning (e.g. `BookOpen` for a Knowledge section, `CreditCard` for Billing, `Bell` for notifications). If in doubt: if the icon could be read as "this is LaPoe / this is the bot", use `bot-icon.png`.
 
+## Chrome-on-Android paint/compositing glitch (recurring)
+
+We've shipped this fix twice now on `src/pages/Docs.tsx`. If users report a tearing / flicker / "ghost stripe" glitch on long content pages — especially on Chrome (Android) and rarely reproducible on our preview/Mac — it's almost always a compositing-layer issue, not a logic bug. Apply this checklist before debugging anything else:
+
+1. **Remove low-alpha `shadow-card` / large soft shadows** from cards and floating inputs inside long, scrollable sections. Chrome on Android re-rasterises these on every scroll frame and tears when stacked. Use `border border-border/60` instead.
+2. **Kill `scroll-behavior: smooth` on programmatic jumps** in those pages. Use `scrollIntoView({ behavior: "auto", block: "start" })`. Smooth scroll + heavy shadows is the worst combination.
+3. **Force a GPU layer on each `<Card>`** that lives in the scrolling region: `style={{ transform: "translateZ(0)", isolation: "isolate" }}`. This isolates them as their own compositing layers and stops bleed-through during scroll.
+4. **Drop `transition-all` / `hover:shadow-*`** on cards in long lists. Hover transitions on shadow + transform on Android Chrome retrigger raster.
+5. **Avoid full-page `bg-gradient-to-b ... to-background`** wrappers on long pages. Replace with flat `bg-secondary/30` or plain `bg-background`. Gradients spanning the full scroll height get re-rasterised constantly.
+6. **Do not add a floating `position: fixed` back-to-top button** with shadow/blur on these pages — it forces the whole viewport into a composited layer every frame.
+
+If a similar glitch appears on another long page (Pricing, marketing landing, etc.), apply the same six rules there. Do **not** "fix" by adding more `will-change`, `backface-visibility`, or `transform3d` on the wrapper — that masks the real cause and hurts memory on low-end Android.
+
 ---
 
 ## What LaPoe is
