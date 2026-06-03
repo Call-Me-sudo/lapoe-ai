@@ -105,7 +105,7 @@ export default function NotificationsPopover() {
                     {isAdmin ? (
                       <Megaphone className="h-4 w-4" />
                     ) : (
-                      <img src="/bot-icon.png" alt="LaPoe" className="h-5 w-5" />
+                      <MessageSquare className="h-4 w-4" />
                     )}
                   </span>
                   <div className="min-w-0 flex-1">
