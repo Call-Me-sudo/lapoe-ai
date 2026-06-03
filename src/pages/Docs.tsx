@@ -211,7 +211,7 @@ const sections: Section[] = [
     title: "The LaPoe bot",
     blurb: "A shared bot for groups and account control.",
     icon: Bot,
-    brand: true,
+    
     body: (
       <>
         <p>
