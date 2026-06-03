@@ -6,11 +6,6 @@ import SiteFooter from "@/components/SiteFooter";
 import ActionRow from "@/components/ActionRow";
 import IconTile from "@/components/IconTile";
 import { MessagesSquare, Shield, BookOpen, Users, Brain, Settings2, ArrowUpRight, QrCode } from "lucide-react";
-import starstoreAsset from "@/assets/starstore.jpg.asset.json";
-
-const sponsors = [
-  { name: "StarStore", url: "https://starstore.example", logo: starstoreAsset.url },
-];
 
 const features = [
   { icon: MessagesSquare, tone: "blue" as const, title: "Conversations, not commands", body: "Reads context, replies like a thoughtful teammate, knows when to stay quiet." },
