@@ -101,7 +101,6 @@ const sections: Section[] = [
     title: "Your bots",
     blurb: "Persona, voice, and house rules.",
     icon: Bot,
-    brand: true,
     body: (
       <>
         <p>
