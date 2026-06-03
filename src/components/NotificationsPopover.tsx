@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Bell, Check, Megaphone } from "lucide-react";
+import { Bell, Check, Megaphone, MessageSquare } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
