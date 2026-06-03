@@ -1,48 +1,27 @@
-# Redesign to mobile-fintech aesthetic
+## Problem
 
-Adopt the look from the reference screenshot across the entire app: soft gray canvas, rounded white cards, colorful tinted icon tiles, bold sans-serif type, and a floating pill bottom navigation on mobile.
+The mobile-only colorful tearing on `/docs` is a Chrome-on-Android paint/compositing glitch. Yesterday's fix already addressed it by removing `overflow-x-hidden` from the Docs root container, but the class is back on `src/pages/Docs.tsx` line 337:
 
-## Visual language
+```
+<div className="min-h-screen overflow-x-hidden bg-background">
+```
 
-- **Canvas**: light neutral gray `#F2F3F5` (dark mode: near-black).
-- **Cards**: pure white, `rounded-3xl`, generous padding, subtle shadow, no visible borders.
-- **Typography**: bold sans-serif (Inter/Manrope-style) headings, medium-weight labels, muted gray subtitles. Drop the editorial serif (Instrument Serif) for this direction.
-- **Icon tiles**: 44–48px rounded-2xl squares with tinted pastel backgrounds (blue/green/pink/gray) holding a single Lucide icon in a saturated tone — exactly like Pay/Request/Transfer rows.
-- **Buttons**: pill-shaped white buttons with subtle shadow for secondary, solid black pills for primary CTAs.
-- **Nav**: floating pill at bottom on mobile (Home / Bots / Messages / Settings), each item icon + label, active item gets a white circle highlight with a black icon.
+That's the only Docs-specific layout property currently set on the page's scroll container, and it's the exact thing the previous fix removed. Other earlier mitigations (no sticky `backdrop-blur` header, desktop-only fixed back-to-top button) are still in place. This explains why desktop preview looks fine and only some phones see the glitch.
 
-## Scope of changes
+## Fix
 
-### Design tokens
-- Rewrite `src/index.css` palette: new background, card, muted, accent tile colors, shadow utilities (`shadow-card`, `shadow-pill`).
-- Update `tailwind.config.ts` font family (sans = Manrope/Inter, drop display serif), add tile color tokens (`tile-blue`, `tile-green`, `tile-pink`, `tile-gray`), new radii (`3xl`).
-- Update `index.html` Google Fonts link (Manrope + Inter, drop Instrument Serif).
+1. In `src/pages/Docs.tsx`, change the root wrapper:
+   - From: `<div className="min-h-screen overflow-x-hidden bg-background">`
+   - To:   `<div className="min-h-screen bg-background">`
 
-### Shared components
-- New `IconTile` component (tinted rounded-square wrapping a Lucide icon).
-- New `ActionRow` component (icon tile + title + subtitle row used inside white cards).
-- New `BottomNav` component (floating pill nav for mobile dashboard).
-- New `RoundButton` / pill button variants in `button.tsx`.
-- Update `PageHeader`, `SiteHeader`, `SiteFooter`, `DashboardLayout`, `AdminLayout` to the new look (white pill header, avatar + actions on the right).
+2. Sanity-check that nothing on the page actually overflows horizontally on a 360–414px viewport (the Card content, hero search, topic grid). If anything does, fix the offending element directly (e.g. `min-w-0`, `break-words`) rather than reintroducing `overflow-x-hidden` on the root.
 
-### Pages
-- **Landing (`Index.tsx`)**: hero with big bold heading, white card stack of features as ActionRows (like the reference), pill CTAs, simplified stats card.
-- **Auth**: light gray canvas, single centered white card, pill Google button + pill primary.
-- **Pricing**: white pricing cards with rounded-3xl and pill CTAs.
-- **Dashboard pages** (Overview, Bots, Groups, Knowledge, Messages, Billing, Settings): rework headers, swap raw lists/tables for white cards with ActionRows where natural, pill buttons everywhere, floating BottomNav on mobile.
-- **Admin pages**: same card + tile treatment, keep tables but wrap them in rounded-3xl white cards.
+3. Verify in the browser at 390×844 mobile viewport: scroll through hero → topic grid → all section cards → footer; click a couple of "On this page" entries to confirm `scrollIntoView` no longer triggers tearing.
 
-### Out of scope
-- No business logic, schema, or auth flow changes.
-- No edge function or backend changes.
-- Functionality of every page is preserved; only presentation is updated.
+No other files need to change. No business logic, routing, content, or design-token changes.
 
-## Technical notes
+## Why we won't do more right now
 
-- All colors via HSL semantic tokens in `index.css` (no inline hex in components).
-- Icons stay `lucide-react` (already installed).
-- `framer-motion` already available for subtle entrance/hover animation on tiles and bottom nav.
-- Mobile-first: floating BottomNav shows under `md`, current sidebar stays for `md+` but restyled to match (white pill rail).
-- TypeScript-only edits, verified by the build after each batch.
-
-Once approved, I'll roll this out in batches: tokens → shared components → landing/auth → dashboard → admin.
+- Not reintroducing `sticky`/`backdrop-blur` on the header.
+- Not re-enabling the mobile floating back-to-top button.
+- Not touching `prose-docs` or any shared CSS — those are used elsewhere and aren't implicated.
