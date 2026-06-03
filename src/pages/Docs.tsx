@@ -46,7 +46,6 @@ const sections: Section[] = [
     title: "Welcome to LaPoe",
     blurb: "What LaPoe is and who it's for.",
     icon: Bot,
-    brand: true,
     body: (
       <>
         <p>
