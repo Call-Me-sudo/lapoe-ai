@@ -8,6 +8,10 @@
 
 **Public docs (`src/pages/Docs.tsx`, marketing pages, help center) MUST NOT expose internal technical details.** That means: no stack tables, no framework or library names (React, Vite, Supabase, Postgres, Deno, Stripe internals, Gemini model IDs, edge function names, RPC names, polling mechanics, etc.), no architecture diagrams, no implementation jargon. Public docs are written for end users and business buyers — describe what the product does and how to use it, not how it's built. Keep all engineering detail in this file and other internal docs only.
 
+## Brand icon rule
+
+**Never use the Lucide `Sparkles` icon (or any other generic Lucide icon) to represent LaPoe, a user's bot, or "the assistant".** Anywhere the icon stands for LaPoe itself or a bot — section headers about LaPoe, empty states for a bot, dashboard avatars, chat bubbles, intro tiles — use the project bot favicon `<img src="/bot-icon.png" alt="LaPoe" />`. Lucide icons are only allowed for non-brand category meaning (e.g. `BookOpen` for a Knowledge section, `CreditCard` for Billing, `Bell` for notifications). If in doubt: if the icon could be read as "this is LaPoe / this is the bot", use `bot-icon.png`.
+
 ---
 
 ## What LaPoe is
