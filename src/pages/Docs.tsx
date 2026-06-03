@@ -409,7 +409,7 @@ export default function Docs() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search the help center…"
-              className="w-full h-12 pl-11 pr-4 rounded-full bg-card border border-border/60 shadow-card text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40 transition"
+              className="w-full h-12 pl-11 pr-4 rounded-full bg-card border border-border/60 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40"
             />
           </div>
         </div>
