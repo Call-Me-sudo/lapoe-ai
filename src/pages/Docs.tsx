@@ -403,12 +403,15 @@ export default function Docs() {
           </p>
 
           <div className="mt-8 max-w-xl mx-auto relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <label htmlFor="docs-search" className="sr-only">Search the help center</label>
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
             <input
-              type="text"
+              id="docs-search"
+              type="search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search the help center…"
+              aria-label="Search the help center"
               className="w-full h-12 pl-11 pr-4 rounded-full bg-card border border-border/60 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40"
             />
           </div>
