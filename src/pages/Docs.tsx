@@ -279,7 +279,7 @@ const sections: Section[] = [
 export default function Docs() {
   const [active, setActive] = useState(sections[0].id);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [showBackToTop, setShowBackToTop] = useState(false);
+  
   const [query, setQuery] = useState("");
 
   const filtered = useMemo(() => {
