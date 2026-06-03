@@ -136,6 +136,33 @@ export default function Index() {
         </div>
       </section>
 
+      {/* SPONSORS */}
+      <section id="sponsors" className="container max-w-5xl py-16 md:py-20">
+        <div className="text-center mb-10">
+          <div className="text-xs uppercase tracking-[0.16em] text-muted-foreground mb-3 font-semibold">Sponsors</div>
+          <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground tracking-tight">
+            Backed by communities we admire.
+          </h2>
+        </div>
+        <div className="flex flex-wrap justify-center items-center gap-6">
+          {sponsors.map((s) => (
+            <a
+              key={s.name}
+              href={s.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group flex items-center gap-3 bg-card rounded-2xl shadow-card px-5 py-4 hover:shadow-lift transition"
+            >
+              <img src={s.logo} alt={`${s.name} logo`} className="h-12 w-12 rounded-full object-cover" />
+              <div className="text-left">
+                <div className="font-display font-bold text-foreground">{s.name}</div>
+                <div className="text-xs text-muted-foreground">Sponsor</div>
+              </div>
+            </a>
+          ))}
+        </div>
+      </section>
+
       {/* CTA */}
       <section className="container max-w-5xl pb-16">
         <div className="rounded-3xl bg-foreground text-background p-10 md:p-16 text-center shadow-pill">
