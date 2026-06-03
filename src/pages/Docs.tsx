@@ -324,6 +324,17 @@ export default function Docs() {
         description="Everything you need to set up, train, and run LaPoe in your Telegram community. Quickstart guides, moderation, knowledge base, plans, and FAQs."
         path="/docs"
         keywords="LaPoe help, Telegram bot guide, community moderation, knowledge base, support"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: [
+            { "@type": "Question", name: "Will my bot reply to every \"hi\"?", acceptedAnswer: { "@type": "Answer", text: "No. Short greetings are safe and never flagged. LaPoe only replies when it has something useful to add." } },
+            { "@type": "Question", name: "Can I customize the welcome message?", acceptedAnswer: { "@type": "Answer", text: "Yes. Set a custom welcome per bot or per group in your dashboard. Otherwise a friendly default is used." } },
+            { "@type": "Question", name: "Can I configure my bot by chatting with it privately?", acceptedAnswer: { "@type": "Answer", text: "No — by design. All configuration lives in the dashboard or in @LaPoe_bot, so settings stay safe and auditable." } },
+            { "@type": "Question", name: "Is my community's data private?", acceptedAnswer: { "@type": "Answer", text: "Yes. Your knowledge, conversations, and settings are yours. We don't share them or use them to train shared models." } },
+            { "@type": "Question", name: "How do I get help?", acceptedAnswer: { "@type": "Answer", text: "Email support@lapoe.app. We reply within one business day." } },
+          ],
+        }}
       />
 
       {/* Top bar */}
