@@ -1,0 +1,11 @@
+# LaPoe
+
+> LaPoe builds AI-powered Telegram bots that moderate communities, answer questions from your own knowledge base, and chat in your brand's tone.
+
+LaPoe lets anyone create a Telegram assistant in minutes — no code required. Connect a bot, drop in a website URL or FAQs, and LaPoe handles greetings, moderation, support, and answers in your groups and DMs.
+
+## Pages
+
+- [Home](/): Product overview, features, and how LaPoe works.
+- [Pricing](/pricing): Free, Starter, Pro, and Business plans with monthly limits.
+- [Help Center](/docs): Quickstart, knowledge base setup, moderation, plans, and FAQs.
