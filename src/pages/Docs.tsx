@@ -111,6 +111,7 @@ const sections: Section[] = [
     title: "Your bots",
     blurb: "Persona, voice, and house rules.",
     icon: Bot,
+    brand: true,
     body: (
       <>
         <p>
@@ -387,7 +388,11 @@ export default function Docs() {
                     : "text-muted-foreground hover:text-foreground hover:bg-muted",
                 )}
               >
-                <s.icon className="h-4 w-4 shrink-0" />
+                {s.brand ? (
+                  <img src="/bot-icon.png" alt="" className="h-4 w-4 shrink-0" />
+                ) : (
+                  <s.icon className="h-4 w-4 shrink-0" />
+                )}
                 {s.title}
               </button>
             ))}
