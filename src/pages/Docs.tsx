@@ -15,7 +15,7 @@ import {
   CreditCard,
   HelpCircle,
   ArrowRight,
-  ArrowUp,
+  
   Menu,
   X,
   Search,
@@ -26,21 +26,12 @@ type Section = {
   title: string;
   blurb: string;
   icon: typeof Bot;
-  brand?: boolean;
   body: JSX.Element;
 };
 
 function SectionIcon({ section, size = "lg" }: { section: Section; size?: "sm" | "lg" }) {
   const box = size === "lg" ? "h-10 w-10" : "h-9 w-9";
-  const img = size === "lg" ? "h-7 w-7" : "h-6 w-6";
   const ic = size === "lg" ? "h-5 w-5" : "h-4 w-4";
-  if (section.brand) {
-    return (
-      <div className={`${box} rounded-xl bg-secondary grid place-items-center shrink-0 overflow-hidden`}>
-        <img src="/bot-icon.png" alt="LaPoe" className={img} />
-      </div>
-    );
-  }
   const Icon = section.icon;
   return (
     <div className={`${box} rounded-xl bg-secondary grid place-items-center shrink-0`}>
@@ -55,7 +46,6 @@ const sections: Section[] = [
     title: "Welcome to LaPoe",
     blurb: "What LaPoe is and who it's for.",
     icon: Bot,
-    brand: true,
     body: (
       <>
         <p>
@@ -111,7 +101,6 @@ const sections: Section[] = [
     title: "Your bots",
     blurb: "Persona, voice, and house rules.",
     icon: Bot,
-    brand: true,
     body: (
       <>
         <p>
@@ -222,7 +211,7 @@ const sections: Section[] = [
     title: "The LaPoe bot",
     blurb: "A shared bot for groups and account control.",
     icon: Bot,
-    brand: true,
+    
     body: (
       <>
         <p>
@@ -290,7 +279,7 @@ const sections: Section[] = [
 export default function Docs() {
   const [active, setActive] = useState(sections[0].id);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [showBackToTop, setShowBackToTop] = useState(false);
+  
   const [query, setQuery] = useState("");
 
   const filtered = useMemo(() => {
@@ -318,17 +307,12 @@ export default function Docs() {
     return () => observer.disconnect();
   }, []);
 
-  useEffect(() => {
-    const onScroll = () => setShowBackToTop(window.scrollY > 600);
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
 
   const handleNavClick = (id: string) => {
     setMobileOpen(false);
     const el = document.getElementById(id);
     if (el) {
-      el.scrollIntoView({ behavior: "smooth", block: "start" });
+      el.scrollIntoView({ behavior: "auto", block: "start" });
       setActive(id);
     }
   };
@@ -388,11 +372,7 @@ export default function Docs() {
                     : "text-muted-foreground hover:text-foreground hover:bg-muted",
                 )}
               >
-                {s.brand ? (
-                  <img src="/bot-icon.png" alt="" className="h-4 w-4 shrink-0" />
-                ) : (
-                  <s.icon className="h-4 w-4 shrink-0" />
-                )}
+                <s.icon className="h-4 w-4 shrink-0" />
                 {s.title}
               </button>
             ))}
@@ -409,10 +389,10 @@ export default function Docs() {
       </header>
 
       {/* Hero */}
-      <section className="border-b border-border/60 bg-gradient-to-b from-secondary/40 to-background">
+      <section className="border-b border-border/60 bg-secondary/30">
         <div className="container max-w-5xl py-14 md:py-20 text-center">
           <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-background border border-border/60 text-xs font-medium text-muted-foreground">
-            <img src="/bot-icon.png" alt="" className="h-4 w-4" />
+            <HelpCircle className="h-3.5 w-3.5" />
             Help Center
           </span>
           <h1 className="mt-5 font-display text-4xl md:text-5xl font-bold tracking-tight text-foreground">
@@ -447,7 +427,7 @@ export default function Docs() {
               onClick={() => handleNavClick(s.id)}
               className="group text-left"
             >
-              <Card className="p-5 h-full border border-border/60 hover:border-primary/40 hover:shadow-md transition-all">
+              <Card className="p-5 h-full border border-border/60 hover:border-primary/40">
                 <div className="flex items-center gap-3 mb-3">
                   <SectionIcon section={s} />
                   <h3 className="font-display font-semibold text-foreground">{s.title}</h3>
@@ -488,11 +468,7 @@ export default function Docs() {
                         : "text-muted-foreground hover:text-foreground hover:bg-muted/50",
                     )}
                   >
-                    {s.brand ? (
-                      <img src="/bot-icon.png" alt="" className="h-4 w-4 shrink-0 opacity-90" />
-                    ) : (
-                      <s.icon className="h-4 w-4 shrink-0 opacity-70" />
-                    )}
+                    <s.icon className="h-4 w-4 shrink-0 opacity-70" />
                     <span className="truncate">{s.title}</span>
                   </button>
                 ))}
@@ -538,7 +514,7 @@ export default function Docs() {
             ))}
 
             {/* CTA */}
-            <Card className="p-8 md:p-10 border border-border/60 bg-gradient-to-br from-secondary/40 to-background text-center">
+            <Card className="p-8 md:p-10 border border-border/60 bg-secondary/30 text-center">
               <h3 className="font-display text-2xl font-semibold text-foreground">
                 Still have a question?
               </h3>
@@ -558,15 +534,6 @@ export default function Docs() {
         </div>
       </section>
 
-      {showBackToTop && (
-        <button
-          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-          className="fixed bottom-6 right-6 z-40 hidden h-10 w-10 rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-105 md:grid"
-          aria-label="Back to top"
-        >
-          <ArrowUp className="h-5 w-5" />
-        </button>
-      )}
 
       <SiteFooter />
     </div>
