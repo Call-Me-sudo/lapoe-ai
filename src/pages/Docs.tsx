@@ -409,7 +409,7 @@ export default function Docs() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search the help center…"
-              className="w-full h-12 pl-11 pr-4 rounded-full bg-card border border-border/60 shadow-card text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40 transition"
+              className="w-full h-12 pl-11 pr-4 rounded-full bg-card border border-border/60 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40"
             />
           </div>
         </div>
@@ -427,7 +427,7 @@ export default function Docs() {
               onClick={() => handleNavClick(s.id)}
               className="group text-left"
             >
-              <Card className="p-5 h-full border border-border/60 hover:border-primary/40">
+              <Card className="p-5 h-full border border-border/60 hover:border-primary/40 shadow-none [transform:translateZ(0)] [isolation:isolate]">
                 <div className="flex items-center gap-3 mb-3">
                   <SectionIcon section={s} />
                   <h3 className="font-display font-semibold text-foreground">{s.title}</h3>
@@ -498,7 +498,7 @@ export default function Docs() {
               <Card
                 key={s.id}
                 id={s.id}
-                className="p-7 md:p-9 scroll-mt-24 border border-border/60"
+                className="p-7 md:p-9 scroll-mt-24 border border-border/60 shadow-none [transform:translateZ(0)] [isolation:isolate]"
               >
                 <div className="flex items-center gap-3 mb-5">
                   <SectionIcon section={s} />
@@ -514,7 +514,7 @@ export default function Docs() {
             ))}
 
             {/* CTA */}
-            <Card className="p-8 md:p-10 border border-border/60 bg-secondary/30 text-center">
+            <Card className="p-8 md:p-10 border border-border/60 bg-secondary/30 text-center shadow-none [transform:translateZ(0)] [isolation:isolate]">
               <h3 className="font-display text-2xl font-semibold text-foreground">
                 Still have a question?
               </h3>
