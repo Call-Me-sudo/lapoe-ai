@@ -15,7 +15,7 @@ import {
   CreditCard,
   HelpCircle,
   ArrowRight,
-  ArrowUp,
+  
   Menu,
   X,
   Search,
