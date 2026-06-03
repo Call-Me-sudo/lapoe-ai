@@ -307,11 +307,6 @@ export default function Docs() {
     return () => observer.disconnect();
   }, []);
 
-  useEffect(() => {
-    const onScroll = () => setShowBackToTop(window.scrollY > 600);
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
 
   const handleNavClick = (id: string) => {
     setMobileOpen(false);
