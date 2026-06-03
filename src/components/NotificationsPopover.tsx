@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Bell, Check, Megaphone } from "lucide-react";
+import { Bell, Check, Megaphone, MessageSquare } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -105,7 +105,7 @@ export default function NotificationsPopover() {
                     {isAdmin ? (
                       <Megaphone className="h-4 w-4" />
                     ) : (
-                      <img src="/bot-icon.png" alt="LaPoe" className="h-5 w-5" />
+                      <MessageSquare className="h-4 w-4" />
                     )}
                   </span>
                   <div className="min-w-0 flex-1">
