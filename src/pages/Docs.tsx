@@ -498,7 +498,7 @@ export default function Docs() {
               <Card
                 key={s.id}
                 id={s.id}
-                className="p-7 md:p-9 scroll-mt-24 border border-border/60"
+                className="p-7 md:p-9 scroll-mt-24 border border-border/60 shadow-none [transform:translateZ(0)] [isolation:isolate]"
               >
                 <div className="flex items-center gap-3 mb-5">
                   <SectionIcon section={s} />
