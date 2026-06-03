@@ -646,11 +646,16 @@ async function processBot(supabase: any, bot: any, deadline: number) {
   // on the same getUpdates offset, which causes duplicate replies.
   const lockUntil = new Date(deadline + 5_000).toISOString();
   const nowIso = new Date().toISOString();
+  await supabase
+    .from("bots")
+    .update({ poll_locked_until: null })
+    .eq("id", bot.id)
+    .lt("poll_locked_until", nowIso);
   const { data: claimed } = await supabase
     .from("bots")
     .update({ poll_locked_until: lockUntil })
     .eq("id", bot.id)
-    .or(`poll_locked_until.is.null,poll_locked_until.lt.${nowIso}`)
+    .is("poll_locked_until", null)
     .select("id")
     .maybeSingle();
   if (!claimed) return { bot: bot.name, skipped: "locked" };
