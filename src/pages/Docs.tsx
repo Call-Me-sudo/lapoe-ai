@@ -519,7 +519,7 @@ export default function Docs() {
             ))}
 
             {/* CTA */}
-            <Card className="p-8 md:p-10 border border-border/60 bg-gradient-to-br from-secondary/40 to-background text-center">
+            <Card className="p-8 md:p-10 border border-border/60 bg-secondary/30 text-center">
               <h3 className="font-display text-2xl font-semibold text-foreground">
                 Still have a question?
               </h3>
