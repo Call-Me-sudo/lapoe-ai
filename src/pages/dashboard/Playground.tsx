@@ -111,8 +111,8 @@ export default function Playground() {
             {messages.length === 0 && (
               <div className="h-full grid place-items-center text-center">
                 <div className="max-w-xs space-y-2">
-                  <div className="h-12 w-12 rounded-2xl bg-tile-yellow text-tile-yellow-foreground grid place-items-center mx-auto">
-                    <Sparkles className="h-5 w-5" />
+                  <div className="h-12 w-12 rounded-2xl bg-tile-yellow grid place-items-center mx-auto overflow-hidden">
+                    <img src="/bot-icon.png" alt="LaPoe" className="h-8 w-8" />
                   </div>
                   <p className="text-sm font-medium text-foreground">Say hi to {activeBot?.name || "your bot"}</p>
                   <p className="text-xs text-muted-foreground">
