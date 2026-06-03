@@ -334,7 +334,7 @@ export default function Docs() {
   };
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-background">
+    <div className="min-h-screen bg-background">
       <SEO
         title="Help Center — LaPoe"
         description="Everything you need to set up, train, and run LaPoe in your Telegram community. Quickstart guides, moderation, knowledge base, plans, and FAQs."
