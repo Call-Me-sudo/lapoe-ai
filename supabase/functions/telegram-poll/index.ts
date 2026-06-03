@@ -645,17 +645,12 @@ async function processBot(supabase: any, bot: any, deadline: number) {
   // ---- Per-bot lock: prevent concurrent pollers (cron + manual) from racing
   // on the same getUpdates offset, which causes duplicate replies.
   const lockUntil = new Date(deadline + 5_000).toISOString();
-  const nowIso = new Date().toISOString();
-  await supabase
-    .from("bots")
-    .update({ poll_locked_until: null })
-    .eq("id", bot.id)
-    .lt("poll_locked_until", nowIso);
+  const existingLockMs = bot.poll_locked_until ? Date.parse(bot.poll_locked_until) : 0;
+  if (existingLockMs && existingLockMs > Date.now()) return { bot: bot.name, skipped: "locked" };
   const { data: claimed } = await supabase
     .from("bots")
     .update({ poll_locked_until: lockUntil })
     .eq("id", bot.id)
-    .is("poll_locked_until", null)
     .select("id")
     .maybeSingle();
   if (!claimed) return { bot: bot.name, skipped: "locked" };
