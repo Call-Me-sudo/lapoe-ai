@@ -427,7 +427,7 @@ export default function Docs() {
               onClick={() => handleNavClick(s.id)}
               className="group text-left"
             >
-              <Card className="p-5 h-full border border-border/60 hover:border-primary/40">
+              <Card className="p-5 h-full border border-border/60 hover:border-primary/40 shadow-none [transform:translateZ(0)] [isolation:isolate]">
                 <div className="flex items-center gap-3 mb-3">
                   <SectionIcon section={s} />
                   <h3 className="font-display font-semibold text-foreground">{s.title}</h3>
