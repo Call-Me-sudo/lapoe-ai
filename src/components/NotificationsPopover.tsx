@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Bell, Check, Megaphone, Sparkles } from "lucide-react";
+import { Bell, Check, Megaphone } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -94,15 +94,19 @@ export default function NotificationsPopover() {
           ) : (
             items.map((n) => {
               const isUnread = !reads.has(n.id);
-              const Icon = n.type === "admin" ? Megaphone : Sparkles;
+              const isAdmin = n.type === "admin";
               return (
                 <button
                   key={n.id}
                   onClick={() => markOne(n.id)}
                   className={`w-full text-left px-4 py-3 flex gap-3 hover:bg-muted/60 transition ${isUnread ? "bg-muted/30" : ""}`}
                 >
-                  <span className={`h-8 w-8 shrink-0 rounded-full grid place-items-center ${n.type === "admin" ? "bg-foreground text-background" : "bg-muted text-foreground"}`}>
-                    <Icon className="h-4 w-4" />
+                  <span className={`h-8 w-8 shrink-0 rounded-full grid place-items-center ${isAdmin ? "bg-foreground text-background" : "bg-muted text-foreground"}`}>
+                    {isAdmin ? (
+                      <Megaphone className="h-4 w-4" />
+                    ) : (
+                      <img src="/bot-icon.png" alt="LaPoe" className="h-5 w-5" />
+                    )}
                   </span>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
