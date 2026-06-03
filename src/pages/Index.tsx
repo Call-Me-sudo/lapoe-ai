@@ -72,7 +72,7 @@ export default function Index() {
                 </div>
               </div>
               <div className="flex gap-2">
-                <button className="grid place-items-center h-9 w-9 rounded-full bg-muted text-foreground"><QrCode className="h-4 w-4" /></button>
+                <button type="button" aria-label="Show QR code" className="grid place-items-center h-9 w-9 rounded-full bg-muted text-foreground"><QrCode className="h-4 w-4" /></button>
               </div>
             </div>
             <div className="divide-y divide-border/60">
