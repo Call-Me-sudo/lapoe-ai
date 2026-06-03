@@ -14,7 +14,6 @@ import {
   MessageSquare,
   CreditCard,
   HelpCircle,
-  Sparkles,
   ArrowRight,
   ArrowUp,
   Menu,
@@ -55,7 +54,8 @@ const sections: Section[] = [
     id: "introduction",
     title: "Welcome to LaPoe",
     blurb: "What LaPoe is and who it's for.",
-    icon: Sparkles,
+    icon: Bot,
+    brand: true,
     body: (
       <>
         <p>
@@ -220,7 +220,8 @@ const sections: Section[] = [
     id: "system-bot",
     title: "The LaPoe bot",
     blurb: "A shared bot for groups and account control.",
-    icon: Sparkles,
+    icon: Bot,
+    brand: true,
     body: (
       <>
         <p>
@@ -406,7 +407,7 @@ export default function Docs() {
       <section className="border-b border-border/60 bg-gradient-to-b from-secondary/40 to-background">
         <div className="container max-w-5xl py-14 md:py-20 text-center">
           <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-background border border-border/60 text-xs font-medium text-muted-foreground">
-            <Sparkles className="h-3.5 w-3.5 text-primary" />
+            <img src="/bot-icon.png" alt="" className="h-4 w-4" />
             Help Center
           </span>
           <h1 className="mt-5 font-display text-4xl md:text-5xl font-bold tracking-tight text-foreground">
@@ -443,9 +444,7 @@ export default function Docs() {
             >
               <Card className="p-5 h-full border border-border/60 hover:border-primary/40 hover:shadow-md transition-all">
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="h-10 w-10 rounded-xl bg-secondary grid place-items-center shrink-0">
-                    <s.icon className="h-5 w-5 text-foreground" />
-                  </div>
+                  <SectionIcon section={s} />
                   <h3 className="font-display font-semibold text-foreground">{s.title}</h3>
                 </div>
                 <p className="text-sm text-muted-foreground leading-relaxed">{s.blurb}</p>
@@ -484,7 +483,11 @@ export default function Docs() {
                         : "text-muted-foreground hover:text-foreground hover:bg-muted/50",
                     )}
                   >
-                    <s.icon className="h-4 w-4 shrink-0 opacity-70" />
+                    {s.brand ? (
+                      <img src="/bot-icon.png" alt="" className="h-4 w-4 shrink-0 opacity-90" />
+                    ) : (
+                      <s.icon className="h-4 w-4 shrink-0 opacity-70" />
+                    )}
                     <span className="truncate">{s.title}</span>
                   </button>
                 ))}
@@ -517,9 +520,7 @@ export default function Docs() {
                 className="p-7 md:p-9 scroll-mt-24 border border-border/60"
               >
                 <div className="flex items-center gap-3 mb-5">
-                  <div className="h-10 w-10 rounded-xl bg-secondary grid place-items-center shrink-0">
-                    <s.icon className="h-5 w-5 text-foreground" />
-                  </div>
+                  <SectionIcon section={s} />
                   <div>
                     <h2 className="font-display text-2xl font-bold text-foreground leading-tight">
                       {s.title}
