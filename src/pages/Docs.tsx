@@ -394,10 +394,10 @@ export default function Docs() {
       </header>
 
       {/* Hero */}
-      <section className="border-b border-border/60 bg-gradient-to-b from-secondary/40 to-background">
+      <section className="border-b border-border/60 bg-secondary/30">
         <div className="container max-w-5xl py-14 md:py-20 text-center">
           <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-background border border-border/60 text-xs font-medium text-muted-foreground">
-            <img src="/bot-icon.png" alt="" className="h-4 w-4" />
+            <HelpCircle className="h-3.5 w-3.5" />
             Help Center
           </span>
           <h1 className="mt-5 font-display text-4xl md:text-5xl font-bold tracking-tight text-foreground">
