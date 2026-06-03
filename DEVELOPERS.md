@@ -4,6 +4,12 @@
 
 ---
 
+## Documentation writing rule
+
+**Public docs (`src/pages/Docs.tsx`, marketing pages, help center) MUST NOT expose internal technical details.** That means: no stack tables, no framework or library names (React, Vite, Supabase, Postgres, Deno, Stripe internals, Gemini model IDs, edge function names, RPC names, polling mechanics, etc.), no architecture diagrams, no implementation jargon. Public docs are written for end users and business buyers — describe what the product does and how to use it, not how it's built. Keep all engineering detail in this file and other internal docs only.
+
+---
+
 ## What LaPoe is
 
 LaPoe is a multi-tenant Telegram assistant platform. Two kinds of bots run on it:
