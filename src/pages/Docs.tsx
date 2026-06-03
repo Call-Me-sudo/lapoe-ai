@@ -27,8 +27,28 @@ type Section = {
   title: string;
   blurb: string;
   icon: typeof Bot;
+  brand?: boolean;
   body: JSX.Element;
 };
+
+function SectionIcon({ section, size = "lg" }: { section: Section; size?: "sm" | "lg" }) {
+  const box = size === "lg" ? "h-10 w-10" : "h-9 w-9";
+  const img = size === "lg" ? "h-7 w-7" : "h-6 w-6";
+  const ic = size === "lg" ? "h-5 w-5" : "h-4 w-4";
+  if (section.brand) {
+    return (
+      <div className={`${box} rounded-xl bg-secondary grid place-items-center shrink-0 overflow-hidden`}>
+        <img src="/bot-icon.png" alt="LaPoe" className={img} />
+      </div>
+    );
+  }
+  const Icon = section.icon;
+  return (
+    <div className={`${box} rounded-xl bg-secondary grid place-items-center shrink-0`}>
+      <Icon className={`${ic} text-foreground`} />
+    </div>
+  );
+}
 
 const sections: Section[] = [
   {
