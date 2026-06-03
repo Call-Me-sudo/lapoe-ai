@@ -10,7 +10,7 @@ export default function SiteFooter() {
             <div className="font-display text-lg font-bold text-foreground">LaPoe</div>
           </div>
           <p className="text-muted-foreground mt-3 max-w-xs">
-            Language + Poiesis — the calm desk for your Telegram community.
+            Poe · Language into existence — the calm desk for your Telegram community.
           </p>
         </div>
         <div>
