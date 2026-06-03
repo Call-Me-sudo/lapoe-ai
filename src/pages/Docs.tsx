@@ -333,7 +333,7 @@ export default function Docs() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen overflow-x-hidden bg-background">
       <SEO
         title="Help Center — LaPoe"
         description="Everything you need to set up, train, and run LaPoe in your Telegram community. Quickstart guides, moderation, knowledge base, plans, and FAQs."
@@ -342,7 +342,7 @@ export default function Docs() {
       />
 
       {/* Top bar */}
-      <header className="sticky top-0 z-50 bg-background/85 backdrop-blur border-b border-border/60">
+      <header className="relative z-10 bg-background border-b border-border/60">
         <div className="container max-w-6xl flex items-center justify-between h-14">
           <Link to="/" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
             <img src="/bot-icon.png" alt="LaPoe" className="h-7 w-7 rounded-lg" />
@@ -467,7 +467,7 @@ export default function Docs() {
       <section className="container max-w-6xl pb-16">
         <div className="grid gap-10 md:grid-cols-[240px_1fr] lg:grid-cols-[260px_1fr]">
           <aside className="hidden md:block">
-            <div className="sticky top-20">
+            <div>
               <div className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground mb-3 px-3">
                 On this page
               </div>
@@ -556,7 +556,7 @@ export default function Docs() {
       {showBackToTop && (
         <button
           onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-          className="fixed bottom-6 right-6 z-40 h-10 w-10 rounded-full bg-primary text-primary-foreground shadow-lg hover:scale-105 transition-transform grid place-items-center"
+          className="fixed bottom-6 right-6 z-40 hidden h-10 w-10 rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-105 md:grid"
           aria-label="Back to top"
         >
           <ArrowUp className="h-5 w-5" />
