@@ -317,7 +317,7 @@ export default function Docs() {
     setMobileOpen(false);
     const el = document.getElementById(id);
     if (el) {
-      el.scrollIntoView({ behavior: "smooth", block: "start" });
+      el.scrollIntoView({ behavior: "auto", block: "start" });
       setActive(id);
     }
   };
