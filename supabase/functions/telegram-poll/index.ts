@@ -709,14 +709,18 @@ async function processBot(supabase: any, bot: any, deadline: number) {
 
       if (!msg.text) continue;
 
+      const isPrivate = msg.chat.type === "private";
+      const isGroup = msg.chat.type === "group" || msg.chat.type === "supergroup";
+      let group: any = null;
+      if (isGroup) {
+        group = await ensureGroup(supabase, bot, msg);
+      }
+
       await supabase.from("bot_messages").insert({
-        bot_id: bot.id, owner_id: bot.owner_id, direction: "inbound",
+        bot_id: bot.id, owner_id: bot.owner_id, group_id: group?.id || null, direction: "inbound",
         content: msg.text,
         telegram_user: msg.from?.username || msg.from?.first_name || String(msg.from?.id || ""),
       });
-
-      const isPrivate = msg.chat.type === "private";
-      const isGroup = msg.chat.type === "group" || msg.chat.type === "supergroup";
 
       // 1) DM general commands (NO owner config in DMs — see policy above)
       if (isPrivate && await handleDmGeneral(supabase, bot, bot.telegram_bot_token, msg)) {
@@ -728,10 +732,8 @@ async function processBot(supabase: any, bot: any, deadline: number) {
         processed++; continue;
       }
 
-      // 3) Auto-register group (silent) + auto-filter moderation
-      let group: any = null;
+      // 3) Auto-filter moderation for already auto-registered groups
       if (isGroup) {
-        group = await ensureGroup(supabase, bot, msg);
         if (bot.moderation_enabled && (group?.moderation_enabled !== false)) {
           const telegramUser = msg.from?.username || msg.from?.first_name || String(msg.from?.id || "");
 
@@ -885,7 +887,7 @@ async function processBot(supabase: any, bot: any, deadline: number) {
           // Send the reply first, log after — don't make the user wait for the DB write.
           await send(bot.telegram_bot_token, msg.chat.id, reply, msg.message_id);
           supabase.from("bot_messages").insert({
-            bot_id: bot.id, owner_id: bot.owner_id, direction: "outbound",
+            bot_id: bot.id, owner_id: bot.owner_id, group_id: group?.id || null, direction: "outbound",
             content: reply, telegram_user: msg.from?.username || null,
           }).then(() => {}, () => {});
         }
