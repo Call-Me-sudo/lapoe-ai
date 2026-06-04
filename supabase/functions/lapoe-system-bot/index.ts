@@ -190,6 +190,15 @@ async function ensureGroup(sb: any, chat: any, addedBy?: number) {
     added_by_tg: addedBy ?? null,
     is_active: true,
   }, { onConflict: "chat_id" });
+  if (addedBy) {
+    const profile = await getProfile(sb, addedBy);
+    if (profile?.id) {
+      await sb.from("system_bot_groups")
+        .update({ linked_owner_id: profile.id, updated_at: new Date().toISOString() })
+        .eq("chat_id", chat.id)
+        .is("linked_owner_id", null);
+    }
+  }
 }
 async function getGroup(sb: any, chatId: number) {
   const { data } = await sb.from("system_bot_groups").select("*").eq("chat_id", chatId).maybeSingle();
