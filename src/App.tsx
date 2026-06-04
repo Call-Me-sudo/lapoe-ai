@@ -15,6 +15,7 @@ import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 import Overview from "./pages/dashboard/Overview";
 import Bots from "./pages/dashboard/Bots";
+import MyAssistant from "./pages/dashboard/MyAssistant";
 import Groups from "./pages/dashboard/Groups";
 import Knowledge from "./pages/dashboard/Knowledge";
 import Messages from "./pages/dashboard/Messages";
@@ -52,6 +53,7 @@ const App = () => (
 
             <Route path="/dashboard" element={<ProtectedRoute><Overview /></ProtectedRoute>} />
             <Route path="/dashboard/bots" element={<ProtectedRoute><Bots /></ProtectedRoute>} />
+            <Route path="/dashboard/assistant" element={<ProtectedRoute><MyAssistant /></ProtectedRoute>} />
             <Route path="/dashboard/groups" element={<ProtectedRoute><Groups /></ProtectedRoute>} />
             <Route path="/dashboard/knowledge" element={<ProtectedRoute><Knowledge /></ProtectedRoute>} />
             <Route path="/dashboard/messages" element={<ProtectedRoute><Messages /></ProtectedRoute>} />

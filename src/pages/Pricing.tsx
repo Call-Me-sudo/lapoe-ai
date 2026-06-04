@@ -12,8 +12,8 @@ import { toast } from "sonner";
 const plans = [
   {
     id: "free", name: "Free", price: "$0", per: "forever",
-    desc: "Try LaPoe on a single small group.",
-    features: ["1 bot", "1 group", "100 messages logged", "AI replies included"],
+    desc: "Use our shared @LaPoe_bot with your own persona and knowledge.",
+    features: ["No custom bot", "30 AI replies / month", "1 group via @LaPoe_bot", "Your persona + knowledge", "Commands always work"],
     cta: "Start free",
   },
   {
