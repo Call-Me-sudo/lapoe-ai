@@ -13,6 +13,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Plus, Bot as BotIcon, Trash2, Edit3, ShieldAlert, CheckCircle2, AlertCircle, AtSign, Settings2, BookOpen } from "lucide-react";
 import { toast } from "sonner";
+import { ListSkeleton } from "@/components/dashboard/ListSkeleton";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type Bot = {
   id: string; name: string; description: string | null;
@@ -58,6 +60,7 @@ export default function Bots() {
   const [quota, setQuota] = useState<BotQuota | null>(null);
   const [usage, setUsage] = useState<WorkspaceUsage | null>(null);
   const [deleteBot, setDeleteBot] = useState<Bot | null>(null);
+  const [loading, setLoading] = useState(true);
   const [form, setForm] = useState({
     name: "", description: "", telegram_bot_token: "",
     tone: "friendly", personality: "",
@@ -78,6 +81,7 @@ export default function Bots() {
     const counts: Record<string, number> = {};
     (kRows ?? []).forEach((r: any) => { counts[r.bot_id] = (counts[r.bot_id] || 0) + 1; });
     setKnowledgeCounts(counts);
+    setLoading(false);
   }, [user]);
   useEffect(() => { load(); }, [load]);
 
@@ -225,6 +229,16 @@ export default function Bots() {
         }
       />
 
+      {loading && !usage && (
+        <div className="mb-6 border border-border rounded-lg bg-card p-4 sm:p-5 space-y-4">
+          <Skeleton className="h-4 w-1/3" />
+          <div className="grid sm:grid-cols-2 gap-4">
+            <Skeleton className="h-6 w-full" />
+            <Skeleton className="h-6 w-full" />
+          </div>
+        </div>
+      )}
+
       {usage && (() => {
         const botPct = Math.min(100, Math.round((usage.current_bots / Math.max(1, usage.max_bots)) * 100));
         const msgPct = Math.min(100, Math.round((usage.monthly_messages / Math.max(1, usage.max_monthly_messages)) * 100));
@@ -269,7 +283,9 @@ export default function Bots() {
         );
       })()}
 
-      {bots.length === 0 ? (
+      {loading ? (
+        <ListSkeleton rows={2} />
+      ) : bots.length === 0 ? (
         <div className="border border-dashed border-border rounded-lg p-12 text-center bg-paper-soft">
           <img src="/bot-icon.png" alt="LaPoe" className="h-10 w-10 rounded-full object-cover mx-auto mb-3" />
           {quota && quota.max_bots === 0 ? (

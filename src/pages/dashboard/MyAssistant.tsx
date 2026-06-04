@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { ExternalLink, Link2, BookOpen, Copy } from "lucide-react";
 import { toast } from "sonner";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type Persona = {
   owner_id: string;
@@ -39,6 +40,7 @@ export default function MyAssistant() {
   const [tgLinked, setTgLinked] = useState(false);
   const [knowledgeCount, setKnowledgeCount] = useState(0);
   const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
     if (!user) return;
@@ -52,6 +54,7 @@ export default function MyAssistant() {
     setUsage(Array.isArray(u) ? u[0] : u);
     setTgLinked(!!prof?.telegram_user_id);
     setKnowledgeCount(kc ?? 0);
+    setLoading(false);
   }, [user]);
   useEffect(() => { load(); }, [load]);
 
@@ -88,6 +91,13 @@ export default function MyAssistant() {
           ? "Your free AI assistant on @LaPoe_bot. Set its voice, knowledge, and link your Telegram to start chatting."
           : "Your shared @LaPoe_bot persona. Your paid plan uses your custom bots — this is just an extra."}
       />
+
+      {loading && !usage && (
+        <div className="mb-6 border border-border rounded-lg bg-card p-4 sm:p-5 space-y-3">
+          <Skeleton className="h-4 w-1/3" />
+          <Skeleton className="h-2 w-full" />
+        </div>
+      )}
 
       {usage && (
         <div className="mb-6 border border-border rounded-lg bg-card p-4 sm:p-5">
