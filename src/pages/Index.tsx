@@ -137,10 +137,6 @@ export default function Index() {
 
       {/* CTA */}
       <section className="container max-w-5xl pb-16">
-        <div className="relative overflow-hidden rounded-3xl bg-[hsl(var(--tile-rose))] border border-[hsl(338_60%_88%)] shadow-card">
-          {/* Decorative blurs */}
-      {/* CTA */}
-      <section className="container max-w-5xl pb-16">
         <div className="relative overflow-hidden rounded-3xl bg-card border border-border shadow-card">
           {/* Decorative blurs — themed */}
           <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-tile-violet-foreground opacity-[0.06] blur-[80px]" />
