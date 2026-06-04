@@ -357,9 +357,16 @@ async function handleCommand(sb: any, token: string, msg: any) {
     if (isGroup) {
       await sb.from("system_bot_groups").update({ linked_owner_id: row.user_id }).eq("chat_id", chatId);
     }
+
+    // One-time welcome DM with onboarding instructions. We DM the linking
+    // Telegram user directly (fromId == their telegram_user_id) regardless of
+    // where /link was issued. Plain static text — no AI in DMs.
+    const welcome = `🎉 *Connected!* You're now linked to LaPoe.\n\nI'm @LaPoe_bot — your free AI assistant in *your group*. Here's how to make me yours:\n\n*1. Set my voice*\n→ https://lapoe-ai.vercel.app/dashboard/assistant\n   Pick a name, tone, personality and house rules.\n\n*2. Feed me knowledge*\n→ https://lapoe-ai.vercel.app/dashboard/knowledge\n   Add docs, FAQs, links. I'll ground every answer in them.\n\n*3. Add me to your group*\n   Promote me as admin, then chat normally — I'll reply using your persona & knowledge (30 AI replies/month on Free).\n\nNote: I don't chat in DMs. Use /help here for commands, or talk to me in your group.`;
+    try { await send(token, fromId, welcome); } catch {}
+
     return send(token, chatId, isGroup
-      ? "✅ Account linked — this group is now powered by *your* AI persona. Mention me or reply to try it. Try /status or /mybots."
-      : "✅ Account linked! Send me anything and I'll reply as your AI assistant. Try /status or /mybots.",
+      ? "✅ Account linked — this group is now powered by *your* AI persona. Just chat normally and I'll reply using your knowledge. (Check your DM for setup steps.)"
+      : "✅ Account linked! Check the welcome message above for next steps.",
       msg.message_id);
   }
 
