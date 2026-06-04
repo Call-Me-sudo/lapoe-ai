@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Inbox as InboxIcon, MessageCircleQuestion, X, Check } from "lucide-react";
+import { ListSkeleton } from "@/components/dashboard/ListSkeleton";
 import { toast } from "sonner";
 
 type Item = {
@@ -28,6 +29,7 @@ export default function Inbox() {
   const [filter, setFilter] = useState<"pending" | "answered" | "dismissed">("pending");
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   const load = async () => {
     if (!user) return;
@@ -40,9 +42,10 @@ export default function Inbox() {
       .order("updated_at", { ascending: false })
       .limit(200);
     setItems((data as any[]) ?? []);
+    setLoading(false);
   };
 
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, [user, filter]);
+  useEffect(() => { setLoading(true); load(); /* eslint-disable-next-line */ }, [user, filter]);
 
   useEffect(() => {
     if (!user) return;
@@ -121,7 +124,9 @@ export default function Inbox() {
         ))}
       </div>
 
-      {items.length === 0 ? (
+      {loading ? (
+        <ListSkeleton rows={3} />
+      ) : items.length === 0 ? (
         <div className="border border-dashed border-border rounded-lg p-12 text-center bg-paper-soft">
           <InboxIcon className="h-8 w-8 text-ink-soft mx-auto mb-3" />
           <p className="text-ink-soft">

@@ -11,10 +11,12 @@ import { Label } from "@/components/ui/label";
 import { Users, Settings as SettingsIcon, Info } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
+import { ListSkeleton } from "@/components/dashboard/ListSkeleton";
 
 export default function Groups() {
   const { user } = useAuth();
   const [groups, setGroups] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<any | null>(null);
   const [form, setForm] = useState({ rules: "", welcome_message: "", moderation_enabled: true, banned_words: "" });
 
@@ -39,6 +41,7 @@ export default function Groups() {
       last_seen_at: g.updated_at,
     }));
     setGroups([...system, ...custom]);
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -103,7 +106,9 @@ export default function Groups() {
         </div>
       </div>
 
-      {groups.length === 0 ? (
+      {loading ? (
+        <ListSkeleton rows={3} />
+      ) : groups.length === 0 ? (
         <div className="border border-dashed border-border rounded-lg p-12 text-center bg-paper-soft">
           <Users className="h-8 w-8 text-ink-soft mx-auto mb-3" />
           <p className="text-ink-soft">No groups detected yet.</p>

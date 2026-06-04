@@ -5,20 +5,23 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { MessageSquare } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { ListSkeleton } from "@/components/dashboard/ListSkeleton";
 
 export default function Messages() {
   const { user } = useAuth();
   const [msgs, setMsgs] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!user) return;
+    setLoading(true);
     supabase
       .from("bot_messages")
       .select("*, bots(name), telegram_groups(name)")
       .eq("owner_id", user.id)
       .order("created_at", { ascending: false })
       .limit(100)
-      .then(({ data }) => setMsgs(data ?? []));
+      .then(({ data }) => { setMsgs(data ?? []); setLoading(false); });
   }, [user]);
 
   return (
@@ -28,7 +31,9 @@ export default function Messages() {
         description="Live log of what LaPoe sees and sends. Newest first."
       />
 
-      {msgs.length === 0 ? (
+      {loading ? (
+        <ListSkeleton rows={5} />
+      ) : msgs.length === 0 ? (
         <div className="border border-dashed border-border rounded-lg p-12 text-center bg-paper-soft">
           <MessageSquare className="h-8 w-8 text-ink-soft mx-auto mb-3" />
           <p className="text-ink-soft">No activity yet. Once your bot is connected to Telegram, messages will appear here.</p>
