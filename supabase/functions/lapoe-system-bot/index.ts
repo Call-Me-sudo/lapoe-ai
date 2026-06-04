@@ -825,15 +825,16 @@ async function handleGroupAi(sb: any, token: string, msg: any, group: any) {
 
   const { data: persona } = await sb.from("system_bot_personas").select("*").eq("owner_id", ownerId).maybeSingle();
 
-  // Decide whether to reply (same triggers as user bots).
+  // Decide whether to reply (same triggers as user bots, plus questions).
   const repliedToBot = msg.reply_to_message?.from?.username?.toLowerCase() === LAPOE_USERNAME;
   const mentionedBot = text.toLowerCase().includes(`@${LAPOE_USERNAME}`)
     || (persona?.display_name && text.toLowerCase().includes(String(persona.display_name).toLowerCase()));
   const greeting = isGreeting(text);
+  const isQuestion = text.includes("?") && text.length >= 3 && !text.startsWith("/") && !text.startsWith("!");
   const substantive = text.length >= 6 && !text.startsWith("/") && !text.startsWith("!");
 
   let rag = { text: "", exists: false };
-  let shouldReply = repliedToBot || mentionedBot || greeting;
+  let shouldReply = repliedToBot || mentionedBot || greeting || isQuestion;
   if (!shouldReply && substantive) {
     rag = await ragForOwner(sb, ownerId, text, 5);
     if (rag.text) shouldReply = true;
