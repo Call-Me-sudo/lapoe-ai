@@ -54,7 +54,7 @@ export type Database = {
       }
       bot_messages: {
         Row: {
-          bot_id: string
+          bot_id: string | null
           content: string | null
           created_at: string
           direction: Database["public"]["Enums"]["message_direction"]
@@ -64,7 +64,7 @@ export type Database = {
           telegram_user: string | null
         }
         Insert: {
-          bot_id: string
+          bot_id?: string | null
           content?: string | null
           created_at?: string
           direction: Database["public"]["Enums"]["message_direction"]
@@ -74,7 +74,7 @@ export type Database = {
           telegram_user?: string | null
         }
         Update: {
-          bot_id?: string
+          bot_id?: string | null
           content?: string | null
           created_at?: string
           direction?: Database["public"]["Enums"]["message_direction"]
@@ -912,7 +912,7 @@ export type Database = {
           answered_at: string | null
           ask_count: number
           asker: string | null
-          bot_id: string
+          bot_id: string | null
           created_at: string
           group_id: string | null
           id: string
@@ -927,7 +927,7 @@ export type Database = {
           answered_at?: string | null
           ask_count?: number
           asker?: string | null
-          bot_id: string
+          bot_id?: string | null
           created_at?: string
           group_id?: string | null
           id?: string
@@ -942,7 +942,7 @@ export type Database = {
           answered_at?: string | null
           ask_count?: number
           asker?: string | null
-          bot_id?: string
+          bot_id?: string | null
           created_at?: string
           group_id?: string | null
           id?: string

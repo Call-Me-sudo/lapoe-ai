@@ -31,6 +31,18 @@ const TONES: Record<string, string> = {
   hype: "High-energy community vibe. Some emoji OK. Never spammy.",
 };
 
+// Hidden self-knowledge injected into every system-bot prompt so it always
+// knows what LaPoe is and never answers "I don't know" about itself.
+const LAPOE_SELF_KB = `LaPoe is a no-code platform for running AI Telegram bots — it powers this assistant.
+- Website: https://lapoe-ai.vercel.app
+- Docs: https://lapoe-ai.vercel.app/docs
+- Pricing: https://lapoe-ai.vercel.app/pricing
+- Free plan: 1 group, 30 AI replies/month via this shared assistant @LaPoe_bot.
+- Paid plans: connect your own Telegram bot tokens, more groups, higher quotas.
+- Owners add knowledge (URLs, FAQs, pasted text) in the dashboard.
+- Owners shape name, tone, personality, welcome and house rules in the dashboard.
+- AI never runs in DMs — only in groups. DMs only handle /start /help /link /unlink /status /mybots /createbot /feedback /id /info.`;
+
 function buildSystemBotPrompt(persona: any, knowledge: string, knowledgeExists: boolean, ownerName: string): string {
   const tone = TONES[persona?.tone] || TONES.friendly;
   const name = persona?.display_name || ownerName || "LaPoe";
@@ -47,13 +59,21 @@ function buildSystemBotPrompt(persona: any, knowledge: string, knowledgeExists: 
 Tone: ${tone}
 ${character}${house}${kb}
 
+=== ABOUT THE PLATFORM POWERING YOU (always available) ===
+${LAPOE_SELF_KB}
+=== END PLATFORM INFO ===
+If asked "what are you", "who built you", "what platform", "how do I get one like you", or any meta question about yourself/the platform, answer from the PLATFORM INFO above. Never say "I don't know" about yourself.
+
 RULES:
 - Reply in the same language the user wrote in.
 - Sound like a real person. Never say "as an AI".
 - Keep replies under 4 short sentences unless asked for detail.
-- NEVER invent URLs, prices, statistics, dates, or facts. If not in the knowledge above, omit it.
+- NEVER invent URLs, prices, statistics, dates, or facts. If not in the knowledge or PLATFORM INFO above, omit it.
 - Politely decline general-knowledge questions (politics, trivia, coding) unless covered above.
-- Never apologize unprompted.`;
+- Never apologize unprompted.
+
+SIGNAL — for owner learning:
+- If the user asked a substantive factual question that DESERVED a real answer, but you cannot answer it from the KNOWLEDGE BASE / house rules / PLATFORM INFO, append the EXACT token [NEEDS_KNOWLEDGE] on its own final line. Do NOT include it for greetings, small talk, or off-topic refusals.`;
 }
 
 async function askAI(system: string, userText: string): Promise<string> {
@@ -873,6 +893,48 @@ function isGroupRelated(text: string, group: any, persona: any): boolean {
   return words.some((w) => hay.includes(w));
 }
 
+function normalizeQuestion(q: string): string {
+  return q.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, " ").replace(/\s+/g, " ").trim().slice(0, 200);
+}
+
+async function logUnansweredSystem(sb: any, ownerId: string, question: string, from: any) {
+  try {
+    const norm = normalizeQuestion(question);
+    if (norm.length < 4) return;
+    const asker = from?.username ? `@${from.username}` : (from?.first_name || null);
+    const { data: existing } = await sb.from("unanswered_questions")
+      .select("id, ask_count, status")
+      .is("bot_id", null)
+      .eq("owner_id", ownerId)
+      .eq("normalized_question", norm)
+      .maybeSingle();
+    if (existing) {
+      if (existing.status === "dismissed") return;
+      await sb.from("unanswered_questions").update({
+        ask_count: (existing.ask_count || 1) + 1,
+        status: "pending",
+        updated_at: new Date().toISOString(),
+      }).eq("id", existing.id);
+    } else {
+      await sb.from("unanswered_questions").insert({
+        owner_id: ownerId,
+        bot_id: null,
+        question: question.slice(0, 1000),
+        normalized_question: norm,
+        asker, status: "pending",
+      });
+    }
+  } catch (e) {
+    console.error("logUnansweredSystem failed:", (e as Error).message);
+  }
+}
+
+function isQuestionLikeSys(text: string): boolean {
+  const t = text.trim().toLowerCase();
+  if (/[?¿]\s*$/.test(t)) return true;
+  return /\b(what|who|when|where|why|how|can|could|should|do|does|did|is|are|am|will|would|tell me|explain|help|que|qué|cuál|cómo|porque|cómo|nini|nani|lini|wapi|kwa\s?nini|vipi)\b/i.test(t);
+}
+
 async function handleGroupAi(sb: any, token: string, msg: any, group: any) {
   const text: string = (msg.text || msg.caption || "").trim();
   if (!text) return;
@@ -881,47 +943,73 @@ async function handleGroupAi(sb: any, token: string, msg: any, group: any) {
   const ownerId = group.linked_owner_id;
   const { plan, allowed, used, cap } = await ownerAiAllowed(sb, ownerId);
   if (plan !== "free") return; // paid users use their own bot
+
+  // Decide whether to reply — NARROW triggers (mirrors user-bot policy):
+  //  1) @LaPoe_bot or persona display name mentioned
+  //  2) Reply to one of @LaPoe_bot's messages
+  //  3) Substantive QUESTION that has a real knowledge match
+  // No more replies on plain greetings or any "?" message.
+  const { data: persona } = await sb.from("system_bot_personas").select("*").eq("owner_id", ownerId).maybeSingle();
+
+  const repliedToBot = msg.reply_to_message?.from?.username?.toLowerCase() === LAPOE_USERNAME;
+  const mentionedBot = text.toLowerCase().includes(`@${LAPOE_USERNAME}`)
+    || (persona?.display_name && text.toLowerCase().includes(String(persona.display_name).toLowerCase()));
+
+  let rag = { text: "", exists: false };
+  let shouldReply = Boolean(repliedToBot || mentionedBot);
+
+  if (!shouldReply) {
+    const probeWorthy = text.length >= 6 && !text.startsWith("/") && !text.startsWith("!") && isQuestionLikeSys(text);
+    if (probeWorthy) {
+      rag = await ragForOwner(sb, ownerId, text, 5);
+      if (rag.text) shouldReply = true;
+    }
+  }
+  if (!shouldReply) return;
+
+  // Log inbound to bot_messages so the dashboard's Messages page shows it.
+  sb.from("bot_messages").insert({
+    bot_id: null, owner_id: ownerId, group_id: null, direction: "inbound",
+    content: text,
+    telegram_user: msg.from?.username || msg.from?.first_name || String(msg.from?.id || ""),
+  }).then(() => {}, () => {});
+
   if (!allowed) {
-    // Only nudge once-ish when actually addressed.
-    const addressed = msg.reply_to_message?.from?.username?.toLowerCase() === LAPOE_USERNAME
-      || text.toLowerCase().includes(`@${LAPOE_USERNAME}`);
-    if (addressed) {
+    if (repliedToBot || mentionedBot) {
       await send(token, msg.chat.id,
         `🌙 ${used}/${cap} AI replies used for the month. Commands still work. (Owner can upgrade at https://lapoe-ai.vercel.app/pricing)`, msg.message_id);
     }
     return;
   }
 
-  const { data: persona } = await sb.from("system_bot_personas").select("*").eq("owner_id", ownerId).maybeSingle();
-
-  // Decide whether to reply (same triggers as user bots, plus questions).
-  const repliedToBot = msg.reply_to_message?.from?.username?.toLowerCase() === LAPOE_USERNAME;
-  const mentionedBot = text.toLowerCase().includes(`@${LAPOE_USERNAME}`)
-    || (persona?.display_name && text.toLowerCase().includes(String(persona.display_name).toLowerCase()));
-  const greeting = isGreeting(text);
-  const isQuestion = text.includes("?") && text.length >= 3 && !text.startsWith("/") && !text.startsWith("!");
-  const substantive = text.length >= 6 && !text.startsWith("/") && !text.startsWith("!");
-
-  let rag = { text: "", exists: false };
-  let shouldReply = repliedToBot || mentionedBot || greeting || isQuestion;
-  if (!shouldReply && substantive) {
-    rag = await ragForOwner(sb, ownerId, text, 5);
-    if (rag.text) shouldReply = true;
-    else if (isGroupRelated(text, group, persona)) shouldReply = true;
-  }
-  if (!shouldReply) return;
   if (!rag.exists && !rag.text) rag = await ragForOwner(sb, ownerId, text, 5);
 
   const ownerName = persona?.display_name || "LaPoe";
   const system = buildSystemBotPrompt(persona, rag.text, rag.exists, ownerName) +
     `\n\nYou are in the Telegram group "${group.title || ""}". Keep it conversational.`;
 
-  let reply = "";
-  try { reply = await askAI(system, text); } catch { return; }
+  let rawReply = "";
+  try { rawReply = await askAI(system, text); } catch { return; }
+  if (!rawReply) return;
+
+  const needsKnowledge = /\[NEEDS_KNOWLEDGE\]/i.test(rawReply);
+  const reply = rawReply.replace(/\[NEEDS_KNOWLEDGE\]/gi, "").trim();
   if (!reply) return;
+
   await send(token, msg.chat.id, reply, msg.message_id);
+
+  sb.from("bot_messages").insert({
+    bot_id: null, owner_id: ownerId, group_id: null, direction: "outbound",
+    content: reply, telegram_user: msg.from?.username || null,
+  }).then(() => {}, () => {});
+
   await sb.rpc("bump_system_bot_usage", { _owner_id: ownerId });
+
+  if (needsKnowledge) {
+    logUnansweredSystem(sb, ownerId, text, msg.from);
+  }
 }
+
 
 async function processUpdate(sb: any, token: string, upd: any) {
   try {
