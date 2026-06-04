@@ -35,6 +35,9 @@ const TONES: Record<string, string> = {
 // knows what LaPoe is and never answers "I don't know" about itself.
 const LAPOE_SELF_KB = `LaPoe is a no-code platform for running AI Telegram bots — it powers this assistant.
 - Website: https://lapoe-ai.vercel.app
+- Dashboard: https://lapoe-ai.vercel.app/dashboard
+- Assistant dashboard: https://lapoe-ai.vercel.app/dashboard/assistant
+- Bots dashboard: https://lapoe-ai.vercel.app/dashboard/bots
 - Docs: https://lapoe-ai.vercel.app/docs
 - Pricing: https://lapoe-ai.vercel.app/pricing
 - Free plan: 1 group, 30 AI replies/month via this shared assistant @LaPoe_bot.
@@ -69,7 +72,7 @@ RULES:
 - Sound like a real person. Never say "as an AI".
 - Keep replies under 4 short sentences unless asked for detail.
 - NEVER invent URLs, prices, statistics, dates, or facts. If not in the knowledge or PLATFORM INFO above, omit it.
-- The URLs inside PLATFORM INFO (https://lapoe-ai.vercel.app, https://lapoe-ai.vercel.app/docs, https://lapoe-ai.vercel.app/pricing) ARE pre-approved. When pointing users to docs, the dashboard, or pricing, ALWAYS write the full URL as bare text (no markdown link, no trailing punctuation inside the URL). Never end a sentence with "see the docs at" without the URL — either include the full URL or rewrite the sentence.
+- The URLs inside PLATFORM INFO are pre-approved. When pointing users to the website, dashboard, assistant dashboard, bot setup, docs, or pricing, ALWAYS write the full URL as bare text (no markdown link, no trailing punctuation inside the URL). Never end a sentence with "at", "see the docs at", or "go to the website at" without the URL — either include the full URL or rewrite the sentence.
 - Politely decline general-knowledge questions (politics, trivia, coding) unless covered above.
 - Never apologize unprompted.
 
@@ -892,6 +895,20 @@ function isGroupRelated(text: string, group: any, persona: any): boolean {
   if (!bag) return false;
   const words = Array.from(new Set(bag.split(/[^a-z0-9]+/).filter((w) => w.length >= 4)));
   return words.some((w) => hay.includes(w));
+}
+
+function isPlatformTopic(text: string): boolean {
+  const t = text.toLowerCase();
+  return /\b(lapoe|la\s*poe|platform|website|dashboard|docs?|documentation|pricing|free plan|paid plan|telegram bot|own bot|create (?:my |your |a )?bot|assistant|bot token|botfather)\b/i.test(t);
+}
+
+function sanitizePlatformLinks(reply: string): string {
+  if (!reply) return reply;
+  return reply
+    .replace(/\b(Go to the LaPoe website at|Open the LaPoe website at|Visit the LaPoe website at)\s*(?=\n|$)/gi, "$1 https://lapoe-ai.vercel.app")
+    .replace(/\b(see the docs at|read the docs at|full details.*?docs at)\s*(?=\n|$)/gi, "$1 https://lapoe-ai.vercel.app/docs")
+    .replace(/\b(upgrade.*?pricing at|pricing at)\s*(?=\n|$)/gi, "$1 https://lapoe-ai.vercel.app/pricing")
+    .trim();
 }
 
 function normalizeQuestion(q: string): string {
