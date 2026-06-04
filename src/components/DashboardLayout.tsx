@@ -119,7 +119,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
       <div className="p-3">
         <a
-          href="mailto:support@lapoe.app"
+          href="mailto:business@starstore.app?subject=LaPoe%20support%20request&body=Hi%20LaPoe%20team%2C%0D%0A%0D%0A(Describe%20your%20question%20here)%0D%0A%0D%0A%E2%80%94%20Sent%20from%20https%3A%2F%2Flapoe-ai.vercel.app"
           className="flex items-center gap-3 rounded-full px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted"
         >
           <HelpCircle className="h-4 w-4" /> Help & support

@@ -1,5 +1,4 @@
 import { Link } from "react-router-dom";
-import starstoreAsset from "@/assets/starstore.jpg.asset.json";
 
 
 export default function SiteFooter() {
