@@ -935,6 +935,47 @@ function isQuestionLikeSys(text: string): boolean {
   return /\b(what|who|when|where|why|how|can|could|should|do|does|did|is|are|am|will|would|tell me|explain|help|que|qué|cuál|cómo|porque|cómo|nini|nani|lini|wapi|kwa\s?nini|vipi)\b/i.test(t);
 }
 
+// DM the free-plan owner once per month when their 30 AI replies run out.
+// Stays silent in the group; uses notifications table to dedup.
+async function notifySystemBotOwnerLimit(sb: any, token: string, ownerId: string, cap: number): Promise<void> {
+  try {
+    const monthStart = new Date();
+    monthStart.setUTCDate(1);
+    monthStart.setUTCHours(0, 0, 0, 0);
+
+    const { data: existing } = await sb
+      .from("notifications")
+      .select("id")
+      .eq("user_id", ownerId)
+      .eq("type", "limit")
+      .gte("created_at", monthStart.toISOString())
+      .limit(1)
+      .maybeSingle();
+    if (existing) return;
+
+    await sb.from("notifications").insert({
+      title: "Monthly AI limit reached",
+      body: `Your free assistant @LaPoe_bot has used all ${cap} AI replies this month. It will stay silent in your group until the 1st. Upgrade for more.`,
+      type: "limit", audience: "user", user_id: ownerId,
+      link: "/pricing",
+    });
+
+    const { data: profile } = await sb
+      .from("profiles").select("telegram_user_id")
+      .eq("id", ownerId).maybeSingle();
+    if (profile?.telegram_user_id) {
+      await tg(token, "sendMessage", {
+        chat_id: Number(profile.telegram_user_id),
+        text: `🛑 You've used all ${cap} free AI replies this month.\n\n@LaPoe_bot will stay silent in your group until the 1st. Upgrade anytime: https://lapoe-ai.vercel.app/pricing`,
+        parse_mode: "Markdown",
+        disable_web_page_preview: true,
+      });
+    }
+  } catch (e) {
+    console.error("notifySystemBotOwnerLimit failed:", (e as Error).message);
+  }
+}
+
 async function handleGroupAi(sb: any, token: string, msg: any, group: any) {
   const text: string = (msg.text || msg.caption || "").trim();
   if (!text) return;
