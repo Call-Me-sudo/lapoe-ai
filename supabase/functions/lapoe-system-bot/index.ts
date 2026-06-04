@@ -35,6 +35,9 @@ const TONES: Record<string, string> = {
 // knows what LaPoe is and never answers "I don't know" about itself.
 const LAPOE_SELF_KB = `LaPoe is a no-code platform for running AI Telegram bots — it powers this assistant.
 - Website: https://lapoe-ai.vercel.app
+- Dashboard: https://lapoe-ai.vercel.app/dashboard
+- Assistant dashboard: https://lapoe-ai.vercel.app/dashboard/assistant
+- Bots dashboard: https://lapoe-ai.vercel.app/dashboard/bots
 - Docs: https://lapoe-ai.vercel.app/docs
 - Pricing: https://lapoe-ai.vercel.app/pricing
 - Free plan: 1 group, 30 AI replies/month via this shared assistant @LaPoe_bot.
@@ -69,7 +72,7 @@ RULES:
 - Sound like a real person. Never say "as an AI".
 - Keep replies under 4 short sentences unless asked for detail.
 - NEVER invent URLs, prices, statistics, dates, or facts. If not in the knowledge or PLATFORM INFO above, omit it.
-- The URLs inside PLATFORM INFO (https://lapoe-ai.vercel.app, https://lapoe-ai.vercel.app/docs, https://lapoe-ai.vercel.app/pricing) ARE pre-approved. When pointing users to docs, the dashboard, or pricing, ALWAYS write the full URL as bare text (no markdown link, no trailing punctuation inside the URL). Never end a sentence with "see the docs at" without the URL — either include the full URL or rewrite the sentence.
+- The URLs inside PLATFORM INFO are pre-approved. When pointing users to the website, dashboard, assistant dashboard, bot setup, docs, or pricing, ALWAYS write the full URL as bare text (no markdown link, no trailing punctuation inside the URL). Never end a sentence with "at", "see the docs at", or "go to the website at" without the URL — either include the full URL or rewrite the sentence.
 - Politely decline general-knowledge questions (politics, trivia, coding) unless covered above.
 - Never apologize unprompted.
 
@@ -894,6 +897,20 @@ function isGroupRelated(text: string, group: any, persona: any): boolean {
   return words.some((w) => hay.includes(w));
 }
 
+function isPlatformTopic(text: string): boolean {
+  const t = text.toLowerCase();
+  return /\b(lapoe|la\s*poe|platform|website|dashboard|docs?|documentation|pricing|free plan|paid plan|telegram bot|own bot|create (?:my |your |a )?bot|assistant|bot token|botfather)\b/i.test(t);
+}
+
+function sanitizePlatformLinks(reply: string): string {
+  if (!reply) return reply;
+  return reply
+    .replace(/\b(Go to the LaPoe website at|Open the LaPoe website at|Visit the LaPoe website at)\s*(?=\n|$)/gi, "$1 https://lapoe-ai.vercel.app")
+    .replace(/\b(see the docs at|read the docs at|full details.*?docs at)\s*(?=\n|$)/gi, "$1 https://lapoe-ai.vercel.app/docs")
+    .replace(/\b(upgrade.*?pricing at|pricing at)\s*(?=\n|$)/gi, "$1 https://lapoe-ai.vercel.app/pricing")
+    .trim();
+}
+
 function normalizeQuestion(q: string): string {
   return q.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, " ").replace(/\s+/g, " ").trim().slice(0, 200);
 }
@@ -989,7 +1006,7 @@ async function handleGroupAi(sb: any, token: string, msg: any, group: any) {
   // Decide whether to reply — mirrors user-bot policy.
   //  1) @LaPoe_bot or persona display name (as a phrase) mentioned
   //  2) Reply to one of @LaPoe_bot's messages
-  //  3) Question-like substantive message that has a real knowledge match
+  //  3) Substantive message relevant to knowledge, group/persona, or LaPoe platform info
   // Greetings are NOT filtered when the bot is addressed (cases 1/2).
   const { data: persona } = await sb.from("system_bot_personas").select("*").eq("owner_id", ownerId).maybeSingle();
 
@@ -1009,10 +1026,10 @@ async function handleGroupAi(sb: any, token: string, msg: any, group: any) {
       text.length >= 8 &&
       !text.startsWith("/") && !text.startsWith("!") &&
       !isGreeting(text) &&
-      isQuestionLikeSys(text);
+      (isQuestionLikeSys(text) || isGroupRelated(text, group, persona) || isPlatformTopic(text));
     if (probeWorthy) {
       rag = await ragForOwner(sb, ownerId, text, 5);
-      if (rag.text) shouldReply = true;
+      if (rag.text || isPlatformTopic(text) || (isQuestionLikeSys(text) && isGroupRelated(text, group, persona))) shouldReply = true;
     }
   }
   if (!shouldReply) return;
@@ -1041,7 +1058,7 @@ async function handleGroupAi(sb: any, token: string, msg: any, group: any) {
   if (!rawReply) return;
 
   const needsKnowledge = /\[NEEDS_KNOWLEDGE\]/i.test(rawReply);
-  const reply = rawReply.replace(/\[NEEDS_KNOWLEDGE\]/gi, "").trim();
+  const reply = sanitizePlatformLinks(rawReply.replace(/\[NEEDS_KNOWLEDGE\]/gi, "").trim());
   if (!reply) return;
 
   await send(token, msg.chat.id, reply, msg.message_id);

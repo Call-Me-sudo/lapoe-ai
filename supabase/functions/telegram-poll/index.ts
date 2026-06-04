@@ -189,6 +189,11 @@ function isGroupRelated(text: string, group: any | null, bot: any): boolean {
   return keywords.some((w: string) => hay.includes(w));
 }
 
+function isPlatformTopic(text: string): boolean {
+  const t = text.toLowerCase();
+  return /\b(lapoe|la\s*poe|platform|website|dashboard|docs?|documentation|pricing|free plan|paid plan|telegram bot|own bot|create (?:my |your |a )?bot|bot token|botfather)\b/i.test(t);
+}
+
 async function hasKnowledge(supabase: any, botId: string): Promise<boolean> {
   const { count } = await supabase
     .from("knowledge_chunks")
@@ -282,6 +287,8 @@ async function notifyOwnerLimitReached(supabase: any, bot: any, cap: number): Pr
 // Kept in sync with the user-facing docs at https://lapoe-ai.vercel.app/docs.
 const LAPOE_SELF_KB = `LaPoe is a no-code platform for running AI Telegram bots — it powers this bot.
 - Website: https://lapoe-ai.vercel.app
+- Dashboard: https://lapoe-ai.vercel.app/dashboard
+- Bots dashboard: https://lapoe-ai.vercel.app/dashboard/bots
 - Docs: https://lapoe-ai.vercel.app/docs
 - Pricing: https://lapoe-ai.vercel.app/pricing
 - Free plan: 1 group, 30 AI replies/month via the shared assistant @LaPoe_bot.
@@ -327,7 +334,7 @@ ANTI-HALLUCINATION — links, URLs, references, citations:
 - Only include a URL/link if it appears VERBATIM inside the KNOWLEDGE BASE / owner instructions / house rules / PLATFORM INFO above. Copy it character-for-character.
 - If you don't have a real source, OMIT the link entirely. Do NOT write "Reference:", "Source:", "Docs:", "See:", "More info:" or any similar line followed by a guessed URL.
 - Markdown links to invented destinations are forbidden under the same rule.
-- The URLs inside PLATFORM INFO (https://lapoe-ai.vercel.app, https://lapoe-ai.vercel.app/docs, https://lapoe-ai.vercel.app/pricing) ARE verbatim and pre-approved. When pointing users to docs, the dashboard, or pricing, ALWAYS write the full URL as bare text (not markdown link, no trailing punctuation inside the URL) so it never gets cut off. Never end a sentence with "see the docs at" without the URL — either include the full URL or rewrite the sentence to not promise a link.
+- The URLs inside PLATFORM INFO are verbatim and pre-approved. When pointing users to the website, dashboard, docs, bot setup, or pricing, ALWAYS write the full URL as bare text (not markdown link, no trailing punctuation inside the URL) so it never gets cut off. Never end a sentence with "at", "see the docs at", or "go to the website at" without the URL — either include the full URL or rewrite the sentence to not promise a link.
 
 Reply rules:
 - Sound like a real person, not an AI assistant. NEVER say "as an AI" or "I'm just an AI".
@@ -379,7 +386,8 @@ async function askAI(system: string, userText: string): Promise<string> {
 // and removes orphan "Reference:" / "Source:" / "Docs:" / "See:" lines.
 function sanitizeReply(reply: string, allowedContext: string): string {
   if (!reply) return reply;
-  const haystack = (allowedContext || "").toLowerCase();
+  const platformContext = `${LAPOE_SELF_KB}\nhttps://lapoe-ai.vercel.app\nhttps://lapoe-ai.vercel.app/dashboard\nhttps://lapoe-ai.vercel.app/dashboard/bots\nhttps://lapoe-ai.vercel.app/docs\nhttps://lapoe-ai.vercel.app/pricing`;
+  const haystack = `${allowedContext || ""}\n${platformContext}`.toLowerCase();
   const urlRe = /\bhttps?:\/\/[^\s)\]>"']+/gi;
 
   // 1) Strip whole lines whose only purpose is a reference label + URL.
@@ -399,6 +407,9 @@ function sanitizeReply(reply: string, allowedContext: string): string {
   );
 
   // 4) Collapse blank lines created by the scrub.
+  out = out.replace(/\b(Go to the LaPoe website at|Open the LaPoe website at|Visit the LaPoe website at)\s*(?=\n|$)/gi, "$1 https://lapoe-ai.vercel.app");
+  out = out.replace(/\b(see the docs at|read the docs at|full details.*?docs at)\s*(?=\n|$)/gi, "$1 https://lapoe-ai.vercel.app/docs");
+  out = out.replace(/\b(upgrade.*?pricing at|pricing at)\s*(?=\n|$)/gi, "$1 https://lapoe-ai.vercel.app/pricing");
   return out.replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
 }
 
@@ -888,11 +899,12 @@ async function handleSingleUpdate(supabase: any, bot: any, me: { username: strin
 
   if (bot.status !== "active") return false;
 
-  // Group reply triggers — keep noise low.
+    // Group reply triggers — keep noise low, but do not require a direct tag.
   // Reply ONLY when:
   //  1) The bot is @mentioned or called by its FULL name, OR
   //  2) The user replied to one of the bot's messages, OR
-  //  3) The message is question-like AND has a real (strict) knowledge match.
+    //  3) The message is question-like AND has a real (strict) knowledge match,
+    //     OR it is about this group/bot's topics or LaPoe platform info.
   // Greetings DO trigger when the bot is addressed (case 1 or 2) — they don't
   // probe knowledge on their own, but they're not filtered out either.
   let autoKnowledge = "";
@@ -902,14 +914,13 @@ async function handleSingleUpdate(supabase: any, bot: any, me: { username: strin
     let shouldReply = Boolean(mentionedOrNamed || isReply);
 
     if (!shouldReply) {
-      // Only probe knowledge for substantive QUESTIONS (not statements,
-      // not greetings, not commands). Stops the bot from chiming in on
-      // admin/owner chatter that happens to share a keyword with the KB.
+      // Probe only substantive messages. This keeps owner/admin chatter quiet,
+      // while still answering relevant questions without a direct tag.
       const probeWorthy =
         text.trim().length >= 8 &&
         !/^[\/!]/.test(text) &&
         !isGreeting(text) &&
-        isQuestionLike(text);
+        (isQuestionLike(text) || isGroupRelated(text, group, bot) || isPlatformTopic(text));
       if (probeWorthy) {
         // Strict text match (no OR-expansion, no recent-chunk fallback).
         const { data: hits } = await supabase.rpc("match_knowledge_chunks_text", {
@@ -920,6 +931,11 @@ async function handleSingleUpdate(supabase: any, bot: any, me: { username: strin
             .map((r: any, i: number) => `[${i + 1}] ${r.content}`)
             .join("\n\n")
             .slice(0, 6000);
+          shouldReply = true;
+        } else if (isPlatformTopic(text)) {
+          autoKnowledge = LAPOE_SELF_KB;
+          shouldReply = true;
+        } else if (isQuestionLike(text) && isGroupRelated(text, group, bot)) {
           shouldReply = true;
         }
       }
@@ -988,7 +1004,7 @@ async function handleSingleUpdate(supabase: any, bot: any, me: { username: strin
     const rawReply = await askAI(system, cleanText);
     const needsKnowledge = /\[NEEDS_KNOWLEDGE\]/i.test(rawReply);
     const stripped = rawReply.replace(/\[NEEDS_KNOWLEDGE\]/gi, "").trim();
-    const allowedCtx = [knowledgeResult, bot.house_rules, bot.default_instructions, bot.personality]
+    const allowedCtx = [knowledgeResult, LAPOE_SELF_KB, bot.house_rules, bot.default_instructions, bot.personality]
       .filter(Boolean).join("\n");
     const reply = sanitizeReply(stripped, allowedCtx);
 
