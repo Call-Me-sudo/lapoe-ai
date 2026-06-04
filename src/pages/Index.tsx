@@ -36,7 +36,7 @@ export default function Index() {
         }}
       />
       <Helmet>
-        <link rel="preload" as="image" href="/desk-clerk.png" fetchpriority="low" />
+        <link rel="preload" as="image" href="/desk-clerk.png" />
       </Helmet>
       <SiteHeader />
 
