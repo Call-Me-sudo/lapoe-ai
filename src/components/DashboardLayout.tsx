@@ -2,7 +2,7 @@ import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { ReactNode, useState } from "react";
 import {
   LayoutDashboard, Bot, Users, BookOpen, MessageSquare, CreditCard, Settings,
-  LogOut, Menu, X, Bell, HelpCircle, QrCode, PlayCircle, Inbox as InboxIcon, Sparkles,
+  LogOut, Menu, X, Bell, HelpCircle, QrCode, PlayCircle, Inbox as InboxIcon, MessageCircle,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -25,7 +25,7 @@ const navGroups: { label: string; items: NavItem[] }[] = [
   {
     label: "Automation",
     items: [
-      { to: "/dashboard/assistant", icon: Sparkles, label: "My Assistant" },
+      { to: "/dashboard/assistant", icon: MessageCircle, label: "My Assistant" },
       { to: "/dashboard/bots", icon: Bot, label: "Bots" },
       { to: "/dashboard/playground", icon: PlayCircle, label: "Playground" },
       { to: "/dashboard/groups", icon: Users, label: "Groups" },
