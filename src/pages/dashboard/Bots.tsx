@@ -272,7 +272,18 @@ export default function Bots() {
       {bots.length === 0 ? (
         <div className="border border-dashed border-border rounded-lg p-12 text-center bg-paper-soft">
           <img src="/bot-icon.png" alt="LaPoe" className="h-10 w-10 rounded-full object-cover mx-auto mb-3" />
-          <p className="text-ink-soft">No bots yet. Create your first one.</p>
+          {quota && quota.max_bots === 0 ? (
+            <>
+              <p className="text-ink-soft mb-1">Your free plan uses the shared <span className="font-medium">@LaPoe_bot</span> assistant.</p>
+              <p className="text-xs text-ink-soft mb-4">Configure its voice & knowledge from My Assistant. Upgrade to create your own custom bots.</p>
+              <div className="flex items-center justify-center gap-2">
+                <Button variant="outline" onClick={() => navigate("/dashboard/my-assistant")}>Open My Assistant</Button>
+                <Button onClick={() => navigate("/pricing")}>Upgrade</Button>
+              </div>
+            </>
+          ) : (
+            <p className="text-ink-soft">No bots yet. Create your first one.</p>
+          )}
         </div>
       ) : (
         <div className="grid gap-4">
