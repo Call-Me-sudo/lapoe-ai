@@ -138,24 +138,33 @@ export default function Index() {
           <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-[hsl(var(--brand-rose))] opacity-[0.04] blur-[80px]" />
           <div className="absolute -bottom-24 -left-24 w-96 h-96 rounded-full bg-[hsl(var(--brand-violet))] opacity-[0.04] blur-[80px]" />
 
-          <div className="relative grid md:grid-cols-2 gap-10 md:gap-16 items-center px-8 py-14 md:px-16 md:py-20">
-            {/* Text side */}
-            <div className="space-y-5">
-              <div className="inline-flex items-center gap-3 text-[hsl(var(--brand-rose-deep))] text-xs font-semibold uppercase tracking-[0.18em]">
-                <span className="h-px w-8 bg-[hsl(var(--brand-rose-deep))]" />
-                Poiesis
-              </div>
-              <h2 className="font-display text-4xl md:text-5xl font-extrabold text-foreground leading-[1.1] tracking-tight text-balance">
-                Your community deserves a calm, well-read desk clerk.
-              </h2>
+          <div className="relative grid md:grid-cols-2 gap-0 items-stretch">
+            {/* Image side */}
+            <div className="relative h-64 md:h-auto overflow-hidden">
+              <img
+                src="/desk-clerk.png"
+                alt="A calm desk clerk organizing community messages"
+                className="absolute inset-0 w-full h-full object-cover"
+                loading="lazy"
+              />
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-[hsl(var(--tile-rose))] md:to-transparent" />
             </div>
 
-            {/* Action side */}
-            <div className="flex flex-col items-start md:items-end md:text-right space-y-6">
+            {/* Text side */}
+            <div className="flex flex-col justify-center px-8 py-14 md:px-16 md:py-20 space-y-6">
+              <div className="space-y-5">
+                <div className="inline-flex items-center gap-3 text-[hsl(var(--brand-rose-deep))] text-xs font-semibold uppercase tracking-[0.18em]">
+                  <span className="h-px w-8 bg-[hsl(var(--brand-rose-deep))]" />
+                  Poiesis
+                </div>
+                <h2 className="font-display text-4xl md:text-5xl font-extrabold text-foreground leading-[1.1] tracking-tight text-balance">
+                  Your community deserves a calm, well-read desk clerk.
+                </h2>
+              </div>
               <p className="text-muted-foreground text-lg md:text-xl max-w-sm leading-relaxed text-balance">
                 Bring language into being. Try LaPoe free, then upgrade when your community grows.
               </p>
-              <Button asChild variant="default" size="xl" className="group">
+              <Button asChild variant="default" size="xl" className="group self-start">
                 <Link to="/auth?mode=signup">
                   Create your workspace
                   <ArrowUpRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
