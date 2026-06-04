@@ -40,7 +40,7 @@ export default function Messages() {
               <Badge variant={m.direction === "inbound" ? "secondary" : "default"}>{m.direction}</Badge>
               <div className="flex-1 min-w-0">
                 <div className="text-xs text-ink-soft">
-                  {m.bots?.name} · {m.telegram_groups?.name || "DM"} · {m.telegram_user || "—"} · {new Date(m.created_at).toLocaleString()}
+                  {m.bots?.name || "LaPoe Assistant"} · {m.telegram_groups?.name || "DM"} · {m.telegram_user || "—"} · {new Date(m.created_at).toLocaleString()}
                 </div>
                 <p className="text-sm text-ink mt-1 break-words">{m.content}</p>
               </div>
