@@ -889,11 +889,11 @@ async function handleSingleUpdate(supabase: any, bot: any, me: { username: strin
 
   // Group reply triggers — keep noise low.
   // Reply ONLY when:
-  //  1) The bot is @mentioned or called by its name, OR
+  //  1) The bot is @mentioned or called by its FULL name, OR
   //  2) The user replied to one of the bot's messages, OR
   //  3) The message is question-like AND has a real (strict) knowledge match.
-  // Greetings alone DO NOT trigger a reply — too noisy in active groups
-  // (admins and members chatting normally would otherwise get spammed).
+  // Greetings DO trigger when the bot is addressed (case 1 or 2) — they don't
+  // probe knowledge on their own, but they're not filtered out either.
   let autoKnowledge = "";
   if (isGroup) {
     const mentionedOrNamed = messageNamesBot(text, bot, me);
@@ -903,7 +903,7 @@ async function handleSingleUpdate(supabase: any, bot: any, me: { username: strin
     if (!shouldReply) {
       // Only probe knowledge for substantive QUESTIONS (not statements,
       // not greetings, not commands). Stops the bot from chiming in on
-      // admin chatter that happens to share a keyword with the KB.
+      // admin/owner chatter that happens to share a keyword with the KB.
       const probeWorthy =
         text.trim().length >= 8 &&
         !/^[\/!]/.test(text) &&
