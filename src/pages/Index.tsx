@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import SEO from "@/components/SEO";
 import { Button } from "@/components/ui/button";
 import SiteHeader from "@/components/SiteHeader";
