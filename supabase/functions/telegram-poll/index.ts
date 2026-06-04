@@ -142,12 +142,16 @@ function escapeRe(value: string): string {
 function messageNamesBot(text: string, bot: any, me: { username: string | null; id: number | null }): boolean {
   const lowerText = text.toLowerCase();
   if (me.username && new RegExp(`(^|\\s|[,.!?;:])@${escapeRe(me.username.toLowerCase())}(?=$|\\s|[,.!?;:])`).test(lowerText)) return true;
-  const nameTokens = (bot.name || "")
-    .toLowerCase()
-    .replace(/[^\p{L}\p{N}\s]/gu, " ")
-    .split(/\s+/)
-    .filter((t: string) => t.length >= 3);
-  return nameTokens.some((t: string) => new RegExp(`\\b${escapeRe(t)}\\b`, "iu").test(text));
+  // Match the FULL bot display name as a phrase only — never individual tokens.
+  // Splitting on tokens caused false positives where any common word in the bot
+  // name (e.g. "Support", "Bot", or the owner's first name) made the bot reply
+  // to every message its owner sent in the group.
+  const fullName = (bot.name || "").trim();
+  if (fullName.length >= 3) {
+    const phrase = escapeRe(fullName).replace(/\\?\s+/g, "\\s+");
+    if (new RegExp(`(^|[\\s,.!?;:])${phrase}(?=$|[\\s,.!?;:])`, "iu").test(text)) return true;
+  }
+  return false;
 }
 
 function stripBotName(text: string, bot: any, me: { username: string | null; id: number | null }): string {
@@ -885,11 +889,11 @@ async function handleSingleUpdate(supabase: any, bot: any, me: { username: strin
 
   // Group reply triggers — keep noise low.
   // Reply ONLY when:
-  //  1) The bot is @mentioned or called by its name, OR
+  //  1) The bot is @mentioned or called by its FULL name, OR
   //  2) The user replied to one of the bot's messages, OR
   //  3) The message is question-like AND has a real (strict) knowledge match.
-  // Greetings alone DO NOT trigger a reply — too noisy in active groups
-  // (admins and members chatting normally would otherwise get spammed).
+  // Greetings DO trigger when the bot is addressed (case 1 or 2) — they don't
+  // probe knowledge on their own, but they're not filtered out either.
   let autoKnowledge = "";
   if (isGroup) {
     const mentionedOrNamed = messageNamesBot(text, bot, me);
@@ -899,7 +903,7 @@ async function handleSingleUpdate(supabase: any, bot: any, me: { username: strin
     if (!shouldReply) {
       // Only probe knowledge for substantive QUESTIONS (not statements,
       // not greetings, not commands). Stops the bot from chiming in on
-      // admin chatter that happens to share a keyword with the KB.
+      // admin/owner chatter that happens to share a keyword with the KB.
       const probeWorthy =
         text.trim().length >= 8 &&
         !/^[\/!]/.test(text) &&
