@@ -357,9 +357,16 @@ async function handleCommand(sb: any, token: string, msg: any) {
     if (isGroup) {
       await sb.from("system_bot_groups").update({ linked_owner_id: row.user_id }).eq("chat_id", chatId);
     }
+
+    // One-time welcome DM with onboarding instructions. We DM the linking
+    // Telegram user directly (fromId == their telegram_user_id) regardless of
+    // where /link was issued. Plain static text — no AI in DMs.
+    const welcome = `🎉 *Connected!* You're now linked to LaPoe.\n\nI'm @LaPoe_bot — your free AI assistant in *your group*. Here's how to make me yours:\n\n*1. Set my voice*\n→ https://lapoe-ai.vercel.app/dashboard/assistant\n   Pick a name, tone, personality and house rules.\n\n*2. Feed me knowledge*\n→ https://lapoe-ai.vercel.app/dashboard/knowledge\n   Add docs, FAQs, links. I'll ground every answer in them.\n\n*3. Add me to your group*\n   Promote me as admin, then chat normally — I'll reply using your persona & knowledge (30 AI replies/month on Free).\n\nNote: I don't chat in DMs. Use /help here for commands, or talk to me in your group.`;
+    try { await send(token, fromId, welcome); } catch {}
+
     return send(token, chatId, isGroup
-      ? "✅ Account linked — this group is now powered by *your* AI persona. Mention me or reply to try it. Try /status or /mybots."
-      : "✅ Account linked! Send me anything and I'll reply as your AI assistant. Try /status or /mybots.",
+      ? "✅ Account linked — this group is now powered by *your* AI persona. Just chat normally and I'll reply using your knowledge. (Check your DM for setup steps.)"
+      : "✅ Account linked! Check the welcome message above for next steps.",
       msg.message_id);
   }
 
@@ -751,7 +758,10 @@ async function ensureWebhook(token: string): Promise<{ ok: boolean; info?: any }
   return { ok: !!r.ok, info: r };
 }
 
-// ---------- AI handlers (DM + group mention) ----------
+// ---------- AI handlers ----------
+// DM policy: @LaPoe_bot does NOT reply to free-form messages in DMs. Only
+// commands (handled in handleCommand) and the one-time welcome DM sent right
+// after /link are allowed. This mirrors the project-wide "no AI in DMs" rule.
 async function handleDmAi(sb: any, token: string, msg: any) {
   const chatId = msg.chat.id;
   const fromId = msg.from?.id;
@@ -761,57 +771,43 @@ async function handleDmAi(sb: any, token: string, msg: any) {
   const profile = await getProfile(sb, fromId);
   if (!profile) {
     return send(token, chatId,
-      `👋 I'm *LaPoe*. To get your own AI assistant, link your account:\n\n1. Open https://lapoe-ai.vercel.app and sign in\n2. Settings → Telegram → generate a code\n3. Send me \`/link YOUR_CODE\`\n\nUse /help for commands.`, msg.message_id);
+      `👋 I'm *LaPoe*. I don't chat in DMs — I'm a *group* assistant.\n\nTo set me up:\n1. Open https://lapoe-ai.vercel.app and sign in\n2. Settings → Telegram → generate a code\n3. Send me \`/link YOUR_CODE\` here\n4. Add me to your group as admin\n\nUse /help for commands.`, msg.message_id);
   }
+  return send(token, chatId,
+    `I don't reply in DMs — I work in your *group*. Manage me at https://lapoe-ai.vercel.app/dashboard/assistant or use /help for commands.`,
+    msg.message_id);
+}
 
-  // Plan + quota
-  const { plan, allowed, used, cap } = await ownerAiAllowed(sb, profile.id);
-  if (plan !== "free") {
-    // Paid users have their own bot — keep DM minimal here.
-    return send(token, chatId,
-      `You're on the *${plan}* plan — manage your custom bot at https://lapoe-ai.vercel.app/dashboard/bots.\n\nFor commands here, try /help.`, msg.message_id);
-  }
-  if (!allowed) {
-    return send(token, chatId,
-      `🌙 You've used your monthly *${cap}* AI replies (${used}/${cap}). Commands still work; AI resumes on the 1st.\n\nWant unlimited? https://lapoe-ai.vercel.app/pricing`, msg.message_id);
-  }
-
-  // Persona + RAG
-  const { data: persona } = await sb.from("system_bot_personas").select("*").eq("owner_id", profile.id).maybeSingle();
-  const rag = await ragForOwner(sb, profile.id, text, 5);
-  const system = buildSystemBotPrompt(persona, rag.text, rag.exists, profile.display_name || profile.email || "LaPoe");
-
-  let reply = "";
-  try {
-    reply = await askAI(system, text);
-  } catch (e) {
-    return send(token, chatId, `Hmm — AI is unavailable right now. Try again in a minute.`, msg.message_id);
-  }
-  if (!reply) return;
-
-  await send(token, chatId, reply, msg.message_id);
-  await sb.rpc("bump_system_bot_usage", { _owner_id: profile.id });
+// Greeting / group-related helpers (mirror user-bot triggers).
+function isGreeting(text: string): boolean {
+  const t = text.trim().toLowerCase();
+  if (t.length > 30) return false;
+  return /^(hi|hello|hey|hola|yo|gm|good\s*morning|good\s*evening|good\s*afternoon|sup|howdy|hiya)\b/i.test(t);
+}
+function isGroupRelated(text: string, group: any, persona: any): boolean {
+  const hay = (text || "").toLowerCase();
+  const bag = [
+    group?.title, group?.rules, group?.welcome_message,
+    persona?.display_name, persona?.personality, persona?.house_rules,
+  ].filter(Boolean).join(" ").toLowerCase();
+  if (!bag) return false;
+  const words = Array.from(new Set(bag.split(/[^a-z0-9]+/).filter((w) => w.length >= 4)));
+  return words.some((w) => hay.includes(w));
 }
 
 async function handleGroupAi(sb: any, token: string, msg: any, group: any) {
-  // Only respond on mention/reply-to-bot.
   const text: string = (msg.text || msg.caption || "").trim();
   if (!text) return;
-
-  const repliedToBot = msg.reply_to_message?.from?.username?.toLowerCase() === LAPOE_USERNAME;
-  const mentionedBot = text.toLowerCase().includes(`@${LAPOE_USERNAME}`);
-  if (!repliedToBot && !mentionedBot) return;
-
-  if (!group.linked_owner_id) {
-    // Group not claimed by a free user → don't AI-reply, marketing nudge once is enough.
-    return;
-  }
+  if (!group.linked_owner_id) return; // unclaimed group → no AI
 
   const ownerId = group.linked_owner_id;
   const { plan, allowed, used, cap } = await ownerAiAllowed(sb, ownerId);
-  if (plan !== "free" || !allowed) {
-    // Paid owners use their own bot; capped free owners get silence here (commands still work).
-    if (plan === "free" && !allowed) {
+  if (plan !== "free") return; // paid users use their own bot
+  if (!allowed) {
+    // Only nudge once-ish when actually addressed.
+    const addressed = msg.reply_to_message?.from?.username?.toLowerCase() === LAPOE_USERNAME
+      || text.toLowerCase().includes(`@${LAPOE_USERNAME}`);
+    if (addressed) {
       await send(token, msg.chat.id,
         `🌙 ${used}/${cap} AI replies used for the month. Commands still work. (Owner can upgrade at https://lapoe-ai.vercel.app/pricing)`, msg.message_id);
     }
@@ -819,7 +815,24 @@ async function handleGroupAi(sb: any, token: string, msg: any, group: any) {
   }
 
   const { data: persona } = await sb.from("system_bot_personas").select("*").eq("owner_id", ownerId).maybeSingle();
-  const rag = await ragForOwner(sb, ownerId, text, 5);
+
+  // Decide whether to reply (same triggers as user bots).
+  const repliedToBot = msg.reply_to_message?.from?.username?.toLowerCase() === LAPOE_USERNAME;
+  const mentionedBot = text.toLowerCase().includes(`@${LAPOE_USERNAME}`)
+    || (persona?.display_name && text.toLowerCase().includes(String(persona.display_name).toLowerCase()));
+  const greeting = isGreeting(text);
+  const substantive = text.length >= 6 && !text.startsWith("/") && !text.startsWith("!");
+
+  let rag = { text: "", exists: false };
+  let shouldReply = repliedToBot || mentionedBot || greeting;
+  if (!shouldReply && substantive) {
+    rag = await ragForOwner(sb, ownerId, text, 5);
+    if (rag.text) shouldReply = true;
+    else if (isGroupRelated(text, group, persona)) shouldReply = true;
+  }
+  if (!shouldReply) return;
+  if (!rag.exists && !rag.text) rag = await ragForOwner(sb, ownerId, text, 5);
+
   const ownerName = persona?.display_name || "LaPoe";
   const system = buildSystemBotPrompt(persona, rag.text, rag.exists, ownerName) +
     `\n\nYou are in the Telegram group "${group.title || ""}". Keep it conversational.`;
