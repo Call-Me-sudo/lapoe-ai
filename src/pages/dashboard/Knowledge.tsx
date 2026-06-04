@@ -99,13 +99,19 @@ export default function Knowledge() {
                 <DialogDescription>The content will be chunked, embedded and used to answer questions.</DialogDescription>
               </DialogHeader>
               <div className="space-y-4">
-                <div>
-                  <Label>Bot</Label>
-                  <Select value={form.bot_id} onValueChange={(v) => setForm({ ...form, bot_id: v })}>
-                    <SelectTrigger><SelectValue placeholder="Choose a bot" /></SelectTrigger>
-                    <SelectContent>{bots.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent>
-                  </Select>
-                </div>
+                {bots.length === 0 ? (
+                  <div className="rounded-md border border-border bg-paper-soft p-3 text-xs text-ink-soft">
+                    This source will be attached to your shared <span className="font-medium">@LaPoe_bot</span> assistant.
+                  </div>
+                ) : (
+                  <div>
+                    <Label>Bot</Label>
+                    <Select value={form.bot_id} onValueChange={(v) => setForm({ ...form, bot_id: v })}>
+                      <SelectTrigger><SelectValue placeholder="Choose a bot" /></SelectTrigger>
+                      <SelectContent>{bots.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                )}
                 <div>
                   <Label>Type</Label>
                   <Select value={form.kind} onValueChange={(v: any) => setForm({ ...form, kind: v })}>
@@ -133,39 +139,35 @@ export default function Knowledge() {
           <p className="text-xs text-ink-soft mb-5">
             Without knowledge, your bot can only chat in persona — it will politely decline factual questions.
           </p>
-          {bots.length === 0 ? (
-            <p className="text-xs text-ink-soft">Create a bot first to add knowledge.</p>
-          ) : (
-            <div className="grid sm:grid-cols-3 gap-2 max-w-xl mx-auto">
-              <button
-                type="button"
-                onClick={() => { setForm({ bot_id: bots[0].id, kind: "text", title: "Frequently asked questions", content: "Q: \nA: \n\nQ: \nA: ", source_url: "" }); setOpen(true); }}
-                className="rounded-lg border border-border bg-card p-3 text-left hover:shadow-card transition"
-              >
-                <HelpCircle className="h-4 w-4 text-primary mb-2" />
-                <div className="text-sm font-medium text-ink">Paste an FAQ</div>
-                <div className="text-xs text-ink-soft">Question + answer pairs.</div>
-              </button>
-              <button
-                type="button"
-                onClick={() => { setForm({ bot_id: bots[0].id, kind: "url", title: "Website", content: "", source_url: "https://" }); setOpen(true); }}
-                className="rounded-lg border border-border bg-card p-3 text-left hover:shadow-card transition"
-              >
-                <LinkIcon className="h-4 w-4 text-primary mb-2" />
-                <div className="text-sm font-medium text-ink">Add your website</div>
-                <div className="text-xs text-ink-soft">We'll index the page.</div>
-              </button>
-              <button
-                type="button"
-                onClick={() => { setForm({ bot_id: bots[0].id, kind: "text", title: "Group pinned message", content: "", source_url: "" }); setOpen(true); }}
-                className="rounded-lg border border-border bg-card p-3 text-left hover:shadow-card transition"
-              >
-                <Pin className="h-4 w-4 text-primary mb-2" />
-                <div className="text-sm font-medium text-ink">Pinned message</div>
-                <div className="text-xs text-ink-soft">Rules, intro, links.</div>
-              </button>
-            </div>
-          )}
+          <div className="grid sm:grid-cols-3 gap-2 max-w-xl mx-auto">
+            <button
+              type="button"
+              onClick={() => { setForm({ bot_id: bots[0]?.id ?? "", kind: "text", title: "Frequently asked questions", content: "Q: \nA: \n\nQ: \nA: ", source_url: "" }); setOpen(true); }}
+              className="rounded-lg border border-border bg-card p-3 text-left hover:shadow-card transition"
+            >
+              <HelpCircle className="h-4 w-4 text-primary mb-2" />
+              <div className="text-sm font-medium text-ink">Paste an FAQ</div>
+              <div className="text-xs text-ink-soft">Question + answer pairs.</div>
+            </button>
+            <button
+              type="button"
+              onClick={() => { setForm({ bot_id: bots[0]?.id ?? "", kind: "url", title: "Website", content: "", source_url: "https://" }); setOpen(true); }}
+              className="rounded-lg border border-border bg-card p-3 text-left hover:shadow-card transition"
+            >
+              <LinkIcon className="h-4 w-4 text-primary mb-2" />
+              <div className="text-sm font-medium text-ink">Add your website</div>
+              <div className="text-xs text-ink-soft">We'll index the page.</div>
+            </button>
+            <button
+              type="button"
+              onClick={() => { setForm({ bot_id: bots[0]?.id ?? "", kind: "text", title: "Group pinned message", content: "", source_url: "" }); setOpen(true); }}
+              className="rounded-lg border border-border bg-card p-3 text-left hover:shadow-card transition"
+            >
+              <Pin className="h-4 w-4 text-primary mb-2" />
+              <div className="text-sm font-medium text-ink">Pinned message</div>
+              <div className="text-xs text-ink-soft">Rules, intro, links.</div>
+            </button>
+          </div>
         </div>
       ) : (
         <div className="grid gap-3">
