@@ -270,7 +270,7 @@ const sections: Section[] = [
         <h4>Is my community's data private?</h4>
         <p>Yes. Your knowledge, conversations, and settings are yours. We don't share them or use them to train shared models.</p>
         <h4>How do I get help?</h4>
-        <p>Email <a href="mailto:support@lapoe.app" className="underline underline-offset-2 text-primary">support@lapoe.app</a>. We reply within one business day.</p>
+        <p>Email <a href="mailto:business@starstore.app?subject=LaPoe%20support%20request&body=Hi%20LaPoe%20team%2C%0D%0A%0D%0A(Describe%20your%20question%20here)%0D%0A%0D%0A%E2%80%94%20Sent%20from%20https%3A%2F%2Flapoe-ai.vercel.app" className="underline underline-offset-2 text-primary">business@starstore.app</a>. We reply within one business day.</p>
       </>
     ),
   },
@@ -332,7 +332,7 @@ export default function Docs() {
             { "@type": "Question", name: "Can I customize the welcome message?", acceptedAnswer: { "@type": "Answer", text: "Yes. Set a custom welcome per bot or per group in your dashboard. Otherwise a friendly default is used." } },
             { "@type": "Question", name: "Can I configure my bot by chatting with it privately?", acceptedAnswer: { "@type": "Answer", text: "No — by design. All configuration lives in the dashboard or in @LaPoe_bot, so settings stay safe and auditable." } },
             { "@type": "Question", name: "Is my community's data private?", acceptedAnswer: { "@type": "Answer", text: "Yes. Your knowledge, conversations, and settings are yours. We don't share them or use them to train shared models." } },
-            { "@type": "Question", name: "How do I get help?", acceptedAnswer: { "@type": "Answer", text: "Email support@lapoe.app. We reply within one business day." } },
+            { "@type": "Question", name: "How do I get help?", acceptedAnswer: { "@type": "Answer", text: "Email business@starstore.app. We reply within one business day." } },
           ],
         }}
       />
@@ -497,10 +497,10 @@ export default function Docs() {
                     Our team replies within one business day.
                   </p>
                   <a
-                    href="mailto:support@lapoe.app"
+                    href="mailto:business@starstore.app?subject=LaPoe%20support%20request&body=Hi%20LaPoe%20team%2C%0D%0A%0D%0A(Describe%20your%20question%20here)%0D%0A%0D%0A%E2%80%94%20Sent%20from%20https%3A%2F%2Flapoe-ai.vercel.app"
                     className="text-sm font-medium text-primary hover:underline"
                   >
-                    support@lapoe.app
+                    business@starstore.app
                   </a>
                 </div>
               </div>
@@ -537,7 +537,7 @@ export default function Docs() {
               </p>
               <div className="mt-6 flex flex-wrap gap-3 justify-center">
                 <Button asChild>
-                  <a href="mailto:support@lapoe.app">Contact support</a>
+                  <a href="mailto:business@starstore.app?subject=LaPoe%20support%20request&body=Hi%20LaPoe%20team%2C%0D%0A%0D%0A(Describe%20your%20question%20here)%0D%0A%0D%0A%E2%80%94%20Sent%20from%20https%3A%2F%2Flapoe-ai.vercel.app">Contact support</a>
                 </Button>
                 <Button variant="outline" asChild>
                   <Link to="/auth?mode=signup">Start free</Link>
