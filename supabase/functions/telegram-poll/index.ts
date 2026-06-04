@@ -142,12 +142,16 @@ function escapeRe(value: string): string {
 function messageNamesBot(text: string, bot: any, me: { username: string | null; id: number | null }): boolean {
   const lowerText = text.toLowerCase();
   if (me.username && new RegExp(`(^|\\s|[,.!?;:])@${escapeRe(me.username.toLowerCase())}(?=$|\\s|[,.!?;:])`).test(lowerText)) return true;
-  const nameTokens = (bot.name || "")
-    .toLowerCase()
-    .replace(/[^\p{L}\p{N}\s]/gu, " ")
-    .split(/\s+/)
-    .filter((t: string) => t.length >= 3);
-  return nameTokens.some((t: string) => new RegExp(`\\b${escapeRe(t)}\\b`, "iu").test(text));
+  // Match the FULL bot display name as a phrase only — never individual tokens.
+  // Splitting on tokens caused false positives where any common word in the bot
+  // name (e.g. "Support", "Bot", or the owner's first name) made the bot reply
+  // to every message its owner sent in the group.
+  const fullName = (bot.name || "").trim();
+  if (fullName.length >= 3) {
+    const phrase = escapeRe(fullName).replace(/\\?\s+/g, "\\s+");
+    if (new RegExp(`(^|[\\s,.!?;:])${phrase}(?=$|[\\s,.!?;:])`, "iu").test(text)) return true;
+  }
+  return false;
 }
 
 function stripBotName(text: string, bot: any, me: { username: string | null; id: number | null }): string {
