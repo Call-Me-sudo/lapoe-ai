@@ -105,7 +105,7 @@ export default function Privacy() {
 
           <section>
             <h2 className="font-display text-2xl font-semibold mt-8 mb-3">13. Contact</h2>
-            <p>For privacy requests or questions, reach us via the in-app feedback channel or the contact details on our website.</p>
+            <p>For privacy requests or questions, reach us via the in-app feedback channel or by email at <a href="mailto:business@starstore.app?subject=LaPoe%20privacy%20request&body=Hi%20LaPoe%20team%2C%0D%0A%0D%0A(Describe%20your%20request%20here)%0D%0A%0D%0A%E2%80%94%20Sent%20from%20https%3A%2F%2Flapoe-ai.vercel.app" className="text-primary underline">business@starstore.app</a>.</p>
           </section>
         </div>
       </main>

@@ -73,7 +73,7 @@ export default function Terms() {
 
           <section>
             <h2 className="font-display text-2xl font-semibold mt-8 mb-3">11. Contact</h2>
-            <p>Questions? Reach us through the in-app feedback channel or via the contact details on our website.</p>
+            <p>Questions? Reach us through the in-app feedback channel or by email at <a href="mailto:business@starstore.app?subject=LaPoe%20support%20request&body=Hi%20LaPoe%20team%2C%0D%0A%0D%0A(Describe%20your%20question%20here)%0D%0A%0D%0A%E2%80%94%20Sent%20from%20https%3A%2F%2Flapoe-ai.vercel.app" className="text-primary underline">business@starstore.app</a>.</p>
           </section>
         </div>
       </main>

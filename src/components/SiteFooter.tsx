@@ -1,4 +1,6 @@
 import { Link } from "react-router-dom";
+import starstoreAsset from "@/assets/starstore.jpg.asset.json";
+
 
 export default function SiteFooter() {
   return (
@@ -37,6 +39,18 @@ export default function SiteFooter() {
           </ul>
           <div className="text-muted-foreground mt-4 text-xs">© {new Date().getFullYear()} LaPoe</div>
         </div>
+      </div>
+      <div className="mt-4 flex justify-center">
+        <a
+          href="https://blog.starstore.app"
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground/80 hover:text-foreground transition-colors"
+        >
+          <span>Powered by</span>
+          <img src={starstoreAsset.url} alt="StarStore" className="h-3.5 w-3.5 rounded-sm object-cover" />
+          <span className="font-medium">StarStore</span>
+        </a>
       </div>
     </footer>
   );
