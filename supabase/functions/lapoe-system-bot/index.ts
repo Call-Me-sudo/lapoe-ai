@@ -1006,7 +1006,7 @@ async function handleGroupAi(sb: any, token: string, msg: any, group: any) {
   // Decide whether to reply — mirrors user-bot policy.
   //  1) @LaPoe_bot or persona display name (as a phrase) mentioned
   //  2) Reply to one of @LaPoe_bot's messages
-  //  3) Question-like substantive message that has a real knowledge match
+  //  3) Substantive message relevant to knowledge, group/persona, or LaPoe platform info
   // Greetings are NOT filtered when the bot is addressed (cases 1/2).
   const { data: persona } = await sb.from("system_bot_personas").select("*").eq("owner_id", ownerId).maybeSingle();
 
@@ -1026,10 +1026,10 @@ async function handleGroupAi(sb: any, token: string, msg: any, group: any) {
       text.length >= 8 &&
       !text.startsWith("/") && !text.startsWith("!") &&
       !isGreeting(text) &&
-      isQuestionLikeSys(text);
+      (isQuestionLikeSys(text) || isGroupRelated(text, group, persona) || isPlatformTopic(text));
     if (probeWorthy) {
       rag = await ragForOwner(sb, ownerId, text, 5);
-      if (rag.text) shouldReply = true;
+      if (rag.text || isPlatformTopic(text) || (isQuestionLikeSys(text) && isGroupRelated(text, group, persona))) shouldReply = true;
     }
   }
   if (!shouldReply) return;
@@ -1058,7 +1058,7 @@ async function handleGroupAi(sb: any, token: string, msg: any, group: any) {
   if (!rawReply) return;
 
   const needsKnowledge = /\[NEEDS_KNOWLEDGE\]/i.test(rawReply);
-  const reply = rawReply.replace(/\[NEEDS_KNOWLEDGE\]/gi, "").trim();
+  const reply = sanitizePlatformLinks(rawReply.replace(/\[NEEDS_KNOWLEDGE\]/gi, "").trim());
   if (!reply) return;
 
   await send(token, msg.chat.id, reply, msg.message_id);
