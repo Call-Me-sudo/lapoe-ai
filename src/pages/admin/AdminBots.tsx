@@ -45,9 +45,19 @@ export default function AdminBots() {
 
   return (
     <AdminLayout>
-      <div className="mb-6">
-        <div className="text-xs uppercase tracking-[0.18em] text-ink-soft">Admin</div>
-        <h1 className="font-display text-3xl text-ink mt-1">Bots ({bots.length})</h1>
+      <div className="mb-6 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+        <div>
+          <div className="text-xs uppercase tracking-[0.18em] text-ink-soft">Admin</div>
+          <h1 className="font-display text-3xl text-ink mt-1">Bots ({bots.length})</h1>
+        </div>
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" onClick={() => bulkStatus("paused")}>
+            <Pause className="h-3.5 w-3.5" /> Pause all bots
+          </Button>
+          <Button size="sm" onClick={() => bulkStatus("active")}>
+            <Play className="h-3.5 w-3.5" /> Resume all bots
+          </Button>
+        </div>
       </div>
 
       {loading ? (
