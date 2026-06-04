@@ -234,7 +234,7 @@ export type Database = {
       }
       knowledge_chunks: {
         Row: {
-          bot_id: string
+          bot_id: string | null
           chunk_index: number
           content: string
           content_tsv: unknown
@@ -242,10 +242,11 @@ export type Database = {
           embedding: string | null
           id: string
           owner_id: string
+          scope: string
           source_id: string
         }
         Insert: {
-          bot_id: string
+          bot_id?: string | null
           chunk_index: number
           content: string
           content_tsv?: unknown
@@ -253,10 +254,11 @@ export type Database = {
           embedding?: string | null
           id?: string
           owner_id: string
+          scope?: string
           source_id: string
         }
         Update: {
-          bot_id?: string
+          bot_id?: string | null
           chunk_index?: number
           content?: string
           content_tsv?: unknown
@@ -264,6 +266,7 @@ export type Database = {
           embedding?: string | null
           id?: string
           owner_id?: string
+          scope?: string
           source_id?: string
         }
         Relationships: [
@@ -278,7 +281,7 @@ export type Database = {
       }
       knowledge_sources: {
         Row: {
-          bot_id: string
+          bot_id: string | null
           chunk_count: number
           content: string | null
           created_at: string
@@ -287,11 +290,12 @@ export type Database = {
           indexing_error: string | null
           kind: Database["public"]["Enums"]["knowledge_kind"]
           owner_id: string
+          scope: string
           source_url: string | null
           title: string
         }
         Insert: {
-          bot_id: string
+          bot_id?: string | null
           chunk_count?: number
           content?: string | null
           created_at?: string
@@ -300,11 +304,12 @@ export type Database = {
           indexing_error?: string | null
           kind: Database["public"]["Enums"]["knowledge_kind"]
           owner_id: string
+          scope?: string
           source_url?: string | null
           title: string
         }
         Update: {
-          bot_id?: string
+          bot_id?: string | null
           chunk_count?: number
           content?: string | null
           created_at?: string
@@ -313,6 +318,7 @@ export type Database = {
           indexing_error?: string | null
           kind?: Database["public"]["Enums"]["knowledge_kind"]
           owner_id?: string
+          scope?: string
           source_url?: string | null
           title?: string
         }
@@ -584,6 +590,7 @@ export type Database = {
           goodbye_message: string | null
           is_active: boolean
           language: string
+          linked_owner_id: string | null
           moderation_enabled: boolean
           rules: string | null
           title: string | null
@@ -603,6 +610,7 @@ export type Database = {
           goodbye_message?: string | null
           is_active?: boolean
           language?: string
+          linked_owner_id?: string | null
           moderation_enabled?: boolean
           rules?: string | null
           title?: string | null
@@ -622,6 +630,7 @@ export type Database = {
           goodbye_message?: string | null
           is_active?: boolean
           language?: string
+          linked_owner_id?: string | null
           moderation_enabled?: boolean
           rules?: string | null
           title?: string | null
@@ -689,6 +698,39 @@ export type Database = {
           created_by?: number | null
           id?: string
           name?: string
+        }
+        Relationships: []
+      }
+      system_bot_personas: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          house_rules: string | null
+          owner_id: string
+          personality: string | null
+          tone: string
+          updated_at: string
+          welcome_message: string | null
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          house_rules?: string | null
+          owner_id: string
+          personality?: string | null
+          tone?: string
+          updated_at?: string
+          welcome_message?: string | null
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          house_rules?: string | null
+          owner_id?: string
+          personality?: string | null
+          tone?: string
+          updated_at?: string
+          welcome_message?: string | null
         }
         Relationships: []
       }
@@ -947,6 +989,7 @@ export type Database = {
           plan: Database["public"]["Enums"]["plan_tier"]
         }[]
       }
+      bump_system_bot_usage: { Args: { _owner_id: string }; Returns: undefined }
       can_create_bot: {
         Args: { _user_id: string }
         Returns: {
@@ -972,12 +1015,30 @@ export type Database = {
           source_id: string
         }[]
       }
+      match_system_knowledge_text: {
+        Args: { _match_count?: number; _owner_id: string; _query: string }
+        Returns: {
+          content: string
+          id: string
+          similarity: number
+          source_id: string
+        }[]
+      }
       my_bot_quota: {
         Args: never
         Returns: {
           allowed: boolean
           current_bots: number
           max_bots: number
+          plan: Database["public"]["Enums"]["plan_tier"]
+        }[]
+      }
+      my_system_bot_usage: {
+        Args: never
+        Returns: {
+          allowed: boolean
+          max_monthly_messages: number
+          monthly_messages: number
           plan: Database["public"]["Enums"]["plan_tier"]
         }[]
       }
@@ -1001,6 +1062,15 @@ export type Database = {
           max_groups: number
           max_monthly_messages: number
           max_msgs_per_minute: number
+        }[]
+      }
+      system_bot_usage: {
+        Args: { _owner_id: string }
+        Returns: {
+          allowed: boolean
+          max_monthly_messages: number
+          monthly_messages: number
+          plan: Database["public"]["Enums"]["plan_tier"]
         }[]
       }
       user_plan: {
