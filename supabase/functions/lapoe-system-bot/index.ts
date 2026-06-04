@@ -301,6 +301,14 @@ async function handleCommand(sb: any, token: string, msg: any) {
   const owner = profile ? await isOwner(sb, profile.id) : false;
   const chatAdmin = isGroup ? await isChatAdmin(token, chatId, fromId) : true;
 
+  // Auto-claim unclaimed group for the linked user who interacts with the bot.
+  if (isGroup && profile) {
+    const { data: g } = await sb.from("system_bot_groups").select("linked_owner_id").eq("chat_id", chatId).maybeSingle();
+    if (g && !g.linked_owner_id) {
+      await sb.from("system_bot_groups").update({ linked_owner_id: profile.id }).eq("chat_id", chatId);
+    }
+  }
+
   const need = (cond: boolean, m: string) => cond ? null : send(token, chatId, m, msg.message_id);
 
   // ===== Universal =====
