@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.notify_telegram_queue_insert() FROM PUBLIC, anon, authenticated;

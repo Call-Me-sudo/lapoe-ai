@@ -639,11 +639,312 @@ async function handleModeration(supabase: any, bot: any, token: string, msg: any
   return false;
 }
 
+// ---------- Webhook self-registration ----------
+// Each user bot pushes Telegram updates straight into our telegram-update-queue
+// via the telegram-webhook function. This is dramatically faster than the
+// 1-minute getUpdates cron. We register the webhook on demand (called from the
+// dashboard right after the token is saved) and re-register it from the cron
+// fallback if it ever drifts (e.g. the user revoked the token in BotFather).
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+const WEBHOOK_URL = `${SUPABASE_URL.replace(/\/$/, "")}/functions/v1/telegram-webhook`;
+const WEBHOOK_REREGISTER_MS = 7 * 24 * 60 * 60 * 1000; // weekly self-heal
+
+async function ensureWebhook(supabase: any, bot: any): Promise<void> {
+  if (!bot.telegram_bot_token || !bot.webhook_secret) return;
+  const registeredAt = bot.webhook_registered_at ? Date.parse(bot.webhook_registered_at) : 0;
+  if (registeredAt && Date.now() - registeredAt < WEBHOOK_REREGISTER_MS) return;
+
+  try {
+    const res = await tg(bot.telegram_bot_token, "setWebhook", {
+      url: `${WEBHOOK_URL}?bot_id=${bot.id}`,
+      secret_token: bot.webhook_secret,
+      allowed_updates: ["message", "edited_message", "callback_query", "my_chat_member", "new_chat_members", "left_chat_member"],
+      drop_pending_updates: false,
+      max_connections: 40,
+    });
+    if (res?.ok) {
+      await supabase.from("bots").update({ webhook_registered_at: new Date().toISOString() }).eq("id", bot.id);
+    } else {
+      console.warn(`ensureWebhook(${bot.name}) failed:`, res?.description);
+    }
+  } catch (e) {
+    console.warn(`ensureWebhook(${bot.name}) threw:`, (e as Error).message);
+  }
+}
+
+// ---------- Per-update handler ----------
+// Shared by the live webhook path (queue drain) and the legacy getUpdates path.
+// Returns true if the update was meaningfully processed, false if ignored.
+async function handleSingleUpdate(supabase: any, bot: any, me: { username: string | null; id: number | null }, upd: any): Promise<boolean> {
+  // Bot was added/removed from a group
+  if (upd.my_chat_member) {
+    const m = upd.my_chat_member;
+    const chat = m.chat;
+    const newStatus = m.new_chat_member?.status;
+    if (chat.type === "group" || chat.type === "supergroup") {
+      if (newStatus === "member" || newStatus === "administrator" || newStatus === "creator") {
+        await ensureGroup(supabase, bot, { chat });
+      } else if (newStatus === "left" || newStatus === "kicked") {
+        await supabase.from("telegram_groups").delete()
+          .eq("bot_id", bot.id).eq("telegram_chat_id", String(chat.id));
+      }
+    }
+    return false;
+  }
+
+  const msg = upd.message;
+  if (!msg) return false;
+
+  // New members → welcome
+  if (msg.new_chat_members && msg.new_chat_members.length > 0) {
+    const group = await ensureGroup(supabase, bot, msg);
+    const tmpl = group?.welcome_message || bot.welcome_message || "Welcome {name} to {group}! 👋";
+    for (const mb of msg.new_chat_members) {
+      if (mb.id === me.id) continue;
+      const name = mb.username ? `@${mb.username}` : (mb.first_name || "friend");
+      await send(bot.telegram_bot_token, msg.chat.id,
+        tmpl.replaceAll("{name}", name).replaceAll("{group}", msg.chat.title || ""));
+    }
+    return true;
+  }
+
+  if (!msg.text) return false;
+
+  const isPrivate = msg.chat.type === "private";
+  const isGroup = msg.chat.type === "group" || msg.chat.type === "supergroup";
+  let group: any = null;
+  if (isGroup) {
+    group = await ensureGroup(supabase, bot, msg);
+  }
+
+  await supabase.from("bot_messages").insert({
+    bot_id: bot.id, owner_id: bot.owner_id, group_id: group?.id || null, direction: "inbound",
+    content: msg.text,
+    telegram_user: msg.from?.username || msg.from?.first_name || String(msg.from?.id || ""),
+  });
+
+  // 1) DM general commands (NO owner config in DMs — see policy in DEVELOPERS.md)
+  if (isPrivate && await handleDmGeneral(supabase, bot, bot.telegram_bot_token, msg)) {
+    return true;
+  }
+
+  // 2) Group moderation commands
+  if (isGroup && bot.moderation_enabled && await handleModeration(supabase, bot, bot.telegram_bot_token, msg)) {
+    return true;
+  }
+
+  // 3) Auto-filter moderation for already auto-registered groups
+  if (isGroup) {
+    if (bot.moderation_enabled && (group?.moderation_enabled !== false)) {
+      const telegramUser = msg.from?.username || msg.from?.first_name || String(msg.from?.id || "");
+
+      if (bot.anti_spam_enabled && await checkSpam(supabase, bot.id, telegramUser, msg.text)) {
+        const r = await tg(bot.telegram_bot_token, "deleteMessage", { chat_id: msg.chat.id, message_id: msg.message_id });
+        await logMod(supabase, bot, msg.chat.id, "anti_spam", {
+          target_user: telegramUser, target_user_id: msg.from?.id, success: r.ok,
+        });
+        return true;
+      }
+
+      if (bot.anti_flood_enabled && await checkFlood(supabase, bot.id, telegramUser, bot.flood_sensitivity || 5)) {
+        const r = await tg(bot.telegram_bot_token, "deleteMessage", { chat_id: msg.chat.id, message_id: msg.message_id });
+        await logMod(supabase, bot, msg.chat.id, "anti_flood", {
+          target_user: telegramUser, target_user_id: msg.from?.id, success: r.ok,
+        });
+        return true;
+      }
+
+      const hit = containsBannedWord(msg.text, bot.banned_words || [], group?.banned_words || []);
+      if (hit) {
+        const r = await tg(bot.telegram_bot_token, "deleteMessage", { chat_id: msg.chat.id, message_id: msg.message_id });
+        await logMod(supabase, bot, msg.chat.id, "filter_word", {
+          target_user: telegramUser, target_user_id: msg.from?.id, reason: hit, success: r.ok,
+        });
+        return true;
+      }
+    }
+  }
+
+  // Built-in info commands (group only — DMs are handled by handleDmGeneral)
+  const text = msg.text.trim();
+  if (isGroup && (text === "/start" || text.startsWith("/start "))) {
+    await send(bot.telegram_bot_token, msg.chat.id, `👋 Hello everyone, I'm *${bot.name}*.`, msg.message_id);
+    return true;
+  }
+  if (isGroup && text === "/status") {
+    await send(bot.telegram_bot_token, msg.chat.id,
+      `*${bot.name}* — ${bot.status === "active" ? "🟢 active" : "🟡 paused"} · AI 🟢`, msg.message_id);
+    return true;
+  }
+  if (isGroup && text === "/help") {
+    await send(bot.telegram_bot_token, msg.chat.id,
+      `Mention me, reply to my messages, or just say my name to chat. Admins can use /ban /kick /mute /del /pin (reply to a user's message). To configure me, my owner uses the LaPoe dashboard.`, msg.message_id);
+    return true;
+  }
+
+  if (bot.status !== "active") return false;
+
+  // Group reply triggers (locked — see mem://features/user-bot-group-reply-triggers)
+  let autoKnowledge = "";
+  if (isGroup) {
+    const mentionedOrNamed = messageNamesBot(text, bot, me);
+    const isReply = msg.reply_to_message?.from?.id === me.id;
+    let shouldReply = Boolean(mentionedOrNamed || isReply);
+    if (!shouldReply && isGreeting(text)) shouldReply = true;
+
+    const probeWorthy = text.trim().length >= 6 && !/^[\/!]/.test(text);
+    if (!shouldReply && probeWorthy) {
+      autoKnowledge = await ragSnippets(supabase, bot.id, text, 5, false);
+      if (autoKnowledge) shouldReply = true;
+    }
+    if (!shouldReply && probeWorthy && isGroupRelated(text, group, bot)) {
+      shouldReply = true;
+    }
+    if (!shouldReply) return false;
+  }
+
+  // ----- Subscription quota + per-user / per-group rate limit -----
+  const chatKey = `${bot.id}:${msg.chat.id}`;
+  if (inCooldown(chatKey)) return true;
+
+  try {
+    const { data: usage } = await supabase.rpc("bot_usage_status", { _bot_id: bot.id });
+    const u = Array.isArray(usage) ? usage[0] : usage;
+    if (u && u.monthly_messages >= u.max_monthly_messages) {
+      await send(bot.telegram_bot_token, msg.chat.id,
+        `🛑 Monthly message limit reached on this workspace (${u.max_monthly_messages}). Owner needs to upgrade the plan.`,
+        msg.message_id);
+      setCooldown(chatKey, 5 * 60_000);
+      return true;
+    }
+
+    const planPerMin = Math.max(1, u?.max_msgs_per_minute || 20);
+    const userRate = planPerMin / 60;
+    const userBurst = Math.min(planPerMin, 5);
+    const groupRate = (planPerMin * 2) / 60;
+    const groupBurst = Math.min(planPerMin * 2, 10);
+
+    const userId = String(msg.from?.id || msg.from?.username || "anon");
+    if (!takeToken(userBuckets, `${bot.id}:u:${userId}`, userRate, userBurst)) {
+      setCooldown(`${chatKey}:u:${userId}`, 8_000);
+      if (isPrivate) {
+        await send(bot.telegram_bot_token, msg.chat.id,
+          `Easy there — give me a sec, you're sending faster than the plan allows (${planPerMin}/min).`,
+          msg.message_id);
+      }
+      return true;
+    }
+    if (inCooldown(`${chatKey}:u:${userId}`)) return true;
+
+    if (isGroup && !takeToken(groupBuckets, `${bot.id}:g:${msg.chat.id}`, groupRate, groupBurst)) {
+      setCooldown(chatKey, 15_000);
+      return true;
+    }
+  } catch (e) {
+    console.error("quota check failed:", (e as Error).message);
+  }
+
+  if (aiBackoffUntil.t > Date.now()) {
+    setCooldown(chatKey, Math.min(15_000, aiBackoffUntil.t - Date.now()));
+    return true;
+  }
+
+  try {
+    tg(bot.telegram_bot_token, "sendChatAction", {
+      chat_id: msg.chat.id, action: "typing",
+    }).catch(() => {});
+
+    const cleanText = isGroup ? stripBotName(text, bot, me) : text.trim();
+    const [knowledgeResult, kExists] = await Promise.all([
+      autoKnowledge ? Promise.resolve(autoKnowledge) : ragSnippets(supabase, bot.id, cleanText, 6),
+      hasKnowledge(supabase, bot.id),
+    ]);
+
+    const system = buildSystemPrompt(bot, group, knowledgeResult, kExists);
+    const rawReply = await askAI(system, cleanText);
+    const needsKnowledge = /\[NEEDS_KNOWLEDGE\]/i.test(rawReply);
+    const stripped = rawReply.replace(/\[NEEDS_KNOWLEDGE\]/gi, "").trim();
+    const allowedCtx = [knowledgeResult, bot.house_rules, bot.default_instructions, bot.personality]
+      .filter(Boolean).join("\n");
+    const reply = sanitizeReply(stripped, allowedCtx);
+
+    if (reply) {
+      await send(bot.telegram_bot_token, msg.chat.id, reply, msg.message_id);
+      supabase.from("bot_messages").insert({
+        bot_id: bot.id, owner_id: bot.owner_id, group_id: group?.id || null, direction: "outbound",
+        content: reply, telegram_user: msg.from?.username || null,
+      }).then(() => {}, () => {});
+    }
+
+    if (needsKnowledge && isQuestionLike(cleanText) && !isGreeting(cleanText)) {
+      logUnansweredQuestion(supabase, bot, group, cleanText, msg.from);
+    }
+  } catch (e) {
+    console.error(`bot ${bot.name} reply failed:`, (e as Error).message);
+  }
+  return true;
+}
+
+// ---------- Queue-drain mode (webhook fast path) ----------
+// Called from an AFTER INSERT trigger on telegram_update_queue the moment a
+// new update arrives. Drains everything queued for one specific bot.
+async function processBotQueue(supabase: any, bot: any, deadline: number) {
+  if (!bot.telegram_bot_token) return { bot: bot.name, skipped: "no token" };
+  const me = await getMe(bot.telegram_bot_token, bot, supabase);
+  let processed = 0;
+
+  while (Date.now() < deadline - 2000) {
+    // Claim a small batch atomically: read unprocessed rows for this bot,
+    // mark them processed_at NOW, then handle them. The unique constraint
+    // on (bot_id, telegram_update_id) keeps Telegram retries from doubling.
+    const { data: rows } = await supabase
+      .from("telegram_update_queue")
+      .select("id, raw_update, telegram_update_id")
+      .eq("bot_id", bot.id)
+      .is("processed_at", null)
+      .order("created_at", { ascending: true })
+      .limit(20);
+
+    if (!rows || rows.length === 0) break;
+
+    const ids = rows.map((r: any) => r.id);
+    const { data: claimed } = await supabase
+      .from("telegram_update_queue")
+      .update({ processed_at: new Date().toISOString() })
+      .in("id", ids)
+      .is("processed_at", null)
+      .select("id, raw_update");
+
+    if (!claimed || claimed.length === 0) break;
+
+    for (const row of claimed) {
+      if (Date.now() >= deadline - 1000) break;
+      try {
+        await handleSingleUpdate(supabase, bot, me, row.raw_update);
+        processed++;
+      } catch (e) {
+        console.error(`queue update for bot ${bot.name} failed:`, (e as Error).message);
+      }
+    }
+  }
+
+  // Best-effort cleanup of stale processed rows so the table stays small.
+  // (Kept short so it never blocks the hot path.)
+  supabase.from("telegram_update_queue")
+    .delete()
+    .eq("bot_id", bot.id)
+    .not("processed_at", "is", null)
+    .lt("processed_at", new Date(Date.now() - 60 * 60 * 1000).toISOString())
+    .then(() => {}, () => {});
+
+  return { bot: bot.name, processed, mode: "queue" };
+}
+
+// ---------- Legacy getUpdates poll (now only a safety-net fallback) ----------
 async function processBot(supabase: any, bot: any, deadline: number) {
   if (!bot.telegram_bot_token) return { bot: bot.name, skipped: "no token" };
 
-  // ---- Per-bot lock: prevent concurrent pollers (cron + manual) from racing
-  // on the same getUpdates offset, which causes duplicate replies.
+  // Per-bot lock prevents concurrent pollers racing on the same getUpdates offset.
   const lockUntil = new Date(deadline + 5_000).toISOString();
   const existingLockMs = bot.poll_locked_until ? Date.parse(bot.poll_locked_until) : 0;
   if (existingLockMs && existingLockMs > Date.now()) return { bot: bot.name, skipped: "locked" };
@@ -658,256 +959,33 @@ async function processBot(supabase: any, bot: any, deadline: number) {
   let offset: number = bot.update_offset || 0;
   let processed = 0;
   try {
-  const me = await getMe(bot.telegram_bot_token, bot, supabase);
+    const me = await getMe(bot.telegram_bot_token, bot, supabase);
 
-  while (Date.now() < deadline - 3000) {
-    const remainingSec = Math.max(1, Math.floor((deadline - Date.now()) / 1000) - 2);
-    const timeout = Math.min(25, remainingSec);
-    const updatesRes = await tg(bot.telegram_bot_token, "getUpdates", {
-      offset, timeout,
-      allowed_updates: ["message", "my_chat_member", "new_chat_members", "left_chat_member"],
-    });
-    if (!updatesRes.ok) return { bot: bot.name, error: updatesRes.description };
-    const updates: any[] = updatesRes.result || [];
-    if (updates.length === 0) break;
-
-    for (const upd of updates) {
-      offset = upd.update_id + 1;
-
-      // Bot was added/removed from a group
-      if (upd.my_chat_member) {
-        const m = upd.my_chat_member;
-        const chat = m.chat;
-        const newStatus = m.new_chat_member?.status;
-        if (chat.type === "group" || chat.type === "supergroup") {
-          if (newStatus === "member" || newStatus === "administrator" || newStatus === "creator") {
-            await ensureGroup(supabase, bot, { chat });
-          } else if (newStatus === "left" || newStatus === "kicked") {
-            // Bot was removed from the group → auto-remove from LaPoe
-            await supabase.from("telegram_groups").delete()
-              .eq("bot_id", bot.id).eq("telegram_chat_id", String(chat.id));
-          }
-        }
-        continue;
-      }
-
-      const msg = upd.message;
-      if (!msg) continue;
-
-      // New members → welcome
-      if (msg.new_chat_members && msg.new_chat_members.length > 0) {
-        const group = await ensureGroup(supabase, bot, msg);
-        const tmpl = group?.welcome_message || bot.welcome_message || "Welcome {name} to {group}! 👋";
-        for (const m of msg.new_chat_members) {
-          if (m.id === me.id) continue;
-          const name = m.username ? `@${m.username}` : (m.first_name || "friend");
-          await send(bot.telegram_bot_token, msg.chat.id,
-            tmpl.replaceAll("{name}", name).replaceAll("{group}", msg.chat.title || ""));
-        }
-        continue;
-      }
-
-      if (!msg.text) continue;
-
-      const isPrivate = msg.chat.type === "private";
-      const isGroup = msg.chat.type === "group" || msg.chat.type === "supergroup";
-      let group: any = null;
-      if (isGroup) {
-        group = await ensureGroup(supabase, bot, msg);
-      }
-
-      await supabase.from("bot_messages").insert({
-        bot_id: bot.id, owner_id: bot.owner_id, group_id: group?.id || null, direction: "inbound",
-        content: msg.text,
-        telegram_user: msg.from?.username || msg.from?.first_name || String(msg.from?.id || ""),
+    while (Date.now() < deadline - 3000) {
+      const remainingSec = Math.max(1, Math.floor((deadline - Date.now()) / 1000) - 2);
+      const timeout = Math.min(25, remainingSec);
+      const updatesRes = await tg(bot.telegram_bot_token, "getUpdates", {
+        offset, timeout,
+        allowed_updates: ["message", "my_chat_member", "new_chat_members", "left_chat_member"],
       });
+      if (!updatesRes.ok) return { bot: bot.name, error: updatesRes.description };
+      const updates: any[] = updatesRes.result || [];
+      if (updates.length === 0) break;
 
-      // 1) DM general commands (NO owner config in DMs — see policy above)
-      if (isPrivate && await handleDmGeneral(supabase, bot, bot.telegram_bot_token, msg)) {
-        processed++; continue;
-      }
-
-      // 2) Group moderation commands
-      if (isGroup && bot.moderation_enabled && await handleModeration(supabase, bot, bot.telegram_bot_token, msg)) {
-        processed++; continue;
-      }
-
-      // 3) Auto-filter moderation for already auto-registered groups
-      if (isGroup) {
-        if (bot.moderation_enabled && (group?.moderation_enabled !== false)) {
-          const telegramUser = msg.from?.username || msg.from?.first_name || String(msg.from?.id || "");
-
-          // Anti-Spam
-          if (bot.anti_spam_enabled && await checkSpam(supabase, bot.id, telegramUser, msg.text)) {
-            const r = await tg(bot.telegram_bot_token, "deleteMessage", { chat_id: msg.chat.id, message_id: msg.message_id });
-            await logMod(supabase, bot, msg.chat.id, "anti_spam", {
-              target_user: telegramUser, target_user_id: msg.from?.id, success: r.ok,
-            });
-            continue;
-          }
-
-          // Anti-Flood
-          if (bot.anti_flood_enabled && await checkFlood(supabase, bot.id, telegramUser, bot.flood_sensitivity || 5)) {
-            const r = await tg(bot.telegram_bot_token, "deleteMessage", { chat_id: msg.chat.id, message_id: msg.message_id });
-            await logMod(supabase, bot, msg.chat.id, "anti_flood", {
-              target_user: telegramUser, target_user_id: msg.from?.id, success: r.ok,
-            });
-            continue;
-          }
-
-          // Banned Words
-          const hit = containsBannedWord(msg.text, bot.banned_words || [], group?.banned_words || []);
-          if (hit) {
-            const r = await tg(bot.telegram_bot_token, "deleteMessage", { chat_id: msg.chat.id, message_id: msg.message_id });
-            await logMod(supabase, bot, msg.chat.id, "filter_word", {
-              target_user: telegramUser, target_user_id: msg.from?.id, reason: hit, success: r.ok,
-            });
-            continue;
-          }
+      for (const upd of updates) {
+        offset = upd.update_id + 1;
+        try {
+          if (await handleSingleUpdate(supabase, bot, me, upd)) processed++;
+        } catch (e) {
+          console.error(`poll update for bot ${bot.name} failed:`, (e as Error).message);
         }
       }
 
-      // Built-in info commands (group only — DMs are handled by handleDmGeneral)
-      const text = msg.text.trim();
-      if (isGroup && (text === "/start" || text.startsWith("/start "))) {
-        await send(bot.telegram_bot_token, msg.chat.id, `👋 Hello everyone, I'm *${bot.name}*.`, msg.message_id);
-        processed++; continue;
-      }
-      if (isGroup && text === "/status") {
-        await send(bot.telegram_bot_token, msg.chat.id,
-          `*${bot.name}* — ${bot.status === "active" ? "🟢 active" : "🟡 paused"} · AI 🟢`, msg.message_id);
-        processed++; continue;
-      }
-      if (isGroup && text === "/help") {
-        await send(bot.telegram_bot_token, msg.chat.id,
-          `Mention me, reply to my messages, or just say my name to chat. Admins can use /ban /kick /mute /del /pin (reply to a user's message). To configure me, my owner uses the LaPoe dashboard.`, msg.message_id);
-        processed++; continue;
-      }
-
-
-      if (bot.status !== "active") continue;
-
-      // In groups, only respond when:
-      //  - directly @mentioned or called by name
-      //  - replying to one of the bot's own messages
-      //  - the message clearly matches the bot's knowledge base
-      //  - the message clearly relates to the group/persona context
-      // Plain greetings, generic questions, and unrelated chatter are ignored to reduce noise.
-      let autoKnowledge = "";
-      if (isGroup) {
-        const mentionedOrNamed = messageNamesBot(text, bot, me);
-        const isReply = msg.reply_to_message?.from?.id === me.id;
-        let shouldReply = Boolean(mentionedOrNamed || isReply);
-        if (!shouldReply && isGreeting(text)) shouldReply = true;
-
-
-        // Probe knowledge base for substantive messages — only jump in if there's a real match.
-        const probeWorthy = text.trim().length >= 6 && !/^[\/!]/.test(text);
-        if (!shouldReply && probeWorthy) {
-          autoKnowledge = await ragSnippets(supabase, bot.id, text, 5, false);
-          if (autoKnowledge) shouldReply = true;
-        }
-        if (!shouldReply && probeWorthy && isGroupRelated(text, group, bot)) {
-          shouldReply = true;
-        }
-        if (!shouldReply) continue;
-      }
-
-      // ----- Subscription quota + per-user / per-group rate limit (token-bucket, in-memory) -----
-      const chatKey = `${bot.id}:${msg.chat.id}`;
-      if (inCooldown(chatKey)) { processed++; continue; }
-
-      try {
-        const { data: usage } = await supabase.rpc("bot_usage_status", { _bot_id: bot.id });
-        const u = Array.isArray(usage) ? usage[0] : usage;
-        if (u && u.monthly_messages >= u.max_monthly_messages) {
-          await send(bot.telegram_bot_token, msg.chat.id,
-            `🛑 Monthly message limit reached on this workspace (${u.max_monthly_messages}). Owner needs to upgrade the plan.`,
-            msg.message_id);
-          setCooldown(chatKey, 5 * 60_000);
-          processed++; continue;
-        }
-
-        const planPerMin = Math.max(1, u?.max_msgs_per_minute || 20);
-        const userRate = planPerMin / 60;                  // tokens/sec per user
-        const userBurst = Math.min(planPerMin, 5);
-        const groupRate = (planPerMin * 2) / 60;           // group is more permissive
-        const groupBurst = Math.min(planPerMin * 2, 10);
-
-        const userId = String(msg.from?.id || msg.from?.username || "anon");
-        if (!takeToken(userBuckets, `${bot.id}:u:${userId}`, userRate, userBurst)) {
-          // Backoff this user in this chat for a few seconds
-          setCooldown(`${chatKey}:u:${userId}`, 8_000);
-          if (isPrivate) {
-            await send(bot.telegram_bot_token, msg.chat.id,
-              `Easy there — give me a sec, you're sending faster than the plan allows (${planPerMin}/min).`,
-              msg.message_id);
-          }
-          processed++; continue;
-        }
-        if (inCooldown(`${chatKey}:u:${userId}`)) { processed++; continue; }
-
-        if (isGroup && !takeToken(groupBuckets, `${bot.id}:g:${msg.chat.id}`, groupRate, groupBurst)) {
-          // Whole group is flooding — silence the bot briefly to let things cool.
-          setCooldown(chatKey, 15_000);
-          processed++; continue;
-        }
-      } catch (e) {
-        console.error("quota check failed:", (e as Error).message);
-      }
-
-      // Skip AI calls if we're in a global AI backoff window.
-      if (aiBackoffUntil.t > Date.now()) {
-        setCooldown(chatKey, Math.min(15_000, aiBackoffUntil.t - Date.now()));
-        processed++; continue;
-      }
-
-      try {
-        // Show "typing…" immediately so the user knows the bot is working.
-        // Fire-and-forget — never block on it.
-        tg(bot.telegram_bot_token, "sendChatAction", {
-          chat_id: msg.chat.id, action: "typing",
-        }).catch(() => {});
-
-        const cleanText = isGroup ? stripBotName(text, bot, me) : text.trim();
-        const [knowledgeResult, kExists] = await Promise.all([
-          autoKnowledge ? Promise.resolve(autoKnowledge) : ragSnippets(supabase, bot.id, cleanText, 6),
-          hasKnowledge(supabase, bot.id),
-        ]);
-
-        const system = buildSystemPrompt(bot, group, knowledgeResult, kExists);
-        const rawReply = await askAI(system, cleanText);
-        const needsKnowledge = /\[NEEDS_KNOWLEDGE\]/i.test(rawReply);
-        const stripped = rawReply.replace(/\[NEEDS_KNOWLEDGE\]/gi, "").trim();
-        const allowedCtx = [knowledgeResult, bot.house_rules, bot.default_instructions, bot.personality]
-          .filter(Boolean).join("\n");
-        const reply = sanitizeReply(stripped, allowedCtx);
-
-        if (reply) {
-          // Send the reply first, log after — don't make the user wait for the DB write.
-          await send(bot.telegram_bot_token, msg.chat.id, reply, msg.message_id);
-          supabase.from("bot_messages").insert({
-            bot_id: bot.id, owner_id: bot.owner_id, group_id: group?.id || null, direction: "outbound",
-            content: reply, telegram_user: msg.from?.username || null,
-          }).then(() => {}, () => {});
-        }
-
-        // If the AI flagged a real factual gap, log it for the owner's Inbox.
-        if (needsKnowledge && isQuestionLike(cleanText) && !isGreeting(cleanText)) {
-          logUnansweredQuestion(supabase, bot, group, cleanText, msg.from);
-        }
-      } catch (e) {
-        console.error(`bot ${bot.name} reply failed:`, (e as Error).message);
-      }
-      processed++;
+      await supabase.from("bots").update({ update_offset: offset }).eq("id", bot.id);
     }
 
-    await supabase.from("bots").update({ update_offset: offset }).eq("id", bot.id);
-  }
-
-  return { bot: bot.name, processed, offset };
+    return { bot: bot.name, processed, offset };
   } finally {
-    // Release the lock so the next cron tick can poll immediately.
     await supabase.from("bots")
       .update({ poll_locked_until: null, update_offset: offset })
       .eq("id", bot.id);
@@ -923,6 +1001,53 @@ Deno.serve(async (req) => {
     Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
   );
 
+  // Parse optional body — used for fast-path queue draining and explicit
+  // webhook (re)registration from the dashboard.
+  let body: any = {};
+  if (req.method === "POST") {
+    try { body = await req.json(); } catch { body = {}; }
+  }
+  const url = new URL(req.url);
+  const mode = body?.mode || url.searchParams.get("mode") || "";
+  const targetBotId = body?.bot_id || url.searchParams.get("bot_id") || "";
+
+  // === QUEUE FAST PATH ===
+  // Fired by the AFTER INSERT trigger on telegram_update_queue. Drains all
+  // unprocessed updates for the target bot in milliseconds.
+  if (mode === "queue" && targetBotId) {
+    const { data: bot } = await supabase.from("bots").select("*").eq("id", targetBotId).maybeSingle();
+    if (!bot) {
+      return new Response(JSON.stringify({ ok: true, skipped: "unknown bot" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const deadline = Date.now() + MAX_RUNTIME_MS;
+    const result = await processBotQueue(supabase, bot, deadline).catch((e) => ({ error: e.message }));
+    return new Response(JSON.stringify({ ok: true, result }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  // === ENSURE WEBHOOK (called from the dashboard right after token save) ===
+  if (mode === "ensure_webhook" && targetBotId) {
+    const { data: bot } = await supabase.from("bots").select("*").eq("id", targetBotId).maybeSingle();
+    if (!bot) {
+      return new Response(JSON.stringify({ ok: false, error: "unknown bot" }), {
+        status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    // Force re-register by clearing the timestamp.
+    await ensureWebhook(supabase, { ...bot, webhook_registered_at: null });
+    return new Response(JSON.stringify({ ok: true }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  // === CRON FALLBACK PATH ===
+  // Runs every minute. Two jobs:
+  //   1. Self-heal webhook registration for any bot that's missing it / stale.
+  //   2. As a safety net, getUpdates for anything that slipped past the webhook.
+  // Also serves as a warm-ping that keeps the function from cold-starting.
   const { data: bots, error } = await supabase
     .from("bots")
     .select("*")
@@ -934,14 +1059,18 @@ Deno.serve(async (req) => {
     });
   }
 
+  // Register/refresh webhooks first (fast, parallel, no-op if recent).
+  await Promise.all((bots || []).map((b) => ensureWebhook(supabase, b).catch(() => {})));
+
+  // Then drain any leftover queued updates (in case the trigger ping was missed).
   const deadline = Date.now() + MAX_RUNTIME_MS;
-  const results = await Promise.all(
+  const queueResults = await Promise.all(
     (bots || []).map((b) =>
-      processBot(supabase, b, deadline).catch((e) => ({ bot: b.name, error: e.message }))
+      processBotQueue(supabase, b, deadline).catch((e) => ({ bot: b.name, error: e.message }))
     )
   );
 
-  return new Response(JSON.stringify({ ok: true, results }), {
+  return new Response(JSON.stringify({ ok: true, queueResults }), {
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 });

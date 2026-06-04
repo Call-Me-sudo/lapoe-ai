@@ -89,6 +89,14 @@ export default function Bots() {
     setEditing(null);
   };
 
+  // Fire-and-forget: tells the worker to register this bot's Telegram webhook
+  // immediately so messages arrive in milliseconds, not on the next cron tick.
+  const ensureWebhook = (botId: string) => {
+    supabase.functions.invoke("telegram-poll", {
+      body: { mode: "ensure_webhook", bot_id: botId },
+    }).catch(() => {});
+  };
+
   const save = async () => {
     if (!user) return;
     if (!form.name.trim()) return toast.error("Name is required");
@@ -104,9 +112,14 @@ export default function Bots() {
     if (editing) {
       const { error } = await supabase.from("bots").update(payload).eq("id", editing.id);
       if (error) return toast.error(error.message);
+      if (payload.telegram_bot_token) ensureWebhook(editing.id);
       toast.success("Bot updated");
     } else {
-      const { error } = await supabase.from("bots").insert({ ...payload, owner_id: user.id, status: "active" });
+      const { data: created, error } = await supabase
+        .from("bots")
+        .insert({ ...payload, owner_id: user.id, status: "active" })
+        .select("id")
+        .maybeSingle();
       if (error) {
         if (error.message?.includes("PLAN_LIMIT_BOTS")) {
           return toast.error("You've hit your plan's bot limit. Upgrade to add more.", {
@@ -115,6 +128,7 @@ export default function Bots() {
         }
         return toast.error(error.message);
       }
+      if (created?.id && payload.telegram_bot_token) ensureWebhook(created.id);
       toast.success("Bot created and activated");
     }
     setOpen(false); reset(); load();
