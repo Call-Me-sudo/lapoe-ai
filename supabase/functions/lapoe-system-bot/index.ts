@@ -1000,6 +1000,7 @@ Deno.serve(async (req) => {
   // Idempotent: skips the API call when already registered correctly.
   const action = url.searchParams.get("action") || "";
   const hookRes = await ensureWebhook(token).catch((e) => ({ ok: false, info: { error: (e as Error).message } }));
+  ensureCommands(token).catch(() => {});
 
   // === EMERGENCY DRAIN (only if webhook is broken) ===
   // If for any reason the webhook isn't accepting updates, fall back to a
