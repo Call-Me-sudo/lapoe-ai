@@ -17,6 +17,87 @@ const corsHeaders = {
 const MAX_RUNTIME_MS = 50_000;
 const FLOOD_WINDOW_SEC = 10;
 
+// ---------- AI ----------
+const LOVABLE_AI_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
+const AI_MODEL = "google/gemini-3.5-flash";
+const LAPOE_USERNAME = "lapoe_bot"; // for mention detection in groups
+const aiBackoffUntil = { t: 0 };
+
+const TONES: Record<string, string> = {
+  friendly: "Warm, casual, like a helpful community member. Contractions OK. Short sentences.",
+  professional: "Clear, courteous, business-appropriate. No emoji unless the user uses them first.",
+  witty: "Dry, clever, a little playful. Keep it short.",
+  strict: "Direct and rule-focused. Short. No padding.",
+  hype: "High-energy community vibe. Some emoji OK. Never spammy.",
+};
+
+function buildSystemBotPrompt(persona: any, knowledge: string, knowledgeExists: boolean, ownerName: string): string {
+  const tone = TONES[persona?.tone] || TONES.friendly;
+  const name = persona?.display_name || ownerName || "LaPoe";
+  const character = persona?.personality ? `Character: ${persona.personality}\n` : "";
+  const house = persona?.house_rules ? `\nHouse rules:\n${persona.house_rules}` : "";
+  let kb = "";
+  if (knowledge) {
+    kb = `\n\n=== KNOWLEDGE BASE (authoritative) ===\n${knowledge}\n=== END ===\n\nGround factual answers in the knowledge above. If the question is outside it, say so honestly.`;
+  } else if (knowledgeExists) {
+    kb = `\n\nThe owner has a knowledge base but nothing matches. Say briefly that this isn't in your notes, offer what you can help with.`;
+  }
+  return `You are *${name}*, a personal assistant powered by LaPoe.
+
+Tone: ${tone}
+${character}${house}${kb}
+
+RULES:
+- Reply in the same language the user wrote in.
+- Sound like a real person. Never say "as an AI".
+- Keep replies under 4 short sentences unless asked for detail.
+- NEVER invent URLs, prices, statistics, dates, or facts. If not in the knowledge above, omit it.
+- Politely decline general-knowledge questions (politics, trivia, coding) unless covered above.
+- Never apologize unprompted.`;
+}
+
+async function askAI(system: string, userText: string): Promise<string> {
+  const apiKey = Deno.env.get("LOVABLE_API_KEY");
+  if (!apiKey) throw new Error("LOVABLE_API_KEY not configured");
+  if (aiBackoffUntil.t > Date.now()) throw new Error("AI backoff");
+  const res = await fetch(LOVABLE_AI_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
+    body: JSON.stringify({
+      model: AI_MODEL,
+      messages: [{ role: "system", content: system }, { role: "user", content: userText }],
+    }),
+  });
+  if (res.status === 429) { aiBackoffUntil.t = Date.now() + 30_000; throw new Error("rate limit"); }
+  if (res.status === 402) { aiBackoffUntil.t = Date.now() + 60_000; throw new Error("credits exhausted"); }
+  const data = await res.json();
+  if (!res.ok) throw new Error(data?.error?.message || "AI error");
+  return (data.choices?.[0]?.message?.content || "").trim();
+}
+
+async function ragForOwner(sb: any, ownerId: string, query: string, k = 5): Promise<{ text: string; exists: boolean }> {
+  const { count } = await sb.from("knowledge_chunks").select("id", { count: "exact", head: true })
+    .eq("owner_id", ownerId).eq("scope", "system_bot");
+  const exists = (count || 0) > 0;
+  if (!exists) return { text: "", exists: false };
+  const { data } = await sb.rpc("match_system_knowledge_text", {
+    _owner_id: ownerId, _query: query, _match_count: k,
+  });
+  const text = (data || []).map((c: any, i: number) => `[${i + 1}] ${c.content}`).join("\n\n");
+  return { text, exists };
+}
+
+async function ownerAiAllowed(sb: any, ownerId: string): Promise<{ allowed: boolean; used: number; cap: number; plan: string }> {
+  const { data } = await sb.rpc("system_bot_usage", { _owner_id: ownerId });
+  const row = Array.isArray(data) ? data[0] : data;
+  return {
+    allowed: !!row?.allowed,
+    used: row?.monthly_messages ?? 0,
+    cap: row?.max_monthly_messages ?? 0,
+    plan: row?.plan ?? "free",
+  };
+}
+
 // ---------- Telegram helpers ----------
 async function tg(token: string, method: string, body: unknown) {
   const res = await fetch(`https://api.telegram.org/bot${token}/${method}`, {
