@@ -153,8 +153,11 @@ export default function Auth() {
           </p>
         </div>
 
-        <p className="text-xs text-muted-foreground mt-6 text-center">
-          Telegram login coming soon.
+        <p className="text-xs text-muted-foreground mt-6 text-center px-4 leading-relaxed">
+          By continuing you agree to our{" "}
+          <Link to="/legal/terms" className="text-foreground hover:underline">Terms</Link>{" "}
+          and{" "}
+          <Link to="/legal/privacy" className="text-foreground hover:underline">Privacy Policy</Link>.
         </p>
       </div>
     </div>

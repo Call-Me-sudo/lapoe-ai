@@ -28,8 +28,14 @@ export default function SiteFooter() {
             <li><Link to="/auth?mode=signup" className="hover:text-foreground">Sign up</Link></li>
           </ul>
         </div>
-        <div className="text-muted-foreground md:text-right">
-          © {new Date().getFullYear()} LaPoe
+        <div className="md:text-right">
+          <div className="font-semibold mb-3 text-foreground">Legal</div>
+          <ul className="space-y-2 text-muted-foreground">
+            <li><Link to="/legal/terms" className="hover:text-foreground">Terms of Service</Link></li>
+            <li><Link to="/legal/privacy" className="hover:text-foreground">Privacy Policy</Link></li>
+            <li><Link to="/legal/privacy#california-ccpa--cpra" className="hover:text-foreground">Your privacy rights</Link></li>
+          </ul>
+          <div className="text-muted-foreground mt-4 text-xs">© {new Date().getFullYear()} LaPoe</div>
         </div>
       </div>
     </footer>
