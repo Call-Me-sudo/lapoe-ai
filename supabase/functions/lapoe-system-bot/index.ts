@@ -613,6 +613,70 @@ async function handleMembership(sb: any, token: string, msg: any) {
   }
 }
 
+// ---------- Webhook (fast path) ----------
+// Telegram pushes each update here within ms of the user sending it.
+// We process inline and return 200 immediately — no cron delay, no long polling.
+
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+const WEBHOOK_URL = `${SUPABASE_URL.replace(/\/$/, "")}/functions/v1/lapoe-system-bot`;
+
+// Derive a stable per-bot secret_token from the bot's API token. Both this
+// function and the setWebhook call compute it the same way.
+async function webhookSecret(token: string): Promise<string> {
+  const data = new TextEncoder().encode(`lapoe-system-bot:${token}`);
+  const digest = await crypto.subtle.digest("SHA-256", data);
+  return btoa(String.fromCharCode(...new Uint8Array(digest)))
+    .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+}
+function safeEqual(a: string | null, b: string) {
+  if (!a || a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
+
+async function ensureWebhook(token: string): Promise<{ ok: boolean; info?: any }> {
+  const secret = await webhookSecret(token);
+  const info = await tg(token, "getWebhookInfo", {});
+  const current = info?.result?.url;
+  // Already registered to the right URL — skip the round-trip.
+  if (current === WEBHOOK_URL && (info?.result?.pending_update_count ?? 0) < 50) {
+    return { ok: true, info: info.result };
+  }
+  const r = await tg(token, "setWebhook", {
+    url: WEBHOOK_URL,
+    secret_token: secret,
+    allowed_updates: ["message", "edited_message", "my_chat_member"],
+    drop_pending_updates: false,
+    max_connections: 40,
+  });
+  return { ok: !!r.ok, info: r };
+}
+
+async function processUpdate(sb: any, token: string, upd: any) {
+  try {
+    if (upd.my_chat_member) {
+      await ensureGroup(sb, upd.my_chat_member.chat, upd.my_chat_member.from?.id);
+    }
+    const msg = upd.message || upd.edited_message;
+    if (!msg) return;
+
+    if (msg.new_chat_members?.length || msg.left_chat_member) {
+      await handleMembership(sb, token, msg);
+      return;
+    }
+    const text: string = msg.text || msg.caption || "";
+    const isPrivate = msg.chat?.type === "private";
+    if (text.startsWith("/") || text.startsWith("#")) {
+      await handleCommand(sb, token, msg);
+    } else if (!isPrivate) {
+      await runGroupChecks(sb, token, msg);
+    }
+  } catch (e) {
+    console.error("system bot update error:", (e as Error).message);
+  }
+}
+
 // ---------- Entrypoint ----------
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -622,60 +686,60 @@ Deno.serve(async (req) => {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
-  const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+  const sb = createClient(SUPABASE_URL, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+  const url = new URL(req.url);
 
-  const { data: state } = await sb.from("system_bot_state").select("update_offset").eq("id", 1).maybeSingle();
-  let offset = state?.update_offset || 0;
-  const deadline = Date.now() + MAX_RUNTIME_MS;
-  let processed = 0;
-
-  while (Date.now() < deadline - 3000) {
-    const remaining = Math.max(1, Math.floor((deadline - Date.now()) / 1000) - 2);
-    const timeout = Math.min(25, remaining);
-    const updatesRes = await tg(token, "getUpdates", {
-      offset, timeout,
-      allowed_updates: ["message", "edited_message", "my_chat_member"],
+  // === WEBHOOK FAST PATH ===
+  // Telegram delivers updates via POST with the secret_token header set.
+  const tgSecretHeader = req.headers.get("x-telegram-bot-api-secret-token");
+  if (req.method === "POST" && tgSecretHeader) {
+    const expected = await webhookSecret(token);
+    if (!safeEqual(tgSecretHeader, expected)) {
+      return new Response("unauthorized", { status: 401 });
+    }
+    let upd: any = null;
+    try { upd = await req.json(); } catch { /* ignore */ }
+    if (upd && typeof upd.update_id === "number") {
+      // Fire-and-forget: ack Telegram immediately so it never waits on us.
+      processUpdate(sb, token, upd).catch(() => {});
+    }
+    return new Response(JSON.stringify({ ok: true }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
-    if (!updatesRes.ok) {
-      return new Response(JSON.stringify({ error: updatesRes.description }), {
-        status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-    const updates: any[] = updatesRes.result || [];
-    if (updates.length === 0) break;
-
-    for (const upd of updates) {
-      offset = upd.update_id + 1;
-      try {
-        if (upd.my_chat_member) {
-          await ensureGroup(sb, upd.my_chat_member.chat, upd.my_chat_member.from?.id);
-        }
-        const msg = upd.message || upd.edited_message;
-        if (!msg) continue;
-
-        // Track membership
-        if (msg.new_chat_members?.length || msg.left_chat_member) {
-          await handleMembership(sb, token, msg);
-          continue;
-        }
-
-        const text: string = msg.text || msg.caption || "";
-        const isPrivate = msg.chat?.type === "private";
-
-        if (text.startsWith("/") || text.startsWith("#")) {
-          await handleCommand(sb, token, msg);
-        } else if (!isPrivate) {
-          await runGroupChecks(sb, token, msg);
-        }
-        processed++;
-      } catch (e) {
-        console.error("system bot error:", (e as Error).message);
-      }
-    }
-    await sb.from("system_bot_state").update({ update_offset: offset, updated_at: new Date().toISOString() }).eq("id", 1);
   }
 
-  return new Response(JSON.stringify({ ok: true, processed, offset }), {
+  // === SETUP / SELF-HEAL WEBHOOK ===
+  // Called from cron (safety net) and from ?action=setup_webhook (manual).
+  // Idempotent: skips the API call when already registered correctly.
+  const action = url.searchParams.get("action") || "";
+  const hookRes = await ensureWebhook(token).catch((e) => ({ ok: false, info: { error: (e as Error).message } }));
+
+  // === EMERGENCY DRAIN (only if webhook is broken) ===
+  // If for any reason the webhook isn't accepting updates, fall back to a
+  // short getUpdates burst so the bot keeps working.
+  let drained = 0;
+  if (action === "drain" || !hookRes.ok) {
+    try {
+      const { data: state } = await sb.from("system_bot_state").select("update_offset").eq("id", 1).maybeSingle();
+      let offset = state?.update_offset || 0;
+      // Note: getUpdates is incompatible with an active webhook, so we only
+      // hit it when ensureWebhook failed.
+      const r = await tg(token, "getUpdates", { offset, timeout: 0, limit: 50 });
+      const updates: any[] = r?.result || [];
+      for (const upd of updates) {
+        offset = upd.update_id + 1;
+        await processUpdate(sb, token, upd);
+        drained++;
+      }
+      if (updates.length) {
+        await sb.from("system_bot_state").update({ update_offset: offset, updated_at: new Date().toISOString() }).eq("id", 1);
+      }
+    } catch (e) {
+      console.error("system bot drain error:", (e as Error).message);
+    }
+  }
+
+  return new Response(JSON.stringify({ ok: true, webhook: hookRes, drained }), {
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 });
