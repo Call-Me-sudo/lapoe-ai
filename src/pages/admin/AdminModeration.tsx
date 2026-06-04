@@ -3,9 +3,11 @@ import AdminLayout from "@/components/AdminLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { AlertTriangle } from "lucide-react";
+import { ListSkeleton } from "@/components/dashboard/ListSkeleton";
 
 export default function AdminModeration() {
   const [items, setItems] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const load = async () => {
     const [{ data: mods }, { data: bots }] = await Promise.all([
@@ -14,6 +16,7 @@ export default function AdminModeration() {
     ]);
     const map = new Map((bots ?? []).map((b: any) => [b.id, b.name]));
     setItems((mods ?? []).map((m: any) => ({ ...m, bot_name: map.get(m.bot_id) || "—" })));
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -34,7 +37,8 @@ export default function AdminModeration() {
         </div>
       </div>
 
-      {items.length === 0 && (
+      {loading && <ListSkeleton rows={4} />}
+      {!loading && items.length === 0 && (
         <div className="surface-card p-10 text-center text-sm text-ink-soft">No moderation actions yet.</div>
       )}
 

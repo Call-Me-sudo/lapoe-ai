@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Bot, Users, MessageSquare, Shield, RefreshCw, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
+import { ListSkeleton } from "@/components/dashboard/ListSkeleton";
 
 export default function AdminSystemBot() {
   const [stats, setStats] = useState({ groups: 0, warns: 0, mods: 0, filters: 0, notes: 0, linked: 0 });
@@ -77,7 +78,7 @@ export default function AdminSystemBot() {
       <div className="grid lg:grid-cols-[1fr_360px] gap-6">
         <section>
           <h2 className="font-display text-xl text-ink mb-3">Groups ({groups.length})</h2>
-          {loading && <div className="text-sm text-ink-soft">Loading…</div>}
+          {loading && <ListSkeleton rows={3} />}
           {!loading && groups.length === 0 && (
             <div className="surface-card p-8 text-center text-sm text-ink-soft">
               No groups yet. Add @LaPoe_bot to a Telegram group to get started.

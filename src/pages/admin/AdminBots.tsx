@@ -5,13 +5,16 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Pause, Play, Trash2, Copy, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
+import { ListSkeleton } from "@/components/dashboard/ListSkeleton";
 
 export default function AdminBots() {
   const [bots, setBots] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const load = async () => {
     const { data } = await supabase.from("bots").select("*").order("created_at", { ascending: false });
     setBots(data ?? []);
+    setLoading(false);
   };
   useEffect(() => { load(); }, []);
 
@@ -34,9 +37,11 @@ export default function AdminBots() {
         <h1 className="font-display text-3xl text-ink mt-1">Bots ({bots.length})</h1>
       </div>
 
-      {bots.length === 0 && (
+      {loading ? (
+        <ListSkeleton rows={4} />
+      ) : bots.length === 0 ? (
         <div className="surface-card p-10 text-center text-sm text-ink-soft">No bots yet.</div>
-      )}
+      ) : null}
 
       {/* Mobile cards */}
       <div className="md:hidden space-y-3">

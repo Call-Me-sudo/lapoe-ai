@@ -15,6 +15,7 @@ import {
   PauseCircle, ChevronRight, ShieldCheck,
 } from "lucide-react";
 import { toast } from "sonner";
+import { TableSkeleton } from "@/components/dashboard/ListSkeleton";
 
 type Plan = "free" | "starter" | "pro" | "business";
 const PLANS: Plan[] = ["free", "starter", "pro", "business"];
@@ -133,7 +134,7 @@ export default function AdminUsers() {
         <Input placeholder="Search email, name, or @handle…" value={q} onChange={(e) => setQ(e.target.value)} className="pl-9" />
       </div>
 
-      {loading && <div className="text-sm text-ink-soft">Loading…</div>}
+      {loading && <TableSkeleton rows={6} cols={6} />}
       {!loading && filtered.length === 0 && <div className="surface-card p-8 text-center text-sm text-ink-soft">No users found.</div>}
 
       {/* Mobile cards */}
