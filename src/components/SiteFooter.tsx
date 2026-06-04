@@ -47,7 +47,7 @@ export default function SiteFooter() {
           className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground/80 hover:text-foreground transition-colors"
         >
           <span>Powered by</span>
-          <img src={starstoreAsset.url} alt="StarStore" className="h-3.5 w-3.5 rounded-sm object-cover" />
+          <img src="/starstore.jpg" alt="StarStore" className="h-3.5 w-3.5 rounded-sm object-cover" />
           <span className="font-medium">StarStore</span>
         </a>
       </div>
