@@ -944,23 +944,26 @@ async function handleGroupAi(sb: any, token: string, msg: any, group: any) {
   const { plan, allowed, used, cap } = await ownerAiAllowed(sb, ownerId);
   if (plan !== "free") return; // paid users use their own bot
 
-  // Decide whether to reply — keep noise low but feel alive (mirrors user-bot policy):
+  // Decide whether to reply — mirrors user-bot policy (greetings alone do NOT
+  // trigger; question-like messages with strict KB match do).
   //  1) @LaPoe_bot or persona display name mentioned
   //  2) Reply to one of @LaPoe_bot's messages
-  //  3) Greeting (short, friendly welcome reply)
-  //  4) Substantive message (>= 6 chars, not a command) that has a real knowledge match
+  //  3) Question-like substantive message that has a real knowledge match
   const { data: persona } = await sb.from("system_bot_personas").select("*").eq("owner_id", ownerId).maybeSingle();
 
   const repliedToBot = msg.reply_to_message?.from?.username?.toLowerCase() === LAPOE_USERNAME;
   const mentionedBot = text.toLowerCase().includes(`@${LAPOE_USERNAME}`)
     || (persona?.display_name && text.toLowerCase().includes(String(persona.display_name).toLowerCase()));
-  const greeted = isGreeting(text);
 
   let rag = { text: "", exists: false };
-  let shouldReply = Boolean(repliedToBot || mentionedBot || greeted);
+  let shouldReply = Boolean(repliedToBot || mentionedBot);
 
   if (!shouldReply) {
-    const probeWorthy = text.length >= 6 && !text.startsWith("/") && !text.startsWith("!");
+    const probeWorthy =
+      text.length >= 8 &&
+      !text.startsWith("/") && !text.startsWith("!") &&
+      !isGreeting(text) &&
+      isQuestionLike(text);
     if (probeWorthy) {
       rag = await ragForOwner(sb, ownerId, text, 5);
       if (rag.text) shouldReply = true;
@@ -976,10 +979,8 @@ async function handleGroupAi(sb: any, token: string, msg: any, group: any) {
   }).then(() => {}, () => {});
 
   if (!allowed) {
-    if (repliedToBot || mentionedBot) {
-      await send(token, msg.chat.id,
-        `🌙 ${used}/${cap} AI replies used for the month. Commands still work. (Owner can upgrade at https://lapoe-ai.vercel.app/pricing)`, msg.message_id);
-    }
+    // Silent in the group. DM the owner once per month.
+    await notifySystemBotOwnerLimit(sb, token, ownerId, cap).catch(() => {});
     return;
   }
 
