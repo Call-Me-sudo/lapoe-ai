@@ -878,6 +878,11 @@ async function processUpdate(sb: any, token: string, upd: any) {
       return;
     }
 
+    // Group: make every group message self-heal registration. If Telegram's
+    // add/member event was missed, a message from the linked owner will create
+    // and claim the group so dashboard visibility + AI start working.
+    await ensureGroup(sb, msg.chat, msg.from?.id);
+
     // Group: run moderation first, then AI (only if mentioned/replied).
     const handled = await runGroupChecks(sb, token, msg);
     if (handled) return;
