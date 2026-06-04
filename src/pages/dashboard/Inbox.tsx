@@ -11,7 +11,7 @@ import { toast } from "sonner";
 
 type Item = {
   id: string;
-  bot_id: string;
+  bot_id: string | null;
   question: string;
   asker: string | null;
   ask_count: number;
