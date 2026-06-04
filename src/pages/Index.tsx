@@ -35,6 +35,9 @@ export default function Index() {
           offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
         }}
       />
+      <Helmet>
+        <link rel="preload" as="image" href="/desk-clerk.png" fetchpriority="low" />
+      </Helmet>
       <SiteHeader />
 
       {/* HERO */}
