@@ -49,6 +49,16 @@ async function ragSnippets(supabase: any, botId: string, question: string, k = 6
   return data.map((r: any, i: number) => `[${i + 1}] ${r.content}`).join("\n\n").slice(0, 6000);
 }
 
+async function systemRagSnippets(supabase: any, ownerId: string, question: string, k = 6): Promise<string> {
+  const q = (question || "").trim();
+  if (!q) return "";
+  const { data } = await supabase.rpc("match_system_knowledge_text", {
+    _owner_id: ownerId, _query: q, _match_count: k,
+  });
+  if (!data || data.length === 0) return "";
+  return data.map((r: any, i: number) => `[${i + 1}] ${r.content}`).join("\n\n").slice(0, 6000);
+}
+
 function buildSystemPrompt(bot: any, knowledge: string): string {
   const tone = TONES[bot.tone] || TONES.friendly;
   const persona = bot.personality || "";
@@ -81,6 +91,16 @@ Reply rules:
 - ALWAYS reply in the same language the user wrote in.
 - Match the user's energy and length. One-liners get one-liners.
 - Never apologize unprompted. Keep replies under 4 short sentences unless asked for detail.`;
+}
+
+function buildSystemAssistantPrompt(persona: any, knowledge: string): string {
+  return buildSystemPrompt({
+    name: persona?.display_name || "LaPoe Assistant",
+    tone: persona?.tone || "friendly",
+    personality: persona?.personality || "",
+    house_rules: persona?.house_rules || "",
+    default_instructions: "This is the shared @LaPoe_bot assistant for a free account. In real Telegram usage, it answers only inside linked groups, never in DMs.",
+  }, knowledge);
 }
 
 Deno.serve(async (req) => {
