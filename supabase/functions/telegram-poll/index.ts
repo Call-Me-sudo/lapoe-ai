@@ -229,6 +229,49 @@ async function logUnansweredQuestion(supabase: any, bot: any, group: any | null,
   }
 }
 
+// DM the bot owner once per month when their monthly AI quota is exhausted.
+// Stays silent in the group, and uses the in-app notifications table to dedup
+// across edge-instance restarts. Telegram DM is best-effort.
+async function notifyOwnerLimitReached(supabase: any, bot: any, cap: number): Promise<void> {
+  try {
+    const monthStart = new Date();
+    monthStart.setUTCDate(1);
+    monthStart.setUTCHours(0, 0, 0, 0);
+
+    const { data: existing } = await supabase
+      .from("notifications")
+      .select("id")
+      .eq("user_id", bot.owner_id)
+      .eq("type", "limit")
+      .gte("created_at", monthStart.toISOString())
+      .limit(1)
+      .maybeSingle();
+    if (existing) return;
+
+    await supabase.from("notifications").insert({
+      title: "Monthly message limit reached",
+      body: `Your bot "${bot.name}" has used all ${cap} AI replies this month. It will stay silent in groups until the 1st. Upgrade for more capacity.`,
+      type: "limit", audience: "user", user_id: bot.owner_id,
+      link: "/pricing",
+    });
+
+    // Try a Telegram DM to the linked owner via the user's own bot.
+    const { data: profile } = await supabase
+      .from("profiles").select("telegram_user_id")
+      .eq("id", bot.owner_id).maybeSingle();
+    if (profile?.telegram_user_id && bot.telegram_bot_token) {
+      await tg(bot.telegram_bot_token, "sendMessage", {
+        chat_id: Number(profile.telegram_user_id),
+        text: `🛑 *${bot.name}* hit its monthly limit of ${cap} AI replies.\n\nThe bot will stay silent in your groups until the 1st of next month. Upgrade anytime: https://lapoe-ai.vercel.app/pricing`,
+        parse_mode: "Markdown",
+        disable_web_page_preview: true,
+      });
+    }
+  } catch (e) {
+    console.error("notifyOwnerLimitReached failed:", (e as Error).message);
+  }
+}
+
 
 // Hidden self-knowledge injected into every bot's prompt so they always
 // know what LaPoe is and never answer "I don't know" about themselves.
