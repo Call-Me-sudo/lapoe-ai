@@ -62,8 +62,16 @@ export default function Knowledge() {
   };
 
   const save = async () => {
-    if (!user || !form.bot_id || !form.title.trim()) return toast.error("Bot and title required");
-    const { data, error } = await supabase.from("knowledge_sources").insert({ ...form, owner_id: user.id }).select("id").single();
+    if (!user || !form.title.trim()) return toast.error("Title required");
+    const isSystemBot = bots.length === 0;
+    if (!isSystemBot && !form.bot_id) return toast.error("Choose a bot");
+    const payload: any = {
+      kind: form.kind, title: form.title, content: form.content, source_url: form.source_url,
+      owner_id: user.id,
+      bot_id: isSystemBot ? null : form.bot_id,
+      scope: isSystemBot ? "system_bot" : "bot",
+    };
+    const { data, error } = await supabase.from("knowledge_sources").insert(payload).select("id").single();
     if (error) return toast.error(error.message);
     toast.success("Source added — indexing…");
     setOpen(false);
@@ -84,7 +92,7 @@ export default function Knowledge() {
         description="Add URLs or paste text. Each source is chunked and embedded so the bot retrieves only what's relevant."
         actions={
           <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild><Button disabled={bots.length === 0}><Plus className="h-4 w-4" /> Add source</Button></DialogTrigger>
+            <DialogTrigger asChild><Button><Plus className="h-4 w-4" /> Add source</Button></DialogTrigger>
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Add a knowledge source</DialogTitle>
