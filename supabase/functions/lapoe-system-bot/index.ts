@@ -944,22 +944,23 @@ async function handleGroupAi(sb: any, token: string, msg: any, group: any) {
   const { plan, allowed, used, cap } = await ownerAiAllowed(sb, ownerId);
   if (plan !== "free") return; // paid users use their own bot
 
-  // Decide whether to reply — NARROW triggers (mirrors user-bot policy):
+  // Decide whether to reply — keep noise low but feel alive (mirrors user-bot policy):
   //  1) @LaPoe_bot or persona display name mentioned
   //  2) Reply to one of @LaPoe_bot's messages
-  //  3) Substantive QUESTION that has a real knowledge match
-  // No more replies on plain greetings or any "?" message.
+  //  3) Greeting (short, friendly welcome reply)
+  //  4) Substantive message (>= 6 chars, not a command) that has a real knowledge match
   const { data: persona } = await sb.from("system_bot_personas").select("*").eq("owner_id", ownerId).maybeSingle();
 
   const repliedToBot = msg.reply_to_message?.from?.username?.toLowerCase() === LAPOE_USERNAME;
   const mentionedBot = text.toLowerCase().includes(`@${LAPOE_USERNAME}`)
     || (persona?.display_name && text.toLowerCase().includes(String(persona.display_name).toLowerCase()));
+  const greeted = isGreeting(text);
 
   let rag = { text: "", exists: false };
-  let shouldReply = Boolean(repliedToBot || mentionedBot);
+  let shouldReply = Boolean(repliedToBot || mentionedBot || greeted);
 
   if (!shouldReply) {
-    const probeWorthy = text.length >= 6 && !text.startsWith("/") && !text.startsWith("!") && isQuestionLikeSys(text);
+    const probeWorthy = text.length >= 6 && !text.startsWith("/") && !text.startsWith("!");
     if (probeWorthy) {
       rag = await ragForOwner(sb, ownerId, text, 5);
       if (rag.text) shouldReply = true;

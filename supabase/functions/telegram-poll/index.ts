@@ -840,21 +840,22 @@ async function handleSingleUpdate(supabase: any, bot: any, me: { username: strin
 
   if (bot.status !== "active") return false;
 
-  // Group reply triggers — DELIBERATELY NARROW to avoid noise.
-  // Reply ONLY when:
+  // Group reply triggers — keep noise low but feel alive.
+  // Reply when:
   //  1) The bot is @mentioned or called by name, OR
   //  2) The user replied to one of the bot's messages, OR
-  //  3) The message is a substantive question AND the knowledge base
-  //     has a real match for it (so we have something grounded to say).
-  // Plain greetings, generic questions, or vague topical overlap NO LONGER trigger a reply.
+  //  3) The message is a greeting (short, friendly welcome reply), OR
+  //  4) The message is substantive (>= 6 chars, not a command) AND the
+  //     knowledge base has a real match for it.
   let autoKnowledge = "";
   if (isGroup) {
     const mentionedOrNamed = messageNamesBot(text, bot, me);
     const isReply = msg.reply_to_message?.from?.id === me.id;
-    let shouldReply = Boolean(mentionedOrNamed || isReply);
+    const greeted = isGreeting(text);
+    let shouldReply = Boolean(mentionedOrNamed || isReply || greeted);
 
     if (!shouldReply) {
-      const probeWorthy = text.trim().length >= 6 && !/^[\/!]/.test(text) && isQuestionLike(text);
+      const probeWorthy = text.trim().length >= 6 && !/^[\/!]/.test(text);
       if (probeWorthy) {
         autoKnowledge = await ragSnippets(supabase, bot.id, text, 5, false);
         if (autoKnowledge) shouldReply = true;
