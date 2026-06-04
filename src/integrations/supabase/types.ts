@@ -172,6 +172,7 @@ export type Database = {
           tone: string | null
           update_offset: number
           updated_at: string
+          webhook_registered_at: string | null
           webhook_secret: string
           welcome_message: string | null
         }
@@ -198,6 +199,7 @@ export type Database = {
           tone?: string | null
           update_offset?: number
           updated_at?: string
+          webhook_registered_at?: string | null
           webhook_secret?: string
           welcome_message?: string | null
         }
@@ -224,6 +226,7 @@ export type Database = {
           tone?: string | null
           update_offset?: number
           updated_at?: string
+          webhook_registered_at?: string | null
           webhook_secret?: string
           welcome_message?: string | null
         }
