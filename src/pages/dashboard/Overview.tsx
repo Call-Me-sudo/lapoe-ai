@@ -39,9 +39,10 @@ export default function Overview() {
     if (!user) return;
     (async () => {
       const sinceISO = new Date(Date.now() - 29 * 86400000).toISOString();
-      const [b, g, m, k, usageRows, recentMsgs, unansweredRes] = await Promise.all([
+      const [b, g, sg, m, k, usageRows, recentMsgs, unansweredRes] = await Promise.all([
         supabase.from("bots").select("id", { count: "exact", head: true }).eq("owner_id", user.id),
         supabase.from("telegram_groups").select("id", { count: "exact", head: true }).eq("owner_id", user.id),
+        supabase.from("system_bot_groups").select("chat_id", { count: "exact", head: true }).eq("linked_owner_id", user.id),
         supabase.from("bot_messages").select("id", { count: "exact", head: true }).eq("owner_id", user.id),
         supabase.from("knowledge_sources").select("id", { count: "exact", head: true }).eq("owner_id", user.id),
         (supabase as unknown as { rpc: (n: string) => Promise<{ data: Usage[] | null }> }).rpc("my_workspace_usage"),
@@ -57,7 +58,7 @@ export default function Overview() {
           .eq("direction", "inbound")
           .gte("created_at", sinceISO),
       ]);
-      setStats({ bots: b.count ?? 0, groups: g.count ?? 0, messages: m.count ?? 0, knowledge: k.count ?? 0 });
+      setStats({ bots: b.count ?? 0, groups: (g.count ?? 0) + (sg.count ?? 0), messages: m.count ?? 0, knowledge: k.count ?? 0 });
       setUsage(Array.isArray(usageRows.data) ? usageRows.data[0] ?? null : null);
       setRecent((recentMsgs.data as RecentMsg[] | null) ?? []);
       setUnanswered(unansweredRes.count ?? 0);

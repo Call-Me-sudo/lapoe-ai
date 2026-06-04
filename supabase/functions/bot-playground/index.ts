@@ -49,6 +49,16 @@ async function ragSnippets(supabase: any, botId: string, question: string, k = 6
   return data.map((r: any, i: number) => `[${i + 1}] ${r.content}`).join("\n\n").slice(0, 6000);
 }
 
+async function systemRagSnippets(supabase: any, ownerId: string, question: string, k = 6): Promise<string> {
+  const q = (question || "").trim();
+  if (!q) return "";
+  const { data } = await supabase.rpc("match_system_knowledge_text", {
+    _owner_id: ownerId, _query: q, _match_count: k,
+  });
+  if (!data || data.length === 0) return "";
+  return data.map((r: any, i: number) => `[${i + 1}] ${r.content}`).join("\n\n").slice(0, 6000);
+}
+
 function buildSystemPrompt(bot: any, knowledge: string): string {
   const tone = TONES[bot.tone] || TONES.friendly;
   const persona = bot.personality || "";
@@ -81,6 +91,16 @@ Reply rules:
 - ALWAYS reply in the same language the user wrote in.
 - Match the user's energy and length. One-liners get one-liners.
 - Never apologize unprompted. Keep replies under 4 short sentences unless asked for detail.`;
+}
+
+function buildSystemAssistantPrompt(persona: any, knowledge: string): string {
+  return buildSystemPrompt({
+    name: persona?.display_name || "LaPoe Assistant",
+    tone: persona?.tone || "friendly",
+    personality: persona?.personality || "",
+    house_rules: persona?.house_rules || "",
+    default_instructions: "This is the shared @LaPoe_bot assistant for a free account. In real Telegram usage, it answers only inside linked groups, never in DMs.",
+  }, knowledge);
 }
 
 Deno.serve(async (req) => {
@@ -131,26 +151,34 @@ Deno.serve(async (req) => {
   }
 
   const botId = String(body?.bot_id || "");
+  const isSystemBot = body?.system_bot === true;
   const messages: Array<{ role: string; content: string }> = Array.isArray(body?.messages) ? body.messages : [];
-  if (!botId || messages.length === 0) {
+  if ((!botId && !isSystemBot) || messages.length === 0) {
     return new Response(JSON.stringify({ error: "bot_id and messages required" }), {
       status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 
-  // Confirm ownership
-  const { data: bot, error: botErr } = await supabase
-    .from("bots").select("*").eq("id", botId).eq("owner_id", userId).maybeSingle();
-  if (botErr || !bot) {
-    return new Response(JSON.stringify({ error: "bot not found" }), {
-      status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
-
   // Build prompt using latest user message for RAG
   const lastUser = [...messages].reverse().find(m => m.role === "user")?.content || "";
-  const knowledge = await ragSnippets(supabase, bot.id, lastUser);
-  const system = buildSystemPrompt(bot, knowledge);
+  let system = "";
+  if (isSystemBot) {
+    const { data: persona } = await supabase
+      .from("system_bot_personas").select("*").eq("owner_id", userId).maybeSingle();
+    const knowledge = await systemRagSnippets(supabase, userId, lastUser);
+    system = buildSystemAssistantPrompt(persona, knowledge);
+  } else {
+    // Confirm ownership
+    const { data: bot, error: botErr } = await supabase
+      .from("bots").select("*").eq("id", botId).eq("owner_id", userId).maybeSingle();
+    if (botErr || !bot) {
+      return new Response(JSON.stringify({ error: "bot not found" }), {
+        status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const knowledge = await ragSnippets(supabase, bot.id, lastUser);
+    system = buildSystemPrompt(bot, knowledge);
+  }
 
   const apiKey = Deno.env.get("LOVABLE_API_KEY");
   if (!apiKey) {

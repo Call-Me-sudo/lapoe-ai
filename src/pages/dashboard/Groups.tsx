@@ -20,10 +20,25 @@ export default function Groups() {
 
   const load = async () => {
     if (!user) return;
-    const { data } = await supabase.from("telegram_groups")
-      .select("*, bots(name, bot_username)")
-      .eq("owner_id", user.id).order("last_seen_at", { ascending: false });
-    setGroups(data ?? []);
+    const [customGroups, systemGroups] = await Promise.all([
+      supabase.from("telegram_groups")
+        .select("*, bots(name, bot_username)")
+        .eq("owner_id", user.id).order("last_seen_at", { ascending: false }),
+      supabase.from("system_bot_groups")
+        .select("*")
+        .eq("linked_owner_id", user.id).order("updated_at", { ascending: false }),
+    ]);
+    const custom = (customGroups.data ?? []).map((g: any) => ({ ...g, source: "custom" }));
+    const system = (systemGroups.data ?? []).map((g: any) => ({
+      ...g,
+      id: `system-${g.chat_id}`,
+      source: "system",
+      name: g.title || `chat:${g.chat_id}`,
+      telegram_chat_id: String(g.chat_id),
+      bots: { name: "LaPoe", bot_username: "LaPoe_bot" },
+      last_seen_at: g.updated_at,
+    }));
+    setGroups([...system, ...custom]);
   };
 
   useEffect(() => {
@@ -60,7 +75,9 @@ export default function Groups() {
       moderation_enabled: form.moderation_enabled,
       banned_words: form.banned_words.split(",").map(w => w.trim()).filter(Boolean),
     };
-    const { error } = await supabase.from("telegram_groups").update(payload).eq("id", editing.id);
+    const { error } = editing.source === "system"
+      ? await supabase.from("system_bot_groups").update(payload).eq("chat_id", editing.chat_id)
+      : await supabase.from("telegram_groups").update(payload).eq("id", editing.id);
     if (error) return toast.error(error.message);
     toast.success("Group updated");
     setEditing(null); load();

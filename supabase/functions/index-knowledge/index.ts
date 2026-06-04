@@ -84,6 +84,7 @@ async function indexSource(supabase: any, source: any) {
     source_id: source.id,
     bot_id: source.bot_id,
     owner_id: source.owner_id,
+    scope: source.scope || "bot",
     chunk_index: i,
     content: c,
   }));

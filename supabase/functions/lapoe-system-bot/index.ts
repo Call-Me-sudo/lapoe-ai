@@ -190,6 +190,15 @@ async function ensureGroup(sb: any, chat: any, addedBy?: number) {
     added_by_tg: addedBy ?? null,
     is_active: true,
   }, { onConflict: "chat_id" });
+  if (addedBy) {
+    const profile = await getProfile(sb, addedBy);
+    if (profile?.id) {
+      await sb.from("system_bot_groups")
+        .update({ linked_owner_id: profile.id, updated_at: new Date().toISOString() })
+        .eq("chat_id", chat.id)
+        .is("linked_owner_id", null);
+    }
+  }
 }
 async function getGroup(sb: any, chatId: number) {
   const { data } = await sb.from("system_bot_groups").select("*").eq("chat_id", chatId).maybeSingle();
@@ -868,6 +877,11 @@ async function processUpdate(sb: any, token: string, upd: any) {
       await handleDmAi(sb, token, msg);
       return;
     }
+
+    // Group: make every group message self-heal registration. If Telegram's
+    // add/member event was missed, a message from the linked owner will create
+    // and claim the group so dashboard visibility + AI start working.
+    await ensureGroup(sb, msg.chat, msg.from?.id);
 
     // Group: run moderation first, then AI (only if mentioned/replied).
     const handled = await runGroupChecks(sb, token, msg);
