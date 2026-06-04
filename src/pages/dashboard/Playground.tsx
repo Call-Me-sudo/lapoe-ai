@@ -5,11 +5,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Bot as BotIcon, Send, RotateCcw } from "lucide-react";
+import { Send, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
-type Bot = { id: string; name: string; tone: string | null; personality: string | null };
+type Bot = { id: string; name: string; tone: string | null; personality: string | null; system?: boolean };
 type Msg = { role: "user" | "assistant"; content: string };
 
 export default function Playground() {
@@ -21,13 +21,15 @@ export default function Playground() {
   const [sending, setSending] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const systemAssistant: Bot = { id: "__lapoe_system_bot__", name: "LaPoe Assistant", tone: "friendly", personality: null, system: true };
 
   useEffect(() => {
     if (!user) return;
     supabase.from("bots").select("id,name,tone,personality").eq("owner_id", user.id).order("created_at", { ascending: false })
       .then(({ data }) => {
-        setBots(data || []);
-        if (data && data.length && !botId) setBotId(data[0].id);
+        const next = data?.length ? data : [systemAssistant];
+        setBots(next);
+        if (next.length && !botId) setBotId(next[0].id);
       });
   }, [user, botId]);
 
@@ -50,7 +52,7 @@ export default function Playground() {
     setSending(true);
     try {
       const { data, error } = await supabase.functions.invoke("bot-playground", {
-        body: { bot_id: botId, messages: next },
+        body: { bot_id: botId, system_bot: activeBot?.system === true, messages: next },
       });
       if (error) throw error;
       if ((data as any)?.error) throw new Error((data as any).error);
@@ -84,7 +86,7 @@ export default function Playground() {
       {bots.length === 0 ? (
         <div className="rounded-3xl bg-card shadow-card p-12 text-center">
           <img src="/bot-icon.png" alt="LaPoe" className="h-10 w-10 rounded-full object-cover mx-auto mb-3" />
-          <p className="text-muted-foreground">Create a bot first, then come back to preview it here.</p>
+          <p className="text-muted-foreground">Connect your assistant first, then come back to preview it here.</p>
         </div>
       ) : (
         <div className="rounded-3xl bg-card shadow-card overflow-hidden flex flex-col h-[calc(100vh-220px)] min-h-[480px]">
