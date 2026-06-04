@@ -734,6 +734,86 @@ async function ensureWebhook(token: string): Promise<{ ok: boolean; info?: any }
   return { ok: !!r.ok, info: r };
 }
 
+// ---------- AI handlers (DM + group mention) ----------
+async function handleDmAi(sb: any, token: string, msg: any) {
+  const chatId = msg.chat.id;
+  const fromId = msg.from?.id;
+  const text = (msg.text || msg.caption || "").trim();
+  if (!fromId || !text) return;
+
+  const profile = await getProfile(sb, fromId);
+  if (!profile) {
+    return send(token, chatId,
+      `👋 I'm *LaPoe*. To get your own AI assistant, link your account:\n\n1. Open https://lapoe-ai.vercel.app and sign in\n2. Settings → Telegram → generate a code\n3. Send me \`/link YOUR_CODE\`\n\nUse /help for commands.`, msg.message_id);
+  }
+
+  // Plan + quota
+  const { plan, allowed, used, cap } = await ownerAiAllowed(sb, profile.id);
+  if (plan !== "free") {
+    // Paid users have their own bot — keep DM minimal here.
+    return send(token, chatId,
+      `You're on the *${plan}* plan — manage your custom bot at https://lapoe-ai.vercel.app/dashboard/bots.\n\nFor commands here, try /help.`, msg.message_id);
+  }
+  if (!allowed) {
+    return send(token, chatId,
+      `🌙 You've used your monthly *${cap}* AI replies (${used}/${cap}). Commands still work; AI resumes on the 1st.\n\nWant unlimited? https://lapoe-ai.vercel.app/pricing`, msg.message_id);
+  }
+
+  // Persona + RAG
+  const { data: persona } = await sb.from("system_bot_personas").select("*").eq("owner_id", profile.id).maybeSingle();
+  const rag = await ragForOwner(sb, profile.id, text, 5);
+  const system = buildSystemBotPrompt(persona, rag.text, rag.exists, profile.display_name || profile.email || "LaPoe");
+
+  let reply = "";
+  try {
+    reply = await askAI(system, text);
+  } catch (e) {
+    return send(token, chatId, `Hmm — AI is unavailable right now. Try again in a minute.`, msg.message_id);
+  }
+  if (!reply) return;
+
+  await send(token, chatId, reply, msg.message_id);
+  await sb.rpc("bump_system_bot_usage", { _owner_id: profile.id });
+}
+
+async function handleGroupAi(sb: any, token: string, msg: any, group: any) {
+  // Only respond on mention/reply-to-bot.
+  const text: string = (msg.text || msg.caption || "").trim();
+  if (!text) return;
+
+  const repliedToBot = msg.reply_to_message?.from?.username?.toLowerCase() === LAPOE_USERNAME;
+  const mentionedBot = text.toLowerCase().includes(`@${LAPOE_USERNAME}`);
+  if (!repliedToBot && !mentionedBot) return;
+
+  if (!group.linked_owner_id) {
+    // Group not claimed by a free user → don't AI-reply, marketing nudge once is enough.
+    return;
+  }
+
+  const ownerId = group.linked_owner_id;
+  const { plan, allowed, used, cap } = await ownerAiAllowed(sb, ownerId);
+  if (plan !== "free" || !allowed) {
+    // Paid owners use their own bot; capped free owners get silence here (commands still work).
+    if (plan === "free" && !allowed) {
+      await send(token, msg.chat.id,
+        `🌙 ${used}/${cap} AI replies used for the month. Commands still work. (Owner can upgrade at https://lapoe-ai.vercel.app/pricing)`, msg.message_id);
+    }
+    return;
+  }
+
+  const { data: persona } = await sb.from("system_bot_personas").select("*").eq("owner_id", ownerId).maybeSingle();
+  const rag = await ragForOwner(sb, ownerId, text, 5);
+  const ownerName = persona?.display_name || "LaPoe";
+  const system = buildSystemBotPrompt(persona, rag.text, rag.exists, ownerName) +
+    `\n\nYou are in the Telegram group "${group.title || ""}". Keep it conversational.`;
+
+  let reply = "";
+  try { reply = await askAI(system, text); } catch { return; }
+  if (!reply) return;
+  await send(token, msg.chat.id, reply, msg.message_id);
+  await sb.rpc("bump_system_bot_usage", { _owner_id: ownerId });
+}
+
 async function processUpdate(sb: any, token: string, upd: any) {
   try {
     if (upd.my_chat_member) {
@@ -748,15 +828,27 @@ async function processUpdate(sb: any, token: string, upd: any) {
     }
     const text: string = msg.text || msg.caption || "";
     const isPrivate = msg.chat?.type === "private";
+
     if (text.startsWith("/") || text.startsWith("#")) {
       await handleCommand(sb, token, msg);
-    } else if (!isPrivate) {
-      await runGroupChecks(sb, token, msg);
+      return;
     }
+
+    if (isPrivate) {
+      await handleDmAi(sb, token, msg);
+      return;
+    }
+
+    // Group: run moderation first, then AI (only if mentioned/replied).
+    const handled = await runGroupChecks(sb, token, msg);
+    if (handled) return;
+    const group = await getGroup(sb, msg.chat.id);
+    if (group) await handleGroupAi(sb, token, msg, group);
   } catch (e) {
     console.error("system bot update error:", (e as Error).message);
   }
 }
+
 
 // ---------- Entrypoint ----------
 Deno.serve(async (req) => {
