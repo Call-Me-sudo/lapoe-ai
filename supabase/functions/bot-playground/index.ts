@@ -151,26 +151,34 @@ Deno.serve(async (req) => {
   }
 
   const botId = String(body?.bot_id || "");
+  const isSystemBot = body?.system_bot === true;
   const messages: Array<{ role: string; content: string }> = Array.isArray(body?.messages) ? body.messages : [];
-  if (!botId || messages.length === 0) {
+  if ((!botId && !isSystemBot) || messages.length === 0) {
     return new Response(JSON.stringify({ error: "bot_id and messages required" }), {
       status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 
-  // Confirm ownership
-  const { data: bot, error: botErr } = await supabase
-    .from("bots").select("*").eq("id", botId).eq("owner_id", userId).maybeSingle();
-  if (botErr || !bot) {
-    return new Response(JSON.stringify({ error: "bot not found" }), {
-      status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
-
   // Build prompt using latest user message for RAG
   const lastUser = [...messages].reverse().find(m => m.role === "user")?.content || "";
-  const knowledge = await ragSnippets(supabase, bot.id, lastUser);
-  const system = buildSystemPrompt(bot, knowledge);
+  let system = "";
+  if (isSystemBot) {
+    const { data: persona } = await supabase
+      .from("system_bot_personas").select("*").eq("owner_id", userId).maybeSingle();
+    const knowledge = await systemRagSnippets(supabase, userId, lastUser);
+    system = buildSystemAssistantPrompt(persona, knowledge);
+  } else {
+    // Confirm ownership
+    const { data: bot, error: botErr } = await supabase
+      .from("bots").select("*").eq("id", botId).eq("owner_id", userId).maybeSingle();
+    if (botErr || !bot) {
+      return new Response(JSON.stringify({ error: "bot not found" }), {
+        status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const knowledge = await ragSnippets(supabase, bot.id, lastUser);
+    system = buildSystemPrompt(bot, knowledge);
+  }
 
   const apiKey = Deno.env.get("LOVABLE_API_KEY");
   if (!apiKey) {
