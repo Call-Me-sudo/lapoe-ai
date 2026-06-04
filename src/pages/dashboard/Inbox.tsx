@@ -139,7 +139,7 @@ export default function Inbox() {
                 <div className="min-w-0 flex-1">
                   <p className="text-sm text-ink font-medium break-words">{it.question}</p>
                   <div className="text-xs text-muted-foreground mt-1 flex flex-wrap gap-x-3 gap-y-1">
-                    <span>{it.bots?.name || "Bot"}</span>
+                    <span>{it.bots?.name || (it.bot_id ? "Bot" : "LaPoe Assistant")}</span>
                     {it.asker && <span>asked by {it.asker}</span>}
                     {it.ask_count > 1 && <Badge variant="secondary" className="text-[10px]">asked {it.ask_count}×</Badge>}
                     <span>{new Date(it.updated_at).toLocaleString()}</span>
