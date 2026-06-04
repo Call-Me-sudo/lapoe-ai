@@ -338,6 +338,7 @@ function sanitizeReply(reply: string, allowedContext: string): string {
 
 async function getMe(token: string, bot: any, supabase: any): Promise<{ username: string | null; id: number | null }> {
   if (bot.bot_username && bot.bot_telegram_id) {
+    ensureBotCommands(token, bot).catch(() => {});
     return { username: bot.bot_username, id: Number(bot.bot_telegram_id) };
   }
   const me = await tg(token, "getMe", {});
@@ -346,7 +347,44 @@ async function getMe(token: string, bot: any, supabase: any): Promise<{ username
   if (username || id) {
     await supabase.from("bots").update({ bot_username: username, bot_telegram_id: id }).eq("id", bot.id);
   }
+  ensureBotCommands(token, bot).catch(() => {});
   return { username, id };
+}
+
+// Per-bot command-menu setup. Cached per cold start (refreshes every 6h).
+const botCommandsSetAt = new Map<string, number>();
+async function ensureBotCommands(token: string, bot: any): Promise<void> {
+  const last = botCommandsSetAt.get(bot.id) || 0;
+  if (Date.now() - last < 6 * 60 * 60 * 1000) return;
+  botCommandsSetAt.set(bot.id, Date.now());
+
+  const privateCommands = [
+    { command: "start", description: "About this bot" },
+    { command: "help", description: "Show available commands" },
+    { command: "feedback", description: "Send feedback to the owner: /feedback text" },
+    { command: "donate", description: "Support this bot (coming soon)" },
+  ];
+  const groupCommands = [
+    { command: "ban", description: "Admin: ban a user (reply)" },
+    { command: "unban", description: "Admin: unban a user (reply)" },
+    { command: "kick", description: "Admin: kick a user (reply)" },
+    { command: "mute", description: "Admin: mute a user (reply)" },
+    { command: "unmute", description: "Admin: unmute a user (reply)" },
+    { command: "del", description: "Admin: delete replied message" },
+    { command: "pin", description: "Admin: pin replied message" },
+    { command: "unpin", description: "Admin: unpin current pinned" },
+    { command: "warn", description: "Admin: warn a user (reply)" },
+  ];
+
+  try {
+    await Promise.all([
+      tg(token, "setMyCommands", { commands: privateCommands, scope: { type: "all_private_chats" } }),
+      tg(token, "setMyCommands", { commands: groupCommands, scope: { type: "all_chat_administrators" } }),
+      tg(token, "setMyCommands", { commands: [], scope: { type: "all_group_chats" } }),
+    ]);
+  } catch (e) {
+    console.error(`setMyCommands failed for bot ${bot.id}:`, (e as Error).message);
+  }
 }
 
 async function isGroupAdmin(token: string, chatId: number, userId: number): Promise<boolean> {

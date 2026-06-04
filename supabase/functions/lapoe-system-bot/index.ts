@@ -767,6 +767,75 @@ async function ensureWebhook(token: string): Promise<{ ok: boolean; info?: any }
   return { ok: !!r.ok, info: r };
 }
 
+// Set the bot's command menu so users see commands when they type "/" in
+// Telegram. Idempotent + cached per cold start (re-runs every 6h).
+const commandsSetAt = { t: 0 };
+async function ensureCommands(token: string): Promise<void> {
+  if (Date.now() - commandsSetAt.t < 6 * 60 * 60 * 1000) return;
+  commandsSetAt.t = Date.now();
+
+  const privateCommands = [
+    { command: "start", description: "About LaPoe + how to set up" },
+    { command: "help", description: "Show available commands" },
+    { command: "link", description: "Link your LaPoe account: /link CODE" },
+    { command: "unlink", description: "Unlink your LaPoe account" },
+    { command: "status", description: "Show your plan + usage" },
+    { command: "mybots", description: "List bots you own" },
+    { command: "createbot", description: "How to create a new bot" },
+    { command: "id", description: "Show your Telegram user ID" },
+    { command: "info", description: "About this chat" },
+  ];
+  const groupCommands = [
+    { command: "rules", description: "Show this group's rules" },
+    { command: "report", description: "Report a message to admins" },
+    { command: "id", description: "Show user / chat IDs" },
+    { command: "info", description: "About this group" },
+    { command: "notes", description: "List saved notes" },
+    { command: "filters", description: "List active filters" },
+    { command: "warns", description: "Show warnings (reply to a user)" },
+    { command: "get", description: "Get a note: /get name" },
+    { command: "setrules", description: "Admin: set group rules" },
+    { command: "setwelcome", description: "Admin: set welcome message" },
+    { command: "setgoodbye", description: "Admin: set goodbye message" },
+    { command: "addnote", description: "Admin: /addnote name text" },
+    { command: "clearnote", description: "Admin: /clearnote name" },
+    { command: "filter", description: "Admin: /filter trigger reply" },
+    { command: "stop", description: "Admin: remove a filter" },
+    { command: "banword", description: "Admin: ban a word" },
+    { command: "unbanword", description: "Admin: unban a word" },
+    { command: "warn", description: "Admin: warn a user (reply)" },
+    { command: "unwarn", description: "Admin: remove last warn (reply)" },
+    { command: "resetwarns", description: "Admin: reset warns (reply)" },
+    { command: "ban", description: "Admin: ban a user (reply)" },
+    { command: "unban", description: "Admin: unban a user (reply)" },
+    { command: "kick", description: "Admin: kick a user (reply)" },
+    { command: "mute", description: "Admin: mute a user (reply)" },
+    { command: "unmute", description: "Admin: unmute a user (reply)" },
+    { command: "promote", description: "Admin: promote a user (reply)" },
+    { command: "demote", description: "Admin: demote a user (reply)" },
+    { command: "pin", description: "Admin: pin replied message" },
+    { command: "unpin", description: "Admin: unpin current pinned" },
+    { command: "purge", description: "Admin: delete from replied to now" },
+    { command: "lock", description: "Admin: lock chat" },
+    { command: "unlock", description: "Admin: unlock chat" },
+    { command: "antiflood", description: "Admin: set flood limit" },
+    { command: "moderation", description: "Admin: toggle moderation on/off" },
+    { command: "setwarnlimit", description: "Admin: set max warns" },
+    { command: "setlang", description: "Admin: set language" },
+    { command: "feedback", description: "Send feedback to LaPoe" },
+  ];
+
+  try {
+    await Promise.all([
+      tg(token, "setMyCommands", { commands: privateCommands, scope: { type: "all_private_chats" } }),
+      tg(token, "setMyCommands", { commands: groupCommands, scope: { type: "all_group_chats" } }),
+      tg(token, "setMyCommands", { commands: groupCommands, scope: { type: "all_chat_administrators" } }),
+    ]);
+  } catch (e) {
+    console.error("setMyCommands failed:", (e as Error).message);
+  }
+}
+
 // ---------- AI handlers ----------
 // DM policy: @LaPoe_bot does NOT reply to free-form messages in DMs. Only
 // commands (handled in handleCommand) and the one-time welcome DM sent right
@@ -931,6 +1000,7 @@ Deno.serve(async (req) => {
   // Idempotent: skips the API call when already registered correctly.
   const action = url.searchParams.get("action") || "";
   const hookRes = await ensureWebhook(token).catch((e) => ({ ok: false, info: { error: (e as Error).message } }));
+  ensureCommands(token).catch(() => {});
 
   // === EMERGENCY DRAIN (only if webhook is broken) ===
   // If for any reason the webhook isn't accepting updates, fall back to a
