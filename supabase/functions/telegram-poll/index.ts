@@ -840,25 +840,40 @@ async function handleSingleUpdate(supabase: any, bot: any, me: { username: strin
 
   if (bot.status !== "active") return false;
 
-  // Group reply triggers — keep noise low but feel alive.
-  // Reply when:
-  //  1) The bot is @mentioned or called by name, OR
+  // Group reply triggers — keep noise low.
+  // Reply ONLY when:
+  //  1) The bot is @mentioned or called by its name, OR
   //  2) The user replied to one of the bot's messages, OR
-  //  3) The message is a greeting (short, friendly welcome reply), OR
-  //  4) The message is substantive (>= 6 chars, not a command) AND the
-  //     knowledge base has a real match for it.
+  //  3) The message is question-like AND has a real (strict) knowledge match.
+  // Greetings alone DO NOT trigger a reply — too noisy in active groups
+  // (admins and members chatting normally would otherwise get spammed).
   let autoKnowledge = "";
   if (isGroup) {
     const mentionedOrNamed = messageNamesBot(text, bot, me);
     const isReply = msg.reply_to_message?.from?.id === me.id;
-    const greeted = isGreeting(text);
-    let shouldReply = Boolean(mentionedOrNamed || isReply || greeted);
+    let shouldReply = Boolean(mentionedOrNamed || isReply);
 
     if (!shouldReply) {
-      const probeWorthy = text.trim().length >= 6 && !/^[\/!]/.test(text);
+      // Only probe knowledge for substantive QUESTIONS (not statements,
+      // not greetings, not commands). Stops the bot from chiming in on
+      // admin chatter that happens to share a keyword with the KB.
+      const probeWorthy =
+        text.trim().length >= 8 &&
+        !/^[\/!]/.test(text) &&
+        !isGreeting(text) &&
+        isQuestionLike(text);
       if (probeWorthy) {
-        autoKnowledge = await ragSnippets(supabase, bot.id, text, 5, false);
-        if (autoKnowledge) shouldReply = true;
+        // Strict text match (no OR-expansion, no recent-chunk fallback).
+        const { data: hits } = await supabase.rpc("match_knowledge_chunks_text", {
+          _bot_id: bot.id, _query: text, _match_count: 5,
+        });
+        if (hits && hits.length > 0) {
+          autoKnowledge = hits
+            .map((r: any, i: number) => `[${i + 1}] ${r.content}`)
+            .join("\n\n")
+            .slice(0, 6000);
+          shouldReply = true;
+        }
       }
     }
     if (!shouldReply) return false;
@@ -872,10 +887,10 @@ async function handleSingleUpdate(supabase: any, bot: any, me: { username: strin
     const { data: usage } = await supabase.rpc("bot_usage_status", { _bot_id: bot.id });
     const u = Array.isArray(usage) ? usage[0] : usage;
     if (u && u.monthly_messages >= u.max_monthly_messages) {
-      await send(bot.telegram_bot_token, msg.chat.id,
-        `🛑 Monthly message limit reached on this workspace (${u.max_monthly_messages}). Owner needs to upgrade the plan.`,
-        msg.message_id);
-      setCooldown(chatKey, 5 * 60_000);
+      // Silent in the group. DM the owner once per month so they know to upgrade.
+      await notifyOwnerLimitReached(supabase, bot, u.max_monthly_messages).catch(() => {});
+      // Long cooldown so we don't re-check on every message this period.
+      setCooldown(chatKey, 60 * 60_000);
       return true;
     }
 
