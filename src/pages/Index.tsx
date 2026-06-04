@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import SEO from "@/components/SEO";
 import { Button } from "@/components/ui/button";
 import SiteHeader from "@/components/SiteHeader";
@@ -34,6 +35,9 @@ export default function Index() {
           offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
         }}
       />
+      <Helmet>
+        <link rel="preload" as="image" href="/desk-clerk.png" />
+      </Helmet>
       <SiteHeader />
 
       {/* HERO */}
@@ -133,28 +137,31 @@ export default function Index() {
 
       {/* CTA */}
       <section className="container max-w-5xl pb-16">
-        <div className="relative overflow-hidden rounded-3xl bg-[hsl(var(--tile-rose))] border border-[hsl(338_60%_88%)] shadow-card">
-          {/* Decorative blurs */}
-          <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-[hsl(var(--brand-rose))] opacity-[0.04] blur-[80px]" />
-          <div className="absolute -bottom-24 -left-24 w-96 h-96 rounded-full bg-[hsl(var(--brand-violet))] opacity-[0.04] blur-[80px]" />
+        <div className="relative overflow-hidden rounded-3xl bg-card border border-border shadow-card">
+          {/* Decorative blurs — themed */}
+          <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-tile-violet-foreground opacity-[0.06] blur-[80px]" />
+          <div className="absolute -bottom-24 -left-24 w-96 h-96 rounded-full bg-tile-blue-foreground opacity-[0.05] blur-[80px]" />
 
           <div className="relative grid md:grid-cols-2 gap-0 items-stretch">
             {/* Image side */}
-            <div className="relative h-64 md:h-auto overflow-hidden">
+            <div className="relative h-64 md:h-auto overflow-hidden bg-muted">
               <img
                 src="/desk-clerk.png"
                 alt="A calm desk clerk organizing community messages"
                 className="absolute inset-0 w-full h-full object-cover"
-                loading="lazy"
+                loading="eager"
+                decoding="async"
+                // @ts-expect-error fetchpriority is valid HTML
+                fetchpriority="high"
               />
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-[hsl(var(--tile-rose))] md:to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-card md:to-transparent" />
             </div>
 
             {/* Text side */}
             <div className="flex flex-col justify-center px-8 py-14 md:px-16 md:py-20 space-y-6">
               <div className="space-y-5">
-                <div className="inline-flex items-center gap-3 text-[hsl(var(--brand-rose-deep))] text-xs font-semibold uppercase tracking-[0.18em]">
-                  <span className="h-px w-8 bg-[hsl(var(--brand-rose-deep))]" />
+                <div className="inline-flex items-center gap-3 text-tile-violet-foreground text-xs font-semibold uppercase tracking-[0.18em]">
+                  <span className="h-px w-8 bg-tile-violet-foreground" />
                   Poiesis
                 </div>
                 <h2 className="font-display text-4xl md:text-5xl font-extrabold text-foreground leading-[1.1] tracking-tight text-balance">
