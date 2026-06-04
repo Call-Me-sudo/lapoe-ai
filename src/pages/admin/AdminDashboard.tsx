@@ -15,6 +15,7 @@ import {
 } from "recharts";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
+import { StatGridSkeleton, CardBlockSkeleton } from "@/components/dashboard/ListSkeleton";
 
 const COLORS = ["hsl(var(--primary))", "hsl(var(--accent))", "hsl(var(--muted-foreground))", "hsl(var(--secondary))", "hsl(var(--destructive))"];
 
@@ -37,6 +38,7 @@ export default function AdminDashboard() {
   const [recentSignups, setRecentSignups] = useState<any[]>([]);
   const [systemHealth, setSystemHealth] = useState({ db: true, ai: true, telegram: true });
   const [hourlyMessages, setHourlyMessages] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const loadAll = async () => {
     const now = Date.now();
@@ -145,6 +147,7 @@ export default function AdminDashboard() {
 
     // Health
     setSystemHealth({ db: true, ai: !!stats || true, telegram: (b.count ?? 0) > 0 });
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -186,24 +189,34 @@ export default function AdminDashboard() {
       </div>
 
       {/* KPI grid */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
-        {kpis.map((c) => (
-          <Link key={c.label} to={c.to}
-            className="surface-card p-4 hover:shadow-lift hover:-translate-y-0.5 transition-all">
-            <c.icon className="h-4 w-4 text-ink-soft mb-3" />
-            <div className="font-display text-2xl text-ink tracking-tight">{c.value}</div>
-            <div className="text-[10px] uppercase tracking-widest text-ink-soft mt-1">{c.label}</div>
-            <div className="text-[11px] text-ink-soft mt-2 flex items-center gap-1">
-              {typeof c.delta === "number" && c.delta !== 0 && (
-                c.delta > 0 ? <ArrowUpRight className="h-3 w-3 text-ink" /> : <ArrowDownRight className="h-3 w-3 text-destructive" />
-              )}
-              {c.sub}
-            </div>
-          </Link>
-        ))}
-      </div>
+      {loading ? (
+        <div className="mb-6"><StatGridSkeleton count={6} /></div>
+      ) : (
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
+          {kpis.map((c) => (
+            <Link key={c.label} to={c.to}
+              className="surface-card p-4 hover:shadow-lift hover:-translate-y-0.5 transition-all">
+              <c.icon className="h-4 w-4 text-ink-soft mb-3" />
+              <div className="font-display text-2xl text-ink tracking-tight">{c.value}</div>
+              <div className="text-[10px] uppercase tracking-widest text-ink-soft mt-1">{c.label}</div>
+              <div className="text-[11px] text-ink-soft mt-2 flex items-center gap-1">
+                {typeof c.delta === "number" && c.delta !== 0 && (
+                  c.delta > 0 ? <ArrowUpRight className="h-3 w-3 text-ink" /> : <ArrowDownRight className="h-3 w-3 text-destructive" />
+                )}
+                {c.sub}
+              </div>
+            </Link>
+          ))}
+        </div>
+      )}
 
       {/* Charts row */}
+      {loading ? (
+        <div className="grid lg:grid-cols-3 gap-4 mb-4">
+          <div className="lg:col-span-2"><CardBlockSkeleton height={240} /></div>
+          <CardBlockSkeleton height={220} />
+        </div>
+      ) : (
       <div className="grid lg:grid-cols-3 gap-4 mb-4">
         <div className="lg:col-span-2 surface-card p-5">
           <div className="flex items-center justify-between mb-4">
