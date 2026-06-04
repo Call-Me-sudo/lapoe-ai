@@ -68,12 +68,8 @@ export default function Auth() {
   };
 
   const handleGoogle = async () => {
-    setLoading(true);
-    const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin + "/dashboard" });
-    if (result.error) {
-      toast.error("Google sign-in failed");
-      setLoading(false);
-    }
+    // Temporarily disabled — backend + UI kept intact, will re-enable once OAuth is fully configured.
+    toast.info("Google sign-in is coming soon. Please use email for now.");
   };
 
   return (
