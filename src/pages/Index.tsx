@@ -133,16 +133,36 @@ export default function Index() {
 
       {/* CTA */}
       <section className="container max-w-5xl pb-16">
-        <div className="rounded-3xl bg-foreground text-background p-10 md:p-16 text-center shadow-pill">
-          <h2 className="font-display text-4xl md:text-5xl font-bold text-balance max-w-2xl mx-auto tracking-tight">
-            Your community deserves a calm, well-read desk clerk.
-          </h2>
-          <p className="text-background/70 mt-4 max-w-xl mx-auto">
-            Try LaPoe free. Upgrade when your community grows.
-          </p>
-          <Button asChild variant="warm" size="xl" className="mt-8">
-            <Link to="/auth?mode=signup">Create your workspace <ArrowUpRight className="h-4 w-4" /></Link>
-          </Button>
+        <div className="relative overflow-hidden rounded-3xl bg-[hsl(var(--tile-rose))] border border-[hsl(338_60%_88%)] shadow-card">
+          {/* Decorative blurs */}
+          <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-[hsl(var(--brand-rose))] opacity-[0.04] blur-[80px]" />
+          <div className="absolute -bottom-24 -left-24 w-96 h-96 rounded-full bg-[hsl(var(--brand-violet))] opacity-[0.04] blur-[80px]" />
+
+          <div className="relative grid md:grid-cols-2 gap-10 md:gap-16 items-center px-8 py-14 md:px-16 md:py-20">
+            {/* Text side */}
+            <div className="space-y-5">
+              <div className="inline-flex items-center gap-3 text-[hsl(var(--brand-rose-deep))] text-xs font-semibold uppercase tracking-[0.18em]">
+                <span className="h-px w-8 bg-[hsl(var(--brand-rose-deep))]" />
+                Poiesis
+              </div>
+              <h2 className="font-display text-4xl md:text-5xl font-extrabold text-foreground leading-[1.1] tracking-tight text-balance">
+                Your community deserves a calm, well-read desk clerk.
+              </h2>
+            </div>
+
+            {/* Action side */}
+            <div className="flex flex-col items-start md:items-end md:text-right space-y-6">
+              <p className="text-muted-foreground text-lg md:text-xl max-w-sm leading-relaxed text-balance">
+                Bring language into being. Try LaPoe free, then upgrade when your community grows.
+              </p>
+              <Button asChild variant="default" size="xl" className="group">
+                <Link to="/auth?mode=signup">
+                  Create your workspace
+                  <ArrowUpRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                </Link>
+              </Button>
+            </div>
+          </div>
         </div>
       </section>
 
