@@ -99,13 +99,19 @@ export default function Knowledge() {
                 <DialogDescription>The content will be chunked, embedded and used to answer questions.</DialogDescription>
               </DialogHeader>
               <div className="space-y-4">
-                <div>
-                  <Label>Bot</Label>
-                  <Select value={form.bot_id} onValueChange={(v) => setForm({ ...form, bot_id: v })}>
-                    <SelectTrigger><SelectValue placeholder="Choose a bot" /></SelectTrigger>
-                    <SelectContent>{bots.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent>
-                  </Select>
-                </div>
+                {bots.length === 0 ? (
+                  <div className="rounded-md border border-border bg-paper-soft p-3 text-xs text-ink-soft">
+                    This source will be attached to your shared <span className="font-medium">@LaPoe_bot</span> assistant.
+                  </div>
+                ) : (
+                  <div>
+                    <Label>Bot</Label>
+                    <Select value={form.bot_id} onValueChange={(v) => setForm({ ...form, bot_id: v })}>
+                      <SelectTrigger><SelectValue placeholder="Choose a bot" /></SelectTrigger>
+                      <SelectContent>{bots.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                )}
                 <div>
                   <Label>Type</Label>
                   <Select value={form.kind} onValueChange={(v: any) => setForm({ ...form, kind: v })}>
