@@ -34,12 +34,13 @@ export default function Overview() {
   const [usage, setUsage] = useState<Usage | null>(null);
   const [recent, setRecent] = useState<RecentMsg[]>([]);
   const [unanswered, setUnanswered] = useState(0);
+  const [assistantReady, setAssistantReady] = useState(false);
 
   useEffect(() => {
     if (!user) return;
     (async () => {
       const sinceISO = new Date(Date.now() - 29 * 86400000).toISOString();
-      const [b, g, sg, m, k, usageRows, recentMsgs, unansweredRes] = await Promise.all([
+      const [b, g, sg, m, k, usageRows, recentMsgs, unansweredRes, persona, prof] = await Promise.all([
         supabase.from("bots").select("id", { count: "exact", head: true }).eq("owner_id", user.id),
         supabase.from("telegram_groups").select("id", { count: "exact", head: true }).eq("owner_id", user.id),
         supabase.from("system_bot_groups").select("chat_id", { count: "exact", head: true }).eq("linked_owner_id", user.id),
@@ -57,13 +58,17 @@ export default function Overview() {
           .eq("owner_id", user.id)
           .eq("direction", "inbound")
           .gte("created_at", sinceISO),
+        supabase.from("system_bot_personas").select("owner_id").eq("owner_id", user.id).maybeSingle(),
+        supabase.from("profiles").select("telegram_user_id").eq("id", user.id).maybeSingle(),
       ]);
       setStats({ bots: b.count ?? 0, groups: (g.count ?? 0) + (sg.count ?? 0), messages: m.count ?? 0, knowledge: k.count ?? 0 });
       setUsage(Array.isArray(usageRows.data) ? usageRows.data[0] ?? null : null);
       setRecent((recentMsgs.data as RecentMsg[] | null) ?? []);
       setUnanswered(unansweredRes.count ?? 0);
+      setAssistantReady(!!persona.data || !!prof.data?.telegram_user_id);
     })();
   }, [user]);
+
 
   // Build last 30-day chart
   const chartData = useMemo(() => {
@@ -97,8 +102,16 @@ export default function Overview() {
     { icon: Users, label: "Telegram groups", value: `${stats.groups} linked`, to: "/dashboard/groups" },
   ];
 
+  const isFreePlan = (usage?.plan ?? "free") === "free";
+  const workspaceOk = stats.bots > 0 || (isFreePlan && assistantReady);
+  const workspaceSub = stats.bots > 0
+    ? (user?.email ?? "")
+    : isFreePlan
+      ? (assistantReady ? "Using shared @LaPoe_bot" : "Set up your assistant")
+      : (user?.email ?? "");
+
   const projectStatus = [
-    { icon: Bot, label: "Bot workspace", sub: user?.email ?? "", state: stats.bots > 0 ? "ok" : "warn" },
+    { icon: Bot, label: "Bot workspace", sub: workspaceSub, state: workspaceOk ? "ok" : "warn" },
     { icon: BookOpen, label: "Knowledge base", sub: stats.knowledge > 0 ? "Indexed and ready" : "Add your first source", state: stats.knowledge > 0 ? "ok" : "warn" },
     { icon: Link2, label: "Telegram groups", sub: stats.groups > 0 ? `${stats.groups} connected` : "Connect a group", state: stats.groups > 0 ? "ok" : "warn" },
   ];

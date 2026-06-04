@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { ExternalLink, Link2, BookOpen, Copy } from "lucide-react";
 import { toast } from "sonner";
 
@@ -133,35 +134,44 @@ export default function MyAssistant() {
                   <SelectContent>{TONES.map((t) => <SelectItem key={t} value={t} className="capitalize">{t}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
-              <div>
-                <Label>Personality (optional)</Label>
-                <Input
-                  value={persona.personality ?? ""}
-                  onChange={(e) => setPersona({ ...persona, personality: e.target.value })}
-                  placeholder="Sassy librarian / no-nonsense ops manager / etc."
-                  maxLength={500}
-                />
-              </div>
-              <div>
-                <Label>Welcome message (groups)</Label>
-                <Textarea
-                  value={persona.welcome_message ?? ""}
-                  onChange={(e) => setPersona({ ...persona, welcome_message: e.target.value })}
-                  rows={2}
-                  maxLength={500}
-                  placeholder="Welcome {name}! Ask me anything about our community."
-                />
-              </div>
-              <div>
-                <Label>House rules (optional)</Label>
-                <Textarea
-                  value={persona.house_rules ?? ""}
-                  onChange={(e) => setPersona({ ...persona, house_rules: e.target.value })}
-                  rows={3}
-                  maxLength={1000}
-                  placeholder="Never share pricing. Always offer the trial link."
-                />
-              </div>
+              <Accordion type="single" collapsible className="border border-border rounded-md px-3 -mx-1">
+                <AccordionItem value="advanced" className="border-0">
+                  <AccordionTrigger className="text-sm font-medium py-3 hover:no-underline">
+                    Advanced settings <span className="text-xs text-ink-soft font-normal ml-1">(optional)</span>
+                  </AccordionTrigger>
+                  <AccordionContent className="space-y-4 pt-1">
+                    <div>
+                      <Label>Personality</Label>
+                      <Input
+                        value={persona.personality ?? ""}
+                        onChange={(e) => setPersona({ ...persona, personality: e.target.value })}
+                        placeholder="Sassy librarian / no-nonsense ops manager / etc."
+                        maxLength={500}
+                      />
+                    </div>
+                    <div>
+                      <Label>Welcome message (groups)</Label>
+                      <Textarea
+                        value={persona.welcome_message ?? ""}
+                        onChange={(e) => setPersona({ ...persona, welcome_message: e.target.value })}
+                        rows={2}
+                        maxLength={500}
+                        placeholder="Welcome {name}! Ask me anything about our community."
+                      />
+                    </div>
+                    <div>
+                      <Label>House rules</Label>
+                      <Textarea
+                        value={persona.house_rules ?? ""}
+                        onChange={(e) => setPersona({ ...persona, house_rules: e.target.value })}
+                        rows={3}
+                        maxLength={1000}
+                        placeholder="Never share pricing. Always offer the trial link."
+                      />
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
               <Button onClick={save} disabled={saving}>{saving ? "Saving…" : "Save persona"}</Button>
             </div>
           )}
