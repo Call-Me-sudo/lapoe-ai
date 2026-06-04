@@ -66,11 +66,13 @@ export default function Inbox() {
     const ans = (drafts[it.id] || "").trim();
     if (!ans) return toast.error("Type an answer first");
     setBusy(it.id);
+    const isSystemBot = !it.bot_id;
     const { data: src, error } = await supabase
       .from("knowledge_sources")
       .insert({
         owner_id: user!.id,
-        bot_id: it.bot_id,
+        bot_id: isSystemBot ? null : it.bot_id,
+        scope: isSystemBot ? "system_bot" : "bot",
         kind: "text",
         title: it.question.slice(0, 180),
         content: `Q: ${it.question}\nA: ${ans}`,
