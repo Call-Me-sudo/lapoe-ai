@@ -893,6 +893,48 @@ function isGroupRelated(text: string, group: any, persona: any): boolean {
   return words.some((w) => hay.includes(w));
 }
 
+function normalizeQuestion(q: string): string {
+  return q.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, " ").replace(/\s+/g, " ").trim().slice(0, 200);
+}
+
+async function logUnansweredSystem(sb: any, ownerId: string, question: string, from: any) {
+  try {
+    const norm = normalizeQuestion(question);
+    if (norm.length < 4) return;
+    const asker = from?.username ? `@${from.username}` : (from?.first_name || null);
+    const { data: existing } = await sb.from("unanswered_questions")
+      .select("id, ask_count, status")
+      .is("bot_id", null)
+      .eq("owner_id", ownerId)
+      .eq("normalized_question", norm)
+      .maybeSingle();
+    if (existing) {
+      if (existing.status === "dismissed") return;
+      await sb.from("unanswered_questions").update({
+        ask_count: (existing.ask_count || 1) + 1,
+        status: "pending",
+        updated_at: new Date().toISOString(),
+      }).eq("id", existing.id);
+    } else {
+      await sb.from("unanswered_questions").insert({
+        owner_id: ownerId,
+        bot_id: null,
+        question: question.slice(0, 1000),
+        normalized_question: norm,
+        asker, status: "pending",
+      });
+    }
+  } catch (e) {
+    console.error("logUnansweredSystem failed:", (e as Error).message);
+  }
+}
+
+function isQuestionLikeSys(text: string): boolean {
+  const t = text.trim().toLowerCase();
+  if (/[?¿]\s*$/.test(t)) return true;
+  return /\b(what|who|when|where|why|how|can|could|should|do|does|did|is|are|am|will|would|tell me|explain|help|que|qué|cuál|cómo|porque|cómo|nini|nani|lini|wapi|kwa\s?nini|vipi)\b/i.test(t);
+}
+
 async function handleGroupAi(sb: any, token: string, msg: any, group: any) {
   const text: string = (msg.text || msg.caption || "").trim();
   if (!text) return;
@@ -901,47 +943,73 @@ async function handleGroupAi(sb: any, token: string, msg: any, group: any) {
   const ownerId = group.linked_owner_id;
   const { plan, allowed, used, cap } = await ownerAiAllowed(sb, ownerId);
   if (plan !== "free") return; // paid users use their own bot
+
+  // Decide whether to reply — NARROW triggers (mirrors user-bot policy):
+  //  1) @LaPoe_bot or persona display name mentioned
+  //  2) Reply to one of @LaPoe_bot's messages
+  //  3) Substantive QUESTION that has a real knowledge match
+  // No more replies on plain greetings or any "?" message.
+  const { data: persona } = await sb.from("system_bot_personas").select("*").eq("owner_id", ownerId).maybeSingle();
+
+  const repliedToBot = msg.reply_to_message?.from?.username?.toLowerCase() === LAPOE_USERNAME;
+  const mentionedBot = text.toLowerCase().includes(`@${LAPOE_USERNAME}`)
+    || (persona?.display_name && text.toLowerCase().includes(String(persona.display_name).toLowerCase()));
+
+  let rag = { text: "", exists: false };
+  let shouldReply = Boolean(repliedToBot || mentionedBot);
+
+  if (!shouldReply) {
+    const probeWorthy = text.length >= 6 && !text.startsWith("/") && !text.startsWith("!") && isQuestionLikeSys(text);
+    if (probeWorthy) {
+      rag = await ragForOwner(sb, ownerId, text, 5);
+      if (rag.text) shouldReply = true;
+    }
+  }
+  if (!shouldReply) return;
+
+  // Log inbound to bot_messages so the dashboard's Messages page shows it.
+  sb.from("bot_messages").insert({
+    bot_id: null, owner_id: ownerId, group_id: null, direction: "inbound",
+    content: text,
+    telegram_user: msg.from?.username || msg.from?.first_name || String(msg.from?.id || ""),
+  }).then(() => {}, () => {});
+
   if (!allowed) {
-    // Only nudge once-ish when actually addressed.
-    const addressed = msg.reply_to_message?.from?.username?.toLowerCase() === LAPOE_USERNAME
-      || text.toLowerCase().includes(`@${LAPOE_USERNAME}`);
-    if (addressed) {
+    if (repliedToBot || mentionedBot) {
       await send(token, msg.chat.id,
         `🌙 ${used}/${cap} AI replies used for the month. Commands still work. (Owner can upgrade at https://lapoe-ai.vercel.app/pricing)`, msg.message_id);
     }
     return;
   }
 
-  const { data: persona } = await sb.from("system_bot_personas").select("*").eq("owner_id", ownerId).maybeSingle();
-
-  // Decide whether to reply (same triggers as user bots, plus questions).
-  const repliedToBot = msg.reply_to_message?.from?.username?.toLowerCase() === LAPOE_USERNAME;
-  const mentionedBot = text.toLowerCase().includes(`@${LAPOE_USERNAME}`)
-    || (persona?.display_name && text.toLowerCase().includes(String(persona.display_name).toLowerCase()));
-  const greeting = isGreeting(text);
-  const isQuestion = text.includes("?") && text.length >= 3 && !text.startsWith("/") && !text.startsWith("!");
-  const substantive = text.length >= 6 && !text.startsWith("/") && !text.startsWith("!");
-
-  let rag = { text: "", exists: false };
-  let shouldReply = repliedToBot || mentionedBot || greeting || isQuestion;
-  if (!shouldReply && substantive) {
-    rag = await ragForOwner(sb, ownerId, text, 5);
-    if (rag.text) shouldReply = true;
-    else if (isGroupRelated(text, group, persona)) shouldReply = true;
-  }
-  if (!shouldReply) return;
   if (!rag.exists && !rag.text) rag = await ragForOwner(sb, ownerId, text, 5);
 
   const ownerName = persona?.display_name || "LaPoe";
   const system = buildSystemBotPrompt(persona, rag.text, rag.exists, ownerName) +
     `\n\nYou are in the Telegram group "${group.title || ""}". Keep it conversational.`;
 
-  let reply = "";
-  try { reply = await askAI(system, text); } catch { return; }
+  let rawReply = "";
+  try { rawReply = await askAI(system, text); } catch { return; }
+  if (!rawReply) return;
+
+  const needsKnowledge = /\[NEEDS_KNOWLEDGE\]/i.test(rawReply);
+  const reply = rawReply.replace(/\[NEEDS_KNOWLEDGE\]/gi, "").trim();
   if (!reply) return;
+
   await send(token, msg.chat.id, reply, msg.message_id);
+
+  sb.from("bot_messages").insert({
+    bot_id: null, owner_id: ownerId, group_id: null, direction: "outbound",
+    content: reply, telegram_user: msg.from?.username || null,
+  }).then(() => {}, () => {});
+
   await sb.rpc("bump_system_bot_usage", { _owner_id: ownerId });
+
+  if (needsKnowledge) {
+    logUnansweredSystem(sb, ownerId, text, msg.from);
+  }
 }
+
 
 async function processUpdate(sb: any, token: string, upd: any) {
   try {
