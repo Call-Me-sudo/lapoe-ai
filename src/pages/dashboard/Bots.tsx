@@ -277,7 +277,7 @@ export default function Bots() {
               <p className="text-ink-soft mb-1">Your free plan uses the shared <span className="font-medium">@LaPoe_bot</span> assistant.</p>
               <p className="text-xs text-ink-soft mb-4">Configure its voice & knowledge from My Assistant. Upgrade to create your own custom bots.</p>
               <div className="flex items-center justify-center gap-2">
-                <Button variant="outline" onClick={() => navigate("/dashboard/my-assistant")}>Open My Assistant</Button>
+                <Button variant="outline" onClick={() => navigate("/dashboard/assistant")}>Open My Assistant</Button>
                 <Button onClick={() => navigate("/pricing")}>Upgrade</Button>
               </div>
             </>
