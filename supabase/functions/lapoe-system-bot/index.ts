@@ -31,6 +31,18 @@ const TONES: Record<string, string> = {
   hype: "High-energy community vibe. Some emoji OK. Never spammy.",
 };
 
+// Hidden self-knowledge injected into every system-bot prompt so it always
+// knows what LaPoe is and never answers "I don't know" about itself.
+const LAPOE_SELF_KB = `LaPoe is a no-code platform for running AI Telegram bots — it powers this assistant.
+- Website: https://lapoe-ai.vercel.app
+- Docs: https://lapoe-ai.vercel.app/docs
+- Pricing: https://lapoe-ai.vercel.app/pricing
+- Free plan: 1 group, 30 AI replies/month via this shared assistant @LaPoe_bot.
+- Paid plans: connect your own Telegram bot tokens, more groups, higher quotas.
+- Owners add knowledge (URLs, FAQs, pasted text) in the dashboard.
+- Owners shape name, tone, personality, welcome and house rules in the dashboard.
+- AI never runs in DMs — only in groups. DMs only handle /start /help /link /unlink /status /mybots /createbot /feedback /id /info.`;
+
 function buildSystemBotPrompt(persona: any, knowledge: string, knowledgeExists: boolean, ownerName: string): string {
   const tone = TONES[persona?.tone] || TONES.friendly;
   const name = persona?.display_name || ownerName || "LaPoe";
@@ -47,13 +59,21 @@ function buildSystemBotPrompt(persona: any, knowledge: string, knowledgeExists: 
 Tone: ${tone}
 ${character}${house}${kb}
 
+=== ABOUT THE PLATFORM POWERING YOU (always available) ===
+${LAPOE_SELF_KB}
+=== END PLATFORM INFO ===
+If asked "what are you", "who built you", "what platform", "how do I get one like you", or any meta question about yourself/the platform, answer from the PLATFORM INFO above. Never say "I don't know" about yourself.
+
 RULES:
 - Reply in the same language the user wrote in.
 - Sound like a real person. Never say "as an AI".
 - Keep replies under 4 short sentences unless asked for detail.
-- NEVER invent URLs, prices, statistics, dates, or facts. If not in the knowledge above, omit it.
+- NEVER invent URLs, prices, statistics, dates, or facts. If not in the knowledge or PLATFORM INFO above, omit it.
 - Politely decline general-knowledge questions (politics, trivia, coding) unless covered above.
-- Never apologize unprompted.`;
+- Never apologize unprompted.
+
+SIGNAL — for owner learning:
+- If the user asked a substantive factual question that DESERVED a real answer, but you cannot answer it from the KNOWLEDGE BASE / house rules / PLATFORM INFO, append the EXACT token [NEEDS_KNOWLEDGE] on its own final line. Do NOT include it for greetings, small talk, or off-topic refusals.`;
 }
 
 async function askAI(system: string, userText: string): Promise<string> {
