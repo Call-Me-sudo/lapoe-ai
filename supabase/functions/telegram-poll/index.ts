@@ -899,11 +899,12 @@ async function handleSingleUpdate(supabase: any, bot: any, me: { username: strin
 
   if (bot.status !== "active") return false;
 
-  // Group reply triggers — keep noise low.
+    // Group reply triggers — keep noise low, but do not require a direct tag.
   // Reply ONLY when:
   //  1) The bot is @mentioned or called by its FULL name, OR
   //  2) The user replied to one of the bot's messages, OR
-  //  3) The message is question-like AND has a real (strict) knowledge match.
+    //  3) The message is question-like AND has a real (strict) knowledge match,
+    //     OR it is about this group/bot's topics or LaPoe platform info.
   // Greetings DO trigger when the bot is addressed (case 1 or 2) — they don't
   // probe knowledge on their own, but they're not filtered out either.
   let autoKnowledge = "";
@@ -913,14 +914,13 @@ async function handleSingleUpdate(supabase: any, bot: any, me: { username: strin
     let shouldReply = Boolean(mentionedOrNamed || isReply);
 
     if (!shouldReply) {
-      // Only probe knowledge for substantive QUESTIONS (not statements,
-      // not greetings, not commands). Stops the bot from chiming in on
-      // admin/owner chatter that happens to share a keyword with the KB.
+      // Probe only substantive messages. This keeps owner/admin chatter quiet,
+      // while still answering relevant questions without a direct tag.
       const probeWorthy =
         text.trim().length >= 8 &&
         !/^[\/!]/.test(text) &&
         !isGreeting(text) &&
-        isQuestionLike(text);
+        (isQuestionLike(text) || isGroupRelated(text, group, bot) || isPlatformTopic(text));
       if (probeWorthy) {
         // Strict text match (no OR-expansion, no recent-chunk fallback).
         const { data: hits } = await supabase.rpc("match_knowledge_chunks_text", {
@@ -931,6 +931,11 @@ async function handleSingleUpdate(supabase: any, bot: any, me: { username: strin
             .map((r: any, i: number) => `[${i + 1}] ${r.content}`)
             .join("\n\n")
             .slice(0, 6000);
+          shouldReply = true;
+        } else if (isPlatformTopic(text)) {
+          autoKnowledge = LAPOE_SELF_KB;
+          shouldReply = true;
+        } else if (isQuestionLike(text) && isGroupRelated(text, group, bot)) {
           shouldReply = true;
         }
       }
@@ -999,7 +1004,7 @@ async function handleSingleUpdate(supabase: any, bot: any, me: { username: strin
     const rawReply = await askAI(system, cleanText);
     const needsKnowledge = /\[NEEDS_KNOWLEDGE\]/i.test(rawReply);
     const stripped = rawReply.replace(/\[NEEDS_KNOWLEDGE\]/gi, "").trim();
-    const allowedCtx = [knowledgeResult, bot.house_rules, bot.default_instructions, bot.personality]
+    const allowedCtx = [knowledgeResult, LAPOE_SELF_KB, bot.house_rules, bot.default_instructions, bot.personality]
       .filter(Boolean).join("\n");
     const reply = sanitizeReply(stripped, allowedCtx);
 
