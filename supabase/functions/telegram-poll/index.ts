@@ -386,7 +386,8 @@ async function askAI(system: string, userText: string): Promise<string> {
 // and removes orphan "Reference:" / "Source:" / "Docs:" / "See:" lines.
 function sanitizeReply(reply: string, allowedContext: string): string {
   if (!reply) return reply;
-  const haystack = (allowedContext || "").toLowerCase();
+  const platformContext = `${LAPOE_SELF_KB}\nhttps://lapoe-ai.vercel.app\nhttps://lapoe-ai.vercel.app/dashboard\nhttps://lapoe-ai.vercel.app/dashboard/bots\nhttps://lapoe-ai.vercel.app/docs\nhttps://lapoe-ai.vercel.app/pricing`;
+  const haystack = `${allowedContext || ""}\n${platformContext}`.toLowerCase();
   const urlRe = /\bhttps?:\/\/[^\s)\]>"']+/gi;
 
   // 1) Strip whole lines whose only purpose is a reference label + URL.
@@ -406,6 +407,9 @@ function sanitizeReply(reply: string, allowedContext: string): string {
   );
 
   // 4) Collapse blank lines created by the scrub.
+  out = out.replace(/\b(Go to the LaPoe website at|Open the LaPoe website at|Visit the LaPoe website at)\s*(?=\n|$)/gi, "$1 https://lapoe-ai.vercel.app");
+  out = out.replace(/\b(see the docs at|read the docs at|full details.*?docs at)\s*(?=\n|$)/gi, "$1 https://lapoe-ai.vercel.app/docs");
+  out = out.replace(/\b(upgrade.*?pricing at|pricing at)\s*(?=\n|$)/gi, "$1 https://lapoe-ai.vercel.app/pricing");
   return out.replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
 }
 
