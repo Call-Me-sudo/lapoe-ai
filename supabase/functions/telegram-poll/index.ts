@@ -189,6 +189,11 @@ function isGroupRelated(text: string, group: any | null, bot: any): boolean {
   return keywords.some((w: string) => hay.includes(w));
 }
 
+function isPlatformTopic(text: string): boolean {
+  const t = text.toLowerCase();
+  return /\b(lapoe|la\s*poe|platform|website|dashboard|docs?|documentation|pricing|free plan|paid plan|telegram bot|own bot|create (?:my |your |a )?bot|bot token|botfather)\b/i.test(t);
+}
+
 async function hasKnowledge(supabase: any, botId: string): Promise<boolean> {
   const { count } = await supabase
     .from("knowledge_chunks")
@@ -282,6 +287,8 @@ async function notifyOwnerLimitReached(supabase: any, bot: any, cap: number): Pr
 // Kept in sync with the user-facing docs at https://lapoe-ai.vercel.app/docs.
 const LAPOE_SELF_KB = `LaPoe is a no-code platform for running AI Telegram bots — it powers this bot.
 - Website: https://lapoe-ai.vercel.app
+- Dashboard: https://lapoe-ai.vercel.app/dashboard
+- Bots dashboard: https://lapoe-ai.vercel.app/dashboard/bots
 - Docs: https://lapoe-ai.vercel.app/docs
 - Pricing: https://lapoe-ai.vercel.app/pricing
 - Free plan: 1 group, 30 AI replies/month via the shared assistant @LaPoe_bot.
@@ -327,7 +334,7 @@ ANTI-HALLUCINATION — links, URLs, references, citations:
 - Only include a URL/link if it appears VERBATIM inside the KNOWLEDGE BASE / owner instructions / house rules / PLATFORM INFO above. Copy it character-for-character.
 - If you don't have a real source, OMIT the link entirely. Do NOT write "Reference:", "Source:", "Docs:", "See:", "More info:" or any similar line followed by a guessed URL.
 - Markdown links to invented destinations are forbidden under the same rule.
-- The URLs inside PLATFORM INFO (https://lapoe-ai.vercel.app, https://lapoe-ai.vercel.app/docs, https://lapoe-ai.vercel.app/pricing) ARE verbatim and pre-approved. When pointing users to docs, the dashboard, or pricing, ALWAYS write the full URL as bare text (not markdown link, no trailing punctuation inside the URL) so it never gets cut off. Never end a sentence with "see the docs at" without the URL — either include the full URL or rewrite the sentence to not promise a link.
+- The URLs inside PLATFORM INFO are verbatim and pre-approved. When pointing users to the website, dashboard, docs, bot setup, or pricing, ALWAYS write the full URL as bare text (not markdown link, no trailing punctuation inside the URL) so it never gets cut off. Never end a sentence with "at", "see the docs at", or "go to the website at" without the URL — either include the full URL or rewrite the sentence to not promise a link.
 
 Reply rules:
 - Sound like a real person, not an AI assistant. NEVER say "as an AI" or "I'm just an AI".
