@@ -1,7 +1,7 @@
 
 # LaPoe
 
-![LaPoe Banner](./assets/kade_banner.png)
+![LaPoe Banner](./assets/LaPoe_banner.png)
 
 > A communications desk that sits politely behind your community, ready to help.
 
