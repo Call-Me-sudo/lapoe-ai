@@ -30,6 +30,19 @@ export default function AdminBots() {
     load();
   };
 
+  const bulkStatus = async (next: "active" | "paused") => {
+    const label = next === "active" ? "Resume" : "Pause";
+    if (!confirm(`${label} ALL user bots AND the system bot in every group?`)) return;
+    const [b, g] = await Promise.all([
+      supabase.from("bots").update({ status: next }).neq("id", "00000000-0000-0000-0000-000000000000"),
+      supabase.from("system_bot_groups").update({ is_active: next === "active" }).neq("chat_id", 0),
+    ]);
+    if (b.error || g.error) return toast.error((b.error || g.error)?.message || "Failed");
+    toast.success(`All bots ${next === "active" ? "resumed" : "paused"}`);
+    load();
+  };
+
+
   return (
     <AdminLayout>
       <div className="mb-6">
