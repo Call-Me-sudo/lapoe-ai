@@ -840,21 +840,25 @@ async function handleSingleUpdate(supabase: any, bot: any, me: { username: strin
 
   if (bot.status !== "active") return false;
 
-  // Group reply triggers (locked — see mem://features/user-bot-group-reply-triggers)
+  // Group reply triggers — DELIBERATELY NARROW to avoid noise.
+  // Reply ONLY when:
+  //  1) The bot is @mentioned or called by name, OR
+  //  2) The user replied to one of the bot's messages, OR
+  //  3) The message is a substantive question AND the knowledge base
+  //     has a real match for it (so we have something grounded to say).
+  // Plain greetings, generic questions, or vague topical overlap NO LONGER trigger a reply.
   let autoKnowledge = "";
   if (isGroup) {
     const mentionedOrNamed = messageNamesBot(text, bot, me);
     const isReply = msg.reply_to_message?.from?.id === me.id;
     let shouldReply = Boolean(mentionedOrNamed || isReply);
-    if (!shouldReply && isGreeting(text)) shouldReply = true;
 
-    const probeWorthy = text.trim().length >= 6 && !/^[\/!]/.test(text);
-    if (!shouldReply && probeWorthy) {
-      autoKnowledge = await ragSnippets(supabase, bot.id, text, 5, false);
-      if (autoKnowledge) shouldReply = true;
-    }
-    if (!shouldReply && probeWorthy && isGroupRelated(text, group, bot)) {
-      shouldReply = true;
+    if (!shouldReply) {
+      const probeWorthy = text.trim().length >= 6 && !/^[\/!]/.test(text) && isQuestionLike(text);
+      if (probeWorthy) {
+        autoKnowledge = await ragSnippets(supabase, bot.id, text, 5, false);
+        if (autoKnowledge) shouldReply = true;
+      }
     }
     if (!shouldReply) return false;
   }
