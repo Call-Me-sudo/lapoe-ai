@@ -2,14 +2,17 @@ import { useEffect, useState } from "react";
 import AdminLayout from "@/components/AdminLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
+import { ListSkeleton } from "@/components/dashboard/ListSkeleton";
 
 export default function AdminMessages() {
   const [feed, setFeed] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const load = async () => {
     const { data } = await supabase.from("bot_messages")
       .select("id,direction,content,telegram_user,created_at,bots(name)")
       .order("created_at", { ascending: false }).limit(200);
     setFeed(data ?? []);
+    setLoading(false);
   };
   useEffect(() => {
     load();
@@ -30,7 +33,9 @@ export default function AdminMessages() {
         <Badge variant="default" className="gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-background animate-pulse" />Live</Badge>
       </div>
       <div className="border border-border/50 rounded-xl bg-card divide-y divide-border/40 max-h-[75vh] overflow-y-auto">
-        {feed.length === 0 ? (
+        {loading ? (
+          <div className="p-4"><ListSkeleton rows={5} /></div>
+        ) : feed.length === 0 ? (
           <div className="p-8 text-sm text-ink-soft text-center">Waiting for messages…</div>
         ) : feed.map((m: any) => (
           <div key={m.id} className="p-3 flex gap-3 items-start hover:bg-muted/20">

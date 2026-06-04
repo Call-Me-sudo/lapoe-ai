@@ -13,6 +13,7 @@ import { Progress } from "@/components/ui/progress";
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid,
 } from "recharts";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type Stats = { bots: number; groups: number; messages: number; knowledge: number };
 type Usage = {
@@ -35,6 +36,7 @@ export default function Overview() {
   const [recent, setRecent] = useState<RecentMsg[]>([]);
   const [unanswered, setUnanswered] = useState(0);
   const [assistantReady, setAssistantReady] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!user) return;
@@ -66,6 +68,7 @@ export default function Overview() {
       setRecent((recentMsgs.data as RecentMsg[] | null) ?? []);
       setUnanswered(unansweredRes.count ?? 0);
       setAssistantReady(!!persona.data || !!prof.data?.telegram_user_id);
+      setLoading(false);
     })();
   }, [user]);
 
@@ -136,7 +139,14 @@ export default function Overview() {
           <section>
             <h3 className="text-sm font-semibold text-ink mb-3">Quick actions</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {quickActions.map((a) => (
+              {loading
+                ? Array.from({ length: 5 }).map((_, i) => (
+                    <div key={i} className="flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3.5">
+                      <Skeleton className="h-9 w-9 rounded-md" />
+                      <div className="flex-1 space-y-2"><Skeleton className="h-3 w-2/3" /><Skeleton className="h-3 w-1/3" /></div>
+                    </div>
+                  ))
+                : quickActions.map((a) => (
                 <Link
                   key={a.label}
                   to={a.to}

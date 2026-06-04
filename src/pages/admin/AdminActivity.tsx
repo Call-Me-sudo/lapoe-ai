@@ -3,6 +3,7 @@ import AdminLayout from "@/components/AdminLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Activity, MessageSquare, Shield, Bot, UserPlus } from "lucide-react";
+import { ListSkeleton } from "@/components/dashboard/ListSkeleton";
 
 type Evt = { kind: "msg" | "mod" | "bot" | "user"; at: number; payload: any };
 
@@ -29,6 +30,7 @@ const summary = (e: Evt) => {
 
 export default function AdminActivity() {
   const [events, setEvents] = useState<Evt[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // Preload recent events so the page isn't empty
@@ -45,6 +47,7 @@ export default function AdminActivity() {
         ...(users ?? []).map((p: any) => ({ kind: "user" as const, at: new Date(p.created_at).getTime(), payload: p })),
       ].sort((a, b) => b.at - a.at).slice(0, 100);
       setEvents(merged);
+      setLoading(false);
     })();
 
     const ch = supabase.channel("admin-activity-firehose")
@@ -75,7 +78,8 @@ export default function AdminActivity() {
 
       <div className="surface-card overflow-hidden">
         <div className="divide-y divide-border/40 max-h-[78vh] overflow-y-auto">
-          {events.length === 0 && (
+          {loading && <div className="p-4"><ListSkeleton rows={6} /></div>}
+          {!loading && events.length === 0 && (
             <div className="p-10 text-center text-ink-soft text-sm">Waiting for live events…</div>
           )}
           {events.map((e, i) => (

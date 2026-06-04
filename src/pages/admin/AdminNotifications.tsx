@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Megaphone, Send, Trash2, Users, User as UserIcon, Globe } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type Audience = "all" | "plan" | "user";
 type Plan = "free" | "starter" | "pro" | "business";
@@ -30,11 +31,13 @@ export default function AdminNotifications() {
   const [userQuery, setUserQuery] = useState("");
   const [users, setUsers] = useState<Profile[]>([]);
   const [recent, setRecent] = useState<Notif[]>([]);
+  const [recentLoading, setRecentLoading] = useState(true);
   const [sending, setSending] = useState(false);
 
   const loadRecent = async () => {
     const { data } = await supabase.from("notifications").select("*").order("created_at", { ascending: false }).limit(30);
     setRecent((data ?? []) as Notif[]);
+    setRecentLoading(false);
   };
 
   const searchUsers = async (q: string) => {
@@ -156,7 +159,14 @@ export default function AdminNotifications() {
         <div className="bg-card rounded-3xl shadow-card p-5">
           <h2 className="font-semibold mb-3">Recent</h2>
           <div className="space-y-2 max-h-[600px] overflow-y-auto">
-            {recent.length === 0 && <div className="text-sm text-muted-foreground py-6 text-center">Nothing sent yet</div>}
+            {recentLoading && Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="border border-border/40 rounded-2xl p-3 space-y-2">
+                <Skeleton className="h-4 w-2/3" />
+                <Skeleton className="h-3 w-full" />
+                <Skeleton className="h-3 w-1/4" />
+              </div>
+            ))}
+            {!recentLoading && recent.length === 0 && <div className="text-sm text-muted-foreground py-6 text-center">Nothing sent yet</div>}
             {recent.map((n) => {
               const Icon = audIcon(n.audience);
               return (

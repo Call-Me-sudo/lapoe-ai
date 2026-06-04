@@ -20,6 +20,7 @@ export default function Playground() {
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
+  const [loading, setLoading] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -30,6 +31,7 @@ export default function Playground() {
         const next = data?.length ? data : [SYSTEM_ASSISTANT];
         setBots(next);
         if (next.length && !botId) setBotId(next[0].id);
+        setLoading(false);
       });
   }, [user, botId]);
 
@@ -83,7 +85,9 @@ export default function Playground() {
         }
       />
 
-      {bots.length === 0 ? (
+      {loading ? (
+        <div className="rounded-3xl bg-card shadow-card h-[calc(100vh-220px)] min-h-[480px] animate-pulse" />
+      ) : bots.length === 0 ? (
         <div className="rounded-3xl bg-card shadow-card p-12 text-center">
           <img src="/bot-icon.png" alt="LaPoe" className="h-10 w-10 rounded-full object-cover mx-auto mb-3" />
           <p className="text-muted-foreground">Connect your assistant first, then come back to preview it here.</p>

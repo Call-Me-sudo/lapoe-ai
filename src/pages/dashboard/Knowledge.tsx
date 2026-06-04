@@ -12,11 +12,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Plus, BookOpen, Trash2, RefreshCw, HelpCircle, Link as LinkIcon, Pin } from "lucide-react";
 import { toast } from "sonner";
+import { ListSkeleton } from "@/components/dashboard/ListSkeleton";
 
 export default function Knowledge() {
   const { user } = useAuth();
   const [bots, setBots] = useState<any[]>([]);
   const [items, setItems] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
   const [form, setForm] = useState({ bot_id: "", kind: "url" as "url" | "text", title: "", content: "", source_url: "" });
@@ -28,6 +30,7 @@ export default function Knowledge() {
       supabase.from("knowledge_sources").select("*, bots(name)").eq("owner_id", user.id).order("created_at", { ascending: false }),
     ]);
     setBots(bs.data ?? []); setItems(ks.data ?? []);
+    setLoading(false);
   };
   useEffect(() => { load(); }, [user]);
 
@@ -132,7 +135,9 @@ export default function Knowledge() {
         }
       />
 
-      {items.length === 0 ? (
+      {loading ? (
+        <ListSkeleton rows={3} />
+      ) : items.length === 0 ? (
         <div className="border border-dashed border-border rounded-lg p-8 sm:p-12 text-center bg-paper-soft">
           <BookOpen className="h-8 w-8 text-ink-soft mx-auto mb-3" />
           <p className="text-ink-soft mb-1">No sources yet.</p>
