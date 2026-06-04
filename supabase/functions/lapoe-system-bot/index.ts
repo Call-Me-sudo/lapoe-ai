@@ -963,7 +963,7 @@ async function handleGroupAi(sb: any, token: string, msg: any, group: any) {
       text.length >= 8 &&
       !text.startsWith("/") && !text.startsWith("!") &&
       !isGreeting(text) &&
-      isQuestionLike(text);
+      isQuestionLikeSys(text);
     if (probeWorthy) {
       rag = await ragForOwner(sb, ownerId, text, 5);
       if (rag.text) shouldReply = true;
