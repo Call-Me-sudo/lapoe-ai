@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 
 type Bot = { id: string; name: string; tone: string | null; personality: string | null; system?: boolean };
 type Msg = { role: "user" | "assistant"; content: string };
+const SYSTEM_ASSISTANT: Bot = { id: "__lapoe_system_bot__", name: "LaPoe Assistant", tone: "friendly", personality: null, system: true };
 
 export default function Playground() {
   const { user } = useAuth();
@@ -21,13 +22,12 @@ export default function Playground() {
   const [sending, setSending] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  const systemAssistant: Bot = { id: "__lapoe_system_bot__", name: "LaPoe Assistant", tone: "friendly", personality: null, system: true };
 
   useEffect(() => {
     if (!user) return;
     supabase.from("bots").select("id,name,tone,personality").eq("owner_id", user.id).order("created_at", { ascending: false })
       .then(({ data }) => {
-        const next = data?.length ? data : [systemAssistant];
+        const next = data?.length ? data : [SYSTEM_ASSISTANT];
         setBots(next);
         if (next.length && !botId) setBotId(next[0].id);
       });
