@@ -102,8 +102,16 @@ export default function Overview() {
     { icon: Users, label: "Telegram groups", value: `${stats.groups} linked`, to: "/dashboard/groups" },
   ];
 
+  const isFreePlan = (usage?.plan ?? "free") === "free";
+  const workspaceOk = stats.bots > 0 || (isFreePlan && assistantReady);
+  const workspaceSub = stats.bots > 0
+    ? (user?.email ?? "")
+    : isFreePlan
+      ? (assistantReady ? "Using shared @LaPoe_bot" : "Set up your assistant")
+      : (user?.email ?? "");
+
   const projectStatus = [
-    { icon: Bot, label: "Bot workspace", sub: user?.email ?? "", state: stats.bots > 0 ? "ok" : "warn" },
+    { icon: Bot, label: "Bot workspace", sub: workspaceSub, state: workspaceOk ? "ok" : "warn" },
     { icon: BookOpen, label: "Knowledge base", sub: stats.knowledge > 0 ? "Indexed and ready" : "Add your first source", state: stats.knowledge > 0 ? "ok" : "warn" },
     { icon: Link2, label: "Telegram groups", sub: stats.groups > 0 ? `${stats.groups} connected` : "Connect a group", state: stats.groups > 0 ? "ok" : "warn" },
   ];
