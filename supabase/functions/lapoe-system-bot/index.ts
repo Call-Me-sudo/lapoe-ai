@@ -344,8 +344,17 @@ async function handleCommand(sb: any, token: string, msg: any) {
     }).eq("id", row.user_id);
     if (error) return send(token, chatId, `❌ ${error.message}`, msg.message_id);
     await sb.from("telegram_link_codes").update({ used_at: new Date().toISOString() }).eq("code", code);
-    return send(token, chatId, "✅ Account linked! Try /status or /mybots.", msg.message_id);
+
+    // Auto-claim this group for the linked user (so AI replies use their persona/knowledge).
+    if (isGroup) {
+      await sb.from("system_bot_groups").update({ linked_owner_id: row.user_id }).eq("chat_id", chatId);
+    }
+    return send(token, chatId, isGroup
+      ? "✅ Account linked — this group is now powered by *your* AI persona. Mention me or reply to try it. Try /status or /mybots."
+      : "✅ Account linked! Send me anything and I'll reply as your AI assistant. Try /status or /mybots.",
+      msg.message_id);
   }
+
 
   if (cmd === "/unlink") {
     if (!profile) return send(token, chatId, "You're not linked.", msg.message_id);
