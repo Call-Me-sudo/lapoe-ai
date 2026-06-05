@@ -29,6 +29,7 @@ export default function AdminDashboard() {
     messages: 0, messagesToday: 0,
     modActions: 0, modToday: 0,
     knowledge: 0, groups: 0,
+    aiMonth: 0, aiToday: 0,
   });
   const [series, setSeries] = useState<any[]>([]);
   const [growthSeries, setGrowthSeries] = useState<any[]>([]);
@@ -67,6 +68,15 @@ export default function AdminDashboard() {
     const { data: paidSubs } = await supabase.from("subscriptions").select("plan").eq("status", "active");
     const mrr = (paidSubs || []).reduce((s, r: any) => s + (PLAN_PRICE[r.plan] || 0), 0);
 
+    // System-wide AI usage (sum of outbound replies)
+    const monthStart = new Date(); monthStart.setDate(1); monthStart.setHours(0,0,0,0);
+    const monthStartISO = monthStart.toISOString().slice(0, 10);
+    const [{ data: usageRows }, aiTodayRes] = await Promise.all([
+      supabase.from("monthly_usage").select("outbound_count").eq("period_start", monthStartISO),
+      supabase.from("bot_messages").select("id", { count: "exact", head: true }).eq("direction", "outbound").gte("created_at", todayISO),
+    ]);
+    const aiMonth = (usageRows || []).reduce((s: number, r: any) => s + (r.outbound_count || 0), 0);
+
     setStats({
       users: u.count ?? 0,
       usersDelta,
@@ -80,6 +90,8 @@ export default function AdminDashboard() {
       modToday: maToday.count ?? 0,
       knowledge: k.count ?? 0,
       groups: g.count ?? 0,
+      aiMonth,
+      aiToday: aiTodayRes.count ?? 0,
     });
 
     // 14-day message volume
@@ -349,6 +361,27 @@ export default function AdminDashboard() {
             </div>
           )}
         </div>
+      </div>
+
+      {/* AI usage */}
+      <div className="surface-card p-5 mb-4">
+        <div className="flex items-start justify-between flex-wrap gap-3">
+          <div>
+            <h2 className="font-display text-lg text-ink flex items-center gap-2"><Zap className="h-4 w-4 text-primary" /> AI usage</h2>
+            <p className="text-xs text-ink-soft mt-0.5">Total assistant replies across every workspace</p>
+          </div>
+          <div className="flex gap-6">
+            <div>
+              <div className="font-display text-2xl text-ink">{stats.aiMonth.toLocaleString()}</div>
+              <div className="text-[10px] uppercase tracking-widest text-ink-soft mt-0.5">This month</div>
+            </div>
+            <div>
+              <div className="font-display text-2xl text-ink">{stats.aiToday.toLocaleString()}</div>
+              <div className="text-[10px] uppercase tracking-widest text-ink-soft mt-0.5">Today</div>
+            </div>
+          </div>
+        </div>
+        <p className="text-[11px] text-ink-soft mt-3">Balance from the upstream provider isn't exposed via API — track usage trends here and top up in the provider console as needed.</p>
       </div>
 
       {/* Top bots + Recent moderation */}

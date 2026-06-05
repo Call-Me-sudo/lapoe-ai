@@ -1029,7 +1029,8 @@ async function handleGroupAi(sb: any, token: string, msg: any, group: any) {
       (isQuestionLikeSys(text) || isGroupRelated(text, group, persona) || isPlatformTopic(text));
     if (probeWorthy) {
       rag = await ragForOwner(sb, ownerId, text, 5);
-      if (rag.text || isPlatformTopic(text) || (isQuestionLikeSys(text) && isGroupRelated(text, group, persona))) shouldReply = true;
+      // Mirror user-bot policy: any relevant topic triggers a reply, not only KB-grounded ones.
+      shouldReply = true;
     }
   }
   if (!shouldReply) return;
