@@ -42,6 +42,9 @@ export default function AdminBots() {
     load();
   };
 
+  const anyActive = bots.some((b) => b.status === "active");
+  const bulkNext: "active" | "paused" = anyActive ? "paused" : "active";
+
 
   return (
     <AdminLayout>
@@ -51,11 +54,8 @@ export default function AdminBots() {
           <h1 className="font-display text-3xl text-ink mt-1">Bots ({bots.length})</h1>
         </div>
         <div className="flex gap-2">
-          <Button size="sm" variant="outline" onClick={() => bulkStatus("paused")}>
-            <Pause className="h-3.5 w-3.5" /> Pause all bots
-          </Button>
-          <Button size="sm" onClick={() => bulkStatus("active")}>
-            <Play className="h-3.5 w-3.5" /> Resume all bots
+          <Button size="sm" variant={anyActive ? "outline" : "default"} onClick={() => bulkStatus(bulkNext)}>
+            {anyActive ? <><Pause className="h-3.5 w-3.5" /> Pause all bots</> : <><Play className="h-3.5 w-3.5" /> Resume all bots</>}
           </Button>
         </div>
       </div>
