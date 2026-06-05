@@ -68,6 +68,15 @@ export default function AdminDashboard() {
     const { data: paidSubs } = await supabase.from("subscriptions").select("plan").eq("status", "active");
     const mrr = (paidSubs || []).reduce((s, r: any) => s + (PLAN_PRICE[r.plan] || 0), 0);
 
+    // System-wide AI usage (sum of outbound replies)
+    const monthStart = new Date(); monthStart.setDate(1); monthStart.setHours(0,0,0,0);
+    const monthStartISO = monthStart.toISOString().slice(0, 10);
+    const [{ data: usageRows }, aiTodayRes] = await Promise.all([
+      supabase.from("monthly_usage").select("outbound_count").eq("period_start", monthStartISO),
+      supabase.from("bot_messages").select("id", { count: "exact", head: true }).eq("direction", "outbound").gte("created_at", todayISO),
+    ]);
+    const aiMonth = (usageRows || []).reduce((s: number, r: any) => s + (r.outbound_count || 0), 0);
+
     setStats({
       users: u.count ?? 0,
       usersDelta,
@@ -81,6 +90,8 @@ export default function AdminDashboard() {
       modToday: maToday.count ?? 0,
       knowledge: k.count ?? 0,
       groups: g.count ?? 0,
+      aiMonth,
+      aiToday: aiTodayRes.count ?? 0,
     });
 
     // 14-day message volume
