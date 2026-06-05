@@ -29,6 +29,7 @@ export default function AdminDashboard() {
     messages: 0, messagesToday: 0,
     modActions: 0, modToday: 0,
     knowledge: 0, groups: 0,
+    aiMonth: 0, aiToday: 0,
   });
   const [series, setSeries] = useState<any[]>([]);
   const [growthSeries, setGrowthSeries] = useState<any[]>([]);
