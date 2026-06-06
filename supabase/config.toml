@@ -23,3 +23,6 @@ verify_jwt = true
 
 [functions.telegram-webhook]
 verify_jwt = false
+
+[functions.auto-knowledge-summarize]
+verify_jwt = false

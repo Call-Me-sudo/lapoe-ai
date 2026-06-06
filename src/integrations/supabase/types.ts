@@ -14,6 +14,50 @@ export type Database = {
   }
   public: {
     Tables: {
+      auto_kb_buffer: {
+        Row: {
+          bot_id: string
+          content: string
+          created_at: string
+          group_title: string | null
+          id: string
+          owner_id: string
+          sender_id: number | null
+          sender_name: string | null
+          telegram_chat_id: string
+        }
+        Insert: {
+          bot_id: string
+          content: string
+          created_at?: string
+          group_title?: string | null
+          id?: string
+          owner_id: string
+          sender_id?: number | null
+          sender_name?: string | null
+          telegram_chat_id: string
+        }
+        Update: {
+          bot_id?: string
+          content?: string
+          created_at?: string
+          group_title?: string | null
+          id?: string
+          owner_id?: string
+          sender_id?: number | null
+          sender_name?: string | null
+          telegram_chat_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "auto_kb_buffer_bot_id_fkey"
+            columns: ["bot_id"]
+            isOneToOne: false
+            referencedRelation: "bots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bot_feedback: {
         Row: {
           bot_id: string | null
@@ -281,6 +325,8 @@ export type Database = {
       }
       knowledge_sources: {
         Row: {
+          auto_generated: boolean
+          auto_updated_at: string | null
           bot_id: string | null
           chunk_count: number
           content: string | null
@@ -292,9 +338,13 @@ export type Database = {
           owner_id: string
           scope: string
           source_url: string | null
+          telegram_chat_id: string | null
+          telegram_group_title: string | null
           title: string
         }
         Insert: {
+          auto_generated?: boolean
+          auto_updated_at?: string | null
           bot_id?: string | null
           chunk_count?: number
           content?: string | null
@@ -306,9 +356,13 @@ export type Database = {
           owner_id: string
           scope?: string
           source_url?: string | null
+          telegram_chat_id?: string | null
+          telegram_group_title?: string | null
           title: string
         }
         Update: {
+          auto_generated?: boolean
+          auto_updated_at?: string | null
           bot_id?: string | null
           chunk_count?: number
           content?: string | null
@@ -320,6 +374,8 @@ export type Database = {
           owner_id?: string
           scope?: string
           source_url?: string | null
+          telegram_chat_id?: string | null
+          telegram_group_title?: string | null
           title?: string
         }
         Relationships: [
@@ -784,6 +840,8 @@ export type Database = {
       }
       telegram_groups: {
         Row: {
+          admin_ids: number[]
+          admin_ids_refreshed_at: string | null
           banned_words: string[] | null
           bot_id: string
           created_at: string
@@ -801,6 +859,8 @@ export type Database = {
           welcome_message: string | null
         }
         Insert: {
+          admin_ids?: number[]
+          admin_ids_refreshed_at?: string | null
           banned_words?: string[] | null
           bot_id: string
           created_at?: string
@@ -818,6 +878,8 @@ export type Database = {
           welcome_message?: string | null
         }
         Update: {
+          admin_ids?: number[]
+          admin_ids_refreshed_at?: string | null
           banned_words?: string[] | null
           bot_id?: string
           created_at?: string

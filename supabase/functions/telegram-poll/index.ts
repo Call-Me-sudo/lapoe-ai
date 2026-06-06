@@ -472,6 +472,48 @@ async function isGroupAdmin(token: string, chatId: number, userId: number): Prom
   } catch { return false; }
 }
 
+// Refresh cached admin ids for a group at most once per hour.
+async function ensureGroupAdmins(supabase: any, token: string, group: any): Promise<number[]> {
+  if (!group) return [];
+  const cached: number[] = Array.isArray(group.admin_ids) ? group.admin_ids : [];
+  const refreshedAt = group.admin_ids_refreshed_at ? Date.parse(group.admin_ids_refreshed_at) : 0;
+  if (cached.length > 0 && Date.now() - refreshedAt < 60 * 60_000) return cached;
+  try {
+    const r = await tg(token, "getChatAdministrators", { chat_id: Number(group.telegram_chat_id) });
+    if (!r?.ok || !Array.isArray(r.result)) return cached;
+    const ids = r.result.map((m: any) => m?.user?.id).filter((x: any) => typeof x === "number");
+    await supabase.from("telegram_groups").update({
+      admin_ids: ids, admin_ids_refreshed_at: new Date().toISOString(),
+    }).eq("id", group.id);
+    group.admin_ids = ids;
+    group.admin_ids_refreshed_at = new Date().toISOString();
+    return ids;
+  } catch { return cached; }
+}
+
+// Buffer admin-authored group messages for the auto-knowledge summarizer.
+// Light filtering only — the LLM does the real curation.
+async function captureAdminMessage(supabase: any, bot: any, group: any, msg: any, adminIds: number[]) {
+  try {
+    if (!group || !msg?.from?.id || !msg?.text) return;
+    const text = String(msg.text).trim();
+    if (text.length < 20) return;                   // skip "ok", "yes", emojis
+    if (/^[\/!]/.test(text)) return;                // skip commands
+    if (!adminIds.includes(msg.from.id)) return;    // admins only
+    const sender = msg.from.username ? `@${msg.from.username}` : (msg.from.first_name || `tg:${msg.from.id}`);
+    await supabase.from("auto_kb_buffer").insert({
+      bot_id: bot.id, owner_id: bot.owner_id,
+      telegram_chat_id: String(msg.chat.id),
+      group_title: group.name || msg.chat.title || "Group",
+      sender_id: msg.from.id, sender_name: sender,
+      content: text.slice(0, 4000),
+    });
+  } catch (e) {
+    console.warn("captureAdminMessage failed:", (e as Error).message);
+  }
+}
+
+
 async function logMod(supabase: any, bot: any, chatId: number, action: string, opts: any) {
   await supabase.from("moderation_actions").insert({
     bot_id: bot.id, owner_id: bot.owner_id,
@@ -882,6 +924,14 @@ async function handleSingleUpdate(supabase: any, bot: any, me: { username: strin
 
   // Built-in info commands (group only — DMs are handled by handleDmGeneral)
   const text = msg.text.trim();
+
+  // Auto-knowledge capture: buffer admin-authored group messages for later
+  // summarization into a per-group knowledge source. Fire-and-forget.
+  if (isGroup && group) {
+    ensureGroupAdmins(supabase, bot.telegram_bot_token, group)
+      .then((ids) => captureAdminMessage(supabase, bot, group, msg, ids))
+      .catch(() => {});
+  }
   if (isGroup && (text === "/start" || text.startsWith("/start "))) {
     await send(bot.telegram_bot_token, msg.chat.id, `👋 Hello everyone, I'm *${bot.name}*.`, msg.message_id);
     return true;
