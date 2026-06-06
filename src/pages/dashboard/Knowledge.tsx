@@ -236,12 +236,39 @@ export default function Knowledge() {
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="font-medium text-ink">{k.title}</span>
+                  {k.auto_generated && (
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <button type="button" className="inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary hover:bg-primary/20">
+                          <Sparkles className="h-3 w-3" /> Auto-generated
+                          <Info className="h-3 w-3 opacity-70" />
+                        </button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-80 text-xs">
+                        <p className="font-medium text-ink mb-1">Auto-generated from group admins</p>
+                        <p className="text-ink-soft">
+                          Your bot summarizes informative messages from admins/owners of{" "}
+                          <span className="font-medium text-ink">{k.telegram_group_title || "this group"}</span>{" "}
+                          into a living knowledge base. It refreshes automatically as admins post new info.
+                        </p>
+                        <p className="text-ink-soft mt-2">
+                          You have full control — edit or delete it anytime. Telegram only lets bots see messages sent after they join, so older history isn't included.
+                        </p>
+                        {k.auto_updated_at && (
+                          <p className="text-ink-soft mt-2">Last updated: {new Date(k.auto_updated_at).toLocaleString()}</p>
+                        )}
+                      </PopoverContent>
+                    </Popover>
+                  )}
                   {k.indexed_at
                     ? <Badge variant="default" className="text-[10px]">indexed · {k.chunk_count} chunks</Badge>
                     : <Badge variant="secondary" className="text-[10px]">pending</Badge>}
                   {k.indexing_error && <Badge variant="destructive" className="text-[10px]">error</Badge>}
                 </div>
-                <div className="text-xs text-ink-soft mt-1">{k.bots?.name} · {k.kind}</div>
+                <div className="text-xs text-ink-soft mt-1">
+                  {k.bots?.name || (k.scope === "system_bot" ? "Shared assistant" : "—")}
+                  {" · "}{k.auto_generated ? "auto" : k.kind}
+                </div>
                 {k.source_url && <a href={k.source_url} target="_blank" rel="noreferrer" className="text-xs text-primary hover:underline mt-1 block truncate">{k.source_url}</a>}
                 {k.indexing_error && <p className="text-xs text-destructive mt-1">{k.indexing_error}</p>}
               </div>
