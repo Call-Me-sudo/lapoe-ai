@@ -10,9 +10,19 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, BookOpen, Trash2, RefreshCw, HelpCircle, Link as LinkIcon, Pin } from "lucide-react";
+import { Plus, BookOpen, Trash2, RefreshCw, HelpCircle, Link as LinkIcon, Pin, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { ListSkeleton } from "@/components/dashboard/ListSkeleton";
+
+type FormState = {
+  bot_id: string;
+  kind: "url" | "text";
+  title: string;
+  content: string;
+  source_url: string;
+};
+
+const emptyForm: FormState = { bot_id: "", kind: "url", title: "", content: "", source_url: "" };
 
 export default function Knowledge() {
   const { user } = useAuth();
@@ -20,8 +30,9 @@ export default function Knowledge() {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
-  const [form, setForm] = useState({ bot_id: "", kind: "url" as "url" | "text", title: "", content: "", source_url: "" });
+  const [form, setForm] = useState<FormState>(emptyForm);
 
   const load = async () => {
     if (!user) return;
@@ -34,7 +45,6 @@ export default function Knowledge() {
   };
   useEffect(() => { load(); }, [user]);
 
-  // Realtime: auto-refresh when knowledge_sources change for this user
   useEffect(() => {
     if (!user) return;
     const channel = supabase
@@ -48,7 +58,6 @@ export default function Knowledge() {
     return () => { supabase.removeChannel(channel); };
   }, [user]);
 
-  // Polling fallback while any source is still indexing
   useEffect(() => {
     const pending = items.some((i) => !i.indexed_at && !i.indexing_error);
     if (!pending) return;
@@ -64,8 +73,47 @@ export default function Knowledge() {
     toast.success("Indexed"); load();
   };
 
+  const openCreate = () => {
+    setEditingId(null);
+    setForm(emptyForm);
+    setOpen(true);
+  };
+
+  const openEdit = (k: any) => {
+    setEditingId(k.id);
+    setForm({
+      bot_id: k.bot_id ?? "",
+      kind: (k.kind as "url" | "text") ?? "text",
+      title: k.title ?? "",
+      content: k.content ?? "",
+      source_url: k.source_url ?? "",
+    });
+    setOpen(true);
+  };
+
   const save = async () => {
     if (!user || !form.title.trim()) return toast.error("Title required");
+
+    if (editingId) {
+      const patch: any = {
+        kind: form.kind,
+        title: form.title,
+        content: form.kind === "text" ? form.content : null,
+        source_url: form.kind === "url" ? form.source_url : null,
+        indexed_at: null,
+        indexing_error: null,
+      };
+      const { error } = await supabase.from("knowledge_sources").update(patch).eq("id", editingId);
+      if (error) return toast.error(error.message);
+      toast.success("Updated — re-indexing…");
+      setOpen(false);
+      setEditingId(null);
+      setForm(emptyForm);
+      supabase.functions.invoke("index-knowledge", { body: { source_id: editingId } }).then(() => load());
+      load();
+      return;
+    }
+
     const isSystemBot = bots.length === 0;
     if (!isSystemBot && !form.bot_id) return toast.error("Choose a bot");
     const payload: any = {
@@ -78,7 +126,7 @@ export default function Knowledge() {
     if (error) return toast.error(error.message);
     toast.success("Source added — indexing…");
     setOpen(false);
-    setForm({ bot_id: "", kind: "url", title: "", content: "", source_url: "" });
+    setForm(emptyForm);
     if (data?.id) supabase.functions.invoke("index-knowledge", { body: { source_id: data.id } }).then(() => load());
     load();
   };
@@ -94,46 +142,52 @@ export default function Knowledge() {
         title="Knowledge"
         description="Add URLs or paste text. Each source is chunked and embedded so the bot retrieves only what's relevant."
         actions={
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild><Button><Plus className="h-4 w-4" /> Add source</Button></DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Add a knowledge source</DialogTitle>
-                <DialogDescription>The content will be chunked, embedded and used to answer questions.</DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4">
-                {bots.length === 0 ? (
-                  <div className="rounded-md border border-border bg-paper-soft p-3 text-xs text-ink-soft">
-                    This source will be attached to your shared <span className="font-medium">@LaPoe_bot</span> assistant.
-                  </div>
-                ) : (
-                  <div>
-                    <Label>Bot</Label>
-                    <Select value={form.bot_id} onValueChange={(v) => setForm({ ...form, bot_id: v })}>
-                      <SelectTrigger><SelectValue placeholder="Choose a bot" /></SelectTrigger>
-                      <SelectContent>{bots.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent>
-                    </Select>
-                  </div>
-                )}
-                <div>
-                  <Label>Type</Label>
-                  <Select value={form.kind} onValueChange={(v: any) => setForm({ ...form, kind: v })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent><SelectItem value="url">URL</SelectItem><SelectItem value="text">Plain text</SelectItem></SelectContent>
-                  </Select>
-                </div>
-                <div><Label>Title</Label><Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} maxLength={200} /></div>
-                {form.kind === "url" ? (
-                  <div><Label>URL</Label><Input value={form.source_url} onChange={(e) => setForm({ ...form, source_url: e.target.value })} placeholder="https://yourblog.com/article" /></div>
-                ) : (
-                  <div><Label>Content</Label><Textarea value={form.content} onChange={(e) => setForm({ ...form, content: e.target.value })} rows={6} maxLength={20000} /></div>
-                )}
-              </div>
-              <DialogFooter><Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button><Button onClick={save}>Add &amp; index</Button></DialogFooter>
-            </DialogContent>
-          </Dialog>
+          <Button onClick={openCreate}><Plus className="h-4 w-4" /> Add source</Button>
         }
       />
+
+      <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) { setEditingId(null); setForm(emptyForm); } }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{editingId ? "Edit knowledge source" : "Add a knowledge source"}</DialogTitle>
+            <DialogDescription>The content will be chunked, embedded and used to answer questions.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            {!editingId && (
+              bots.length === 0 ? (
+                <div className="rounded-md border border-border bg-paper-soft p-3 text-xs text-ink-soft">
+                  This source will be attached to your shared <span className="font-medium">@LaPoe_bot</span> assistant.
+                </div>
+              ) : (
+                <div>
+                  <Label>Bot</Label>
+                  <Select value={form.bot_id} onValueChange={(v) => setForm({ ...form, bot_id: v })}>
+                    <SelectTrigger><SelectValue placeholder="Choose a bot" /></SelectTrigger>
+                    <SelectContent>{bots.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+              )
+            )}
+            <div>
+              <Label>Type</Label>
+              <Select value={form.kind} onValueChange={(v: any) => setForm({ ...form, kind: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent><SelectItem value="url">URL</SelectItem><SelectItem value="text">Plain text</SelectItem></SelectContent>
+              </Select>
+            </div>
+            <div><Label>Title</Label><Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} maxLength={200} /></div>
+            {form.kind === "url" ? (
+              <div><Label>URL</Label><Input value={form.source_url} onChange={(e) => setForm({ ...form, source_url: e.target.value })} placeholder="https://yourblog.com/article" /></div>
+            ) : (
+              <div><Label>Content</Label><Textarea value={form.content} onChange={(e) => setForm({ ...form, content: e.target.value })} rows={6} maxLength={20000} /></div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+            <Button onClick={save}>{editingId ? "Save & re-index" : "Add & index"}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {loading ? (
         <ListSkeleton rows={3} />
@@ -147,7 +201,7 @@ export default function Knowledge() {
           <div className="grid sm:grid-cols-3 gap-2 max-w-xl mx-auto">
             <button
               type="button"
-              onClick={() => { setForm({ bot_id: bots[0]?.id ?? "", kind: "text", title: "Frequently asked questions", content: "Q: \nA: \n\nQ: \nA: ", source_url: "" }); setOpen(true); }}
+              onClick={() => { setEditingId(null); setForm({ bot_id: bots[0]?.id ?? "", kind: "text", title: "Frequently asked questions", content: "Q: \nA: \n\nQ: \nA: ", source_url: "" }); setOpen(true); }}
               className="rounded-lg border border-border bg-card p-3 text-left hover:shadow-card transition"
             >
               <HelpCircle className="h-4 w-4 text-primary mb-2" />
@@ -156,7 +210,7 @@ export default function Knowledge() {
             </button>
             <button
               type="button"
-              onClick={() => { setForm({ bot_id: bots[0]?.id ?? "", kind: "url", title: "Website", content: "", source_url: "https://" }); setOpen(true); }}
+              onClick={() => { setEditingId(null); setForm({ bot_id: bots[0]?.id ?? "", kind: "url", title: "Website", content: "", source_url: "https://" }); setOpen(true); }}
               className="rounded-lg border border-border bg-card p-3 text-left hover:shadow-card transition"
             >
               <LinkIcon className="h-4 w-4 text-primary mb-2" />
@@ -165,7 +219,7 @@ export default function Knowledge() {
             </button>
             <button
               type="button"
-              onClick={() => { setForm({ bot_id: bots[0]?.id ?? "", kind: "text", title: "Group pinned message", content: "", source_url: "" }); setOpen(true); }}
+              onClick={() => { setEditingId(null); setForm({ bot_id: bots[0]?.id ?? "", kind: "text", title: "Group pinned message", content: "", source_url: "" }); setOpen(true); }}
               className="rounded-lg border border-border bg-card p-3 text-left hover:shadow-card transition"
             >
               <Pin className="h-4 w-4 text-primary mb-2" />
@@ -191,10 +245,13 @@ export default function Knowledge() {
                 {k.indexing_error && <p className="text-xs text-destructive mt-1">{k.indexing_error}</p>}
               </div>
               <div className="flex gap-1">
-                <Button variant="ghost" size="icon" onClick={() => reindex(k.id)} disabled={busy === k.id}>
+                <Button variant="ghost" size="icon" onClick={() => openEdit(k)} title="Edit">
+                  <Pencil className="h-4 w-4" />
+                </Button>
+                <Button variant="ghost" size="icon" onClick={() => reindex(k.id)} disabled={busy === k.id} title="Re-index">
                   <RefreshCw className={`h-4 w-4 ${busy === k.id ? "animate-spin" : ""}`} />
                 </Button>
-                <Button variant="ghost" size="icon" onClick={() => remove(k.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                <Button variant="ghost" size="icon" onClick={() => remove(k.id)} title="Delete"><Trash2 className="h-4 w-4 text-destructive" /></Button>
               </div>
             </div>
           ))}
