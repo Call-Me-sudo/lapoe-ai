@@ -924,6 +924,14 @@ async function handleSingleUpdate(supabase: any, bot: any, me: { username: strin
 
   // Built-in info commands (group only — DMs are handled by handleDmGeneral)
   const text = msg.text.trim();
+
+  // Auto-knowledge capture: buffer admin-authored group messages for later
+  // summarization into a per-group knowledge source. Fire-and-forget.
+  if (isGroup && group) {
+    ensureGroupAdmins(supabase, bot.telegram_bot_token, group)
+      .then((ids) => captureAdminMessage(supabase, bot, group, msg, ids))
+      .catch(() => {});
+  }
   if (isGroup && (text === "/start" || text.startsWith("/start "))) {
     await send(bot.telegram_bot_token, msg.chat.id, `👋 Hello everyone, I'm *${bot.name}*.`, msg.message_id);
     return true;
