@@ -11,7 +11,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const LOVABLE_AI_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
+import { aiChat } from "../_shared/ai-chat.ts";
 const DEFAULT_MODEL = "google/gemini-3-flash-preview";
 
 const TONES: Record<string, string> = {
