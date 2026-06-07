@@ -108,7 +108,7 @@ export async function aiChat(body: AiChatBody): Promise<AiChatResult> {
       if (r.ok) return r;
       // Fall back on rate-limit, payment required, or upstream 5xx.
       if (r.status === 429 || r.status === 402 || r.status >= 500) {
-        console.warn(`[ai-chat] provider=${p.name} status=${r.status}, trying next`);
+        console.warn(`[ai-chat] provider=${p.name} status=${r.status} body=${r._bodyText.slice(0,400)}`);
         last = r;
         continue;
       }
