@@ -8,6 +8,7 @@
 // Uses LAPOE_SYSTEM_BOT_TOKEN. No per-user API key required.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { aiChat } from "../_shared/ai-chat.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -18,7 +19,6 @@ const MAX_RUNTIME_MS = 50_000;
 const FLOOD_WINDOW_SEC = 10;
 
 // ---------- AI ----------
-const LOVABLE_AI_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
 const AI_MODEL = "google/gemini-3.5-flash";
 const LAPOE_USERNAME = "lapoe_bot"; // for mention detection in groups
 const aiBackoffUntil = { t: 0 };
