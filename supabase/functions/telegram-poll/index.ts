@@ -3,6 +3,7 @@
 // - In group chats: only replies on mention/reply, auto-registers groups, runs moderation.
 // - In private chats with the bot owner (linked profile): exposes a Rose-style command suite to configure the bot.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { aiChat } from "../_shared/ai-chat.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -10,7 +11,6 @@ const corsHeaders = {
 };
 
 const MAX_RUNTIME_MS = 50_000;
-const LOVABLE_AI_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
 const EMBED_URL = "https://ai.gateway.lovable.dev/v1/embeddings";
 const DEFAULT_MODEL = "google/gemini-3.5-flash";
 const EMBED_MODEL = "google/text-embedding-004";
