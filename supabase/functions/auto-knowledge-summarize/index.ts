@@ -28,8 +28,6 @@ function chunk(text: string): string[] {
 }
 
 async function summarize(existing: string, newMessages: { sender_name: string | null; content: string }[], groupTitle: string): Promise<string> {
-  const key = Deno.env.get("LOVABLE_API_KEY");
-  if (!key) throw new Error("Missing LOVABLE_API_KEY");
 
   const formatted = newMessages
     .map((m, i) => `(${i + 1}) ${m.sender_name || "admin"}: ${m.content.replace(/\s+/g, " ").slice(0, 800)}`)
