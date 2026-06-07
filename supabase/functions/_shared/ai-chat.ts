@@ -11,18 +11,25 @@ type Provider = {
   authHeader: (key: string) => Record<string, string>;
 };
 
-// Map "canonical" model strings (the ones we use with Lovable) to each provider.
-// Map canonical Lovable models to FREE OpenRouter equivalents so the
-// fallback works even when the user's OpenRouter key has no credits.
-// (Override via OPENROUTER_MODEL env var if you want a paid model.)
-const OPENROUTER_FREE_DEFAULT = "meta-llama/llama-3.3-70b-instruct:free";
-const OPENROUTER_MODEL_MAP: Record<string, string> = {
-  "google/gemini-3.5-flash": OPENROUTER_FREE_DEFAULT,
-  "google/gemini-3-flash-preview": OPENROUTER_FREE_DEFAULT,
-  "google/gemini-2.5-flash": OPENROUTER_FREE_DEFAULT,
-  "google/gemini-2.5-flash-lite": OPENROUTER_FREE_DEFAULT,
-  "google/gemini-2.5-pro": "deepseek/deepseek-chat-v3.1:free",
-};
+// OpenRouter free-tier models. We try several since any one of them can be
+// rate-limited upstream. Override with OPENROUTER_MODELS (comma-separated)
+// or OPENROUTER_MODEL (single) env var.
+const OPENROUTER_FREE_MODELS = [
+  "google/gemma-4-31b-it:free",
+  "qwen/qwen3-next-80b-a3b-instruct:free",
+  "meta-llama/llama-3.3-70b-instruct:free",
+  "z-ai/glm-4.5-air:free",
+  "openai/gpt-oss-120b:free",
+  "nousresearch/hermes-3-llama-3.1-405b:free",
+];
+
+function openrouterModels(): string[] {
+  const single = Deno.env.get("OPENROUTER_MODEL");
+  if (single) return [single];
+  const list = Deno.env.get("OPENROUTER_MODELS");
+  if (list) return list.split(",").map((s) => s.trim()).filter(Boolean);
+  return OPENROUTER_FREE_MODELS;
+}
 
 function getProviders(): Provider[] {
   const lovableKey = Deno.env.get("LOVABLE_API_KEY");
@@ -39,17 +46,19 @@ function getProviders(): Provider[] {
     });
   }
   if (openrouterKey) {
-    list.push({
-      name: "openrouter",
-      url: "https://openrouter.ai/api/v1/chat/completions",
-      apiKey: openrouterKey,
-      mapModel: (m) => Deno.env.get("OPENROUTER_MODEL") || OPENROUTER_MODEL_MAP[m] || m,
-      authHeader: (k) => ({
-        Authorization: `Bearer ${k}`,
-        "HTTP-Referer": "https://lapoe-ai.vercel.app",
-        "X-Title": "LaPoe",
-      }),
-    });
+    for (const m of openrouterModels()) {
+      list.push({
+        name: `openrouter:${m}`,
+        url: "https://openrouter.ai/api/v1/chat/completions",
+        apiKey: openrouterKey,
+        mapModel: () => m,
+        authHeader: (k) => ({
+          Authorization: `Bearer ${k}`,
+          "HTTP-Referer": "https://lapoe-ai.vercel.app",
+          "X-Title": "LaPoe",
+        }),
+      });
+    }
   }
   return list;
 }
