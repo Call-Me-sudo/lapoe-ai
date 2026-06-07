@@ -296,22 +296,44 @@ export function buildImprovedSystemPrompt(
   conversationContext: ConversationContext | null,
   ragResult: RAGResult
 ): string {
-  // Insert context injection before knowledge base section if exists
+  // Insert context injection after REQUIRED INSTRUCTIONS if exists, otherwise before knowledge base
   let prompt = baseSystemPrompt;
   
   if (conversationContext?.isExisting) {
     // Build context info
     const contextInfo = buildContextInjection(conversationContext, []);
     
-    // Find where to inject (before knowledge base marker if exists)
-    const knowledgeMarker = '=== KNOWLEDGE BASE';
-    const idx = prompt.indexOf(knowledgeMarker);
+    // Try to find REQUIRED INSTRUCTIONS section (newer format)
+    const requiredInstrMarker = '=== REQUIRED INSTRUCTIONS';
+    const requiredInstrIdx = prompt.indexOf(requiredInstrMarker);
     
-    if (idx > 0) {
-      prompt = prompt.slice(0, idx) + contextInfo + prompt.slice(idx);
+    if (requiredInstrIdx > 0) {
+      // Inject after REQUIRED INSTRUCTIONS ends (after === END REQUIRED INSTRUCTIONS ===)
+      const endMarker = '=== END REQUIRED INSTRUCTIONS ===';
+      const endIdx = prompt.indexOf(endMarker, requiredInstrIdx);
+      if (endIdx > 0) {
+        prompt = prompt.slice(0, endIdx + endMarker.length) + '\n' + contextInfo + prompt.slice(endIdx + endMarker.length);
+      } else {
+        // Fallback: inject before knowledge base
+        const knowledgeMarker = '=== KNOWLEDGE BASE';
+        const kbIdx = prompt.indexOf(knowledgeMarker);
+        if (kbIdx > 0) {
+          prompt = prompt.slice(0, kbIdx) + contextInfo + prompt.slice(kbIdx);
+        } else {
+          prompt += contextInfo;
+        }
+      }
     } else {
-      // No knowledge base section, append at end
-      prompt += contextInfo;
+      // Old format or no instructions - inject before knowledge base
+      const knowledgeMarker = '=== KNOWLEDGE BASE';
+      const kbIdx = prompt.indexOf(knowledgeMarker);
+      
+      if (kbIdx > 0) {
+        prompt = prompt.slice(0, kbIdx) + contextInfo + prompt.slice(kbIdx);
+      } else {
+        // No knowledge base section, append at end
+        prompt += contextInfo;
+      }
     }
   }
   
