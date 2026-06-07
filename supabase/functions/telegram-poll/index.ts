@@ -90,6 +90,10 @@ async function send(token: string, chatId: number | string, text: string, replyT
   return res;
 }
 
+function telegramUserLabel(from: any): string {
+  return from?.username || from?.first_name || String(from?.id || "");
+}
+
 async function ragSnippets(supabase: any, botId: string, question: string, k = 6, useFallback = true): Promise<string> {
   const q = (question || "").trim();
   if (!q) return "";
@@ -192,6 +196,57 @@ function isGroupRelated(text: string, group: any | null, bot: any): boolean {
 function isPlatformTopic(text: string): boolean {
   const t = text.toLowerCase();
   return /\b(lapoe|la\s*poe|platform|website|dashboard|docs?|documentation|pricing|free plan|paid plan|telegram bot|own bot|create (?:my |your |a )?bot|bot token|botfather)\b/i.test(t);
+}
+
+
+function isFollowUpLike(text: string): boolean {
+  const t = text.trim().toLowerCase();
+  if (t.length < 3 || /^[\/!]/.test(t) || isGreeting(t)) return false;
+  if (isQuestionLike(t)) return true;
+  return /^(and|also|then|what about|how about|what if|how do i|can i|does it|is it|do they|do you|tell me more|more|why|where|when|who|which|that|this|those|these|it|they|them)\b/i.test(t);
+}
+
+async function recentBotReplyContext(supabase: any, bot: any, group: any | null, msg: any, minutes = 10): Promise<boolean> {
+  const user = telegramUserLabel(msg.from);
+  let q = supabase
+    .from("bot_messages")
+    .select("id,created_at")
+    .eq("bot_id", bot.id)
+    .eq("direction", "outbound")
+    .eq("telegram_user", user)
+    .gte("created_at", new Date(Date.now() - minutes * 60_000).toISOString())
+    .order("created_at", { ascending: false })
+    .limit(1);
+  q = group?.id ? q.eq("group_id", group.id) : q.is("group_id", null);
+  const { data } = await q;
+  return !!(data && data.length > 0);
+}
+
+async function recentConversationMessages(
+  supabase: any,
+  bot: any,
+  group: any | null,
+  msg: any,
+  currentLogId: string | null,
+): Promise<{ role: "user" | "assistant"; content: string }[]> {
+  let q = supabase
+    .from("bot_messages")
+    .select("id,direction,content,created_at")
+    .eq("bot_id", bot.id)
+    .order("created_at", { ascending: false })
+    .limit(10);
+  q = group?.id ? q.eq("group_id", group.id) : q.is("group_id", null).eq("telegram_user", telegramUserLabel(msg.from));
+  const { data } = await q;
+  if (!data || data.length === 0) return [];
+
+  return data
+    .filter((row: any) => row.id !== currentLogId && row.content)
+    .reverse()
+    .slice(-8)
+    .map((row: any) => ({
+      role: row.direction === "outbound" ? "assistant" : "user",
+      content: String(row.content || "").slice(0, 2000),
+    }));
 }
 
 async function hasKnowledge(supabase: any, botId: string): Promise<boolean> {
@@ -350,12 +405,17 @@ SIGNAL — IMPORTANT for owner learning:
 - Do NOT include this token for greetings, small talk, off-topic refusals you intentionally declined, moderation requests, or questions you actually answered.`;
 }
 
-async function askAI(system: string, userText: string): Promise<string> {
+async function askAI(
+  system: string,
+  userText: string,
+  history: { role: "user" | "assistant"; content: string }[] = [],
+): Promise<string> {
   if (aiBackoffUntil.t > Date.now()) throw new Error("AI backoff active");
   const res = await aiChat({
     model: DEFAULT_MODEL,
     messages: [
       { role: "system", content: system },
+      ...history,
       { role: "user", content: userText },
     ],
   });
@@ -868,11 +928,11 @@ async function handleSingleUpdate(supabase: any, bot: any, me: { username: strin
     group = await ensureGroup(supabase, bot, msg);
   }
 
-  await supabase.from("bot_messages").insert({
+  const { data: inboundLog } = await supabase.from("bot_messages").insert({
     bot_id: bot.id, owner_id: bot.owner_id, group_id: group?.id || null, direction: "inbound",
     content: msg.text,
-    telegram_user: msg.from?.username || msg.from?.first_name || String(msg.from?.id || ""),
-  });
+    telegram_user: telegramUserLabel(msg.from),
+  }).select("id").maybeSingle();
 
   // 1) DM general commands (NO owner config in DMs — see policy in DEVELOPERS.md)
   if (isPrivate && await handleDmGeneral(supabase, bot, bot.telegram_bot_token, msg)) {
@@ -947,15 +1007,19 @@ async function handleSingleUpdate(supabase: any, bot: any, me: { username: strin
   // Reply ONLY when:
   //  1) The bot is @mentioned or called by its FULL name, OR
   //  2) The user replied to one of the bot's messages, OR
-    //  3) The message is question-like AND has a real (strict) knowledge match,
-    //     OR it is about this group/bot's topics or LaPoe platform info.
-  // Greetings DO trigger when the bot is addressed (case 1 or 2) — they don't
-  // probe knowledge on their own, but they're not filtered out either.
+  //  3) The message is a greeting, OR
+  //  4) The message is question-like AND has a knowledge match,
+  //     OR it is about this group/bot's topics or LaPoe platform info, OR
+  //  5) The same user asks a short follow-up soon after a bot answer.
   let autoKnowledge = "";
   if (isGroup) {
     const mentionedOrNamed = messageNamesBot(text, bot, me);
     const isReply = msg.reply_to_message?.from?.id === me.id;
     let shouldReply = Boolean(mentionedOrNamed || isReply);
+
+    if (!shouldReply && isGreeting(text)) {
+      shouldReply = true;
+    }
 
     if (!shouldReply) {
       // Probe only substantive messages. This keeps owner/admin chatter quiet,
@@ -966,24 +1030,26 @@ async function handleSingleUpdate(supabase: any, bot: any, me: { username: strin
         !isGreeting(text) &&
         (isQuestionLike(text) || isGroupRelated(text, group, bot) || isPlatformTopic(text));
       if (probeWorthy) {
-        // Strict text match (no OR-expansion, no recent-chunk fallback).
-        const { data: hits } = await supabase.rpc("match_knowledge_chunks_text", {
-          _bot_id: bot.id, _query: text, _match_count: 5,
-        });
-        if (hits && hits.length > 0) {
-          autoKnowledge = hits
-            .map((r: any, i: number) => `[${i + 1}] ${r.content}`)
-            .join("\n\n")
-            .slice(0, 6000);
-          shouldReply = true;
-        } else if (isPlatformTopic(text)) {
+        if (isPlatformTopic(text)) {
           autoKnowledge = LAPOE_SELF_KB;
           shouldReply = true;
-        } else if (isQuestionLike(text) && isGroupRelated(text, group, bot)) {
-          shouldReply = true;
+        } else {
+          // Use the same forgiving text retrieval as normal answers, but without
+          // the recent-chunk fallback. This lets untagged relevant questions match
+          // knowledge by important words instead of requiring an exact full-sentence
+          // match, while still avoiding random group chatter.
+          autoKnowledge = await ragSnippets(supabase, bot.id, text, 5, false);
+          if (autoKnowledge || (isQuestionLike(text) && isGroupRelated(text, group, bot))) {
+            shouldReply = true;
+          }
         }
       }
     }
+
+    if (!shouldReply && isFollowUpLike(text) && await recentBotReplyContext(supabase, bot, group, msg)) {
+      shouldReply = true;
+    }
+
     if (!shouldReply) return false;
   }
 
@@ -1039,13 +1105,17 @@ async function handleSingleUpdate(supabase: any, bot: any, me: { username: strin
     }).catch(() => {});
 
     const cleanText = isGroup ? stripBotName(text, bot, me) : text.trim();
+    const history = await recentConversationMessages(supabase, bot, group, msg, inboundLog?.id || null);
+    const retrievalText = isFollowUpLike(cleanText) && history.length > 0
+      ? `${history.slice(-4).map((m) => m.content).join("\n")}\n${cleanText}`
+      : cleanText;
     const [knowledgeResult, kExists] = await Promise.all([
-      autoKnowledge ? Promise.resolve(autoKnowledge) : ragSnippets(supabase, bot.id, cleanText, 6),
+      autoKnowledge ? Promise.resolve(autoKnowledge) : ragSnippets(supabase, bot.id, retrievalText, 6),
       hasKnowledge(supabase, bot.id),
     ]);
 
     const system = buildSystemPrompt(bot, group, knowledgeResult, kExists);
-    const rawReply = await askAI(system, cleanText);
+    const rawReply = await askAI(system, cleanText, history);
     const needsKnowledge = /\[NEEDS_KNOWLEDGE\]/i.test(rawReply);
     const stripped = rawReply.replace(/\[NEEDS_KNOWLEDGE\]/gi, "").trim();
     const allowedCtx = [knowledgeResult, LAPOE_SELF_KB, bot.house_rules, bot.default_instructions, bot.personality]
@@ -1056,7 +1126,7 @@ async function handleSingleUpdate(supabase: any, bot: any, me: { username: strin
       await send(bot.telegram_bot_token, msg.chat.id, reply, msg.message_id);
       supabase.from("bot_messages").insert({
         bot_id: bot.id, owner_id: bot.owner_id, group_id: group?.id || null, direction: "outbound",
-        content: reply, telegram_user: msg.from?.username || null,
+        content: reply, telegram_user: telegramUserLabel(msg.from),
       }).then(() => {}, () => {});
     }
 
