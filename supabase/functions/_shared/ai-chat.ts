@@ -11,13 +11,25 @@ type Provider = {
   authHeader: (key: string) => Record<string, string>;
 };
 
-// Map "canonical" model strings (the ones we use with Lovable) to each provider.
-const OPENROUTER_MODEL_MAP: Record<string, string> = {
-  "google/gemini-3.5-flash": "google/gemini-2.5-flash",
-  "google/gemini-3-flash-preview": "google/gemini-2.5-flash",
-  "google/gemini-2.5-flash": "google/gemini-2.5-flash",
-  "google/gemini-2.5-pro": "google/gemini-2.5-pro",
-};
+// OpenRouter free-tier models. We try several since any one of them can be
+// rate-limited upstream. Override with OPENROUTER_MODELS (comma-separated)
+// or OPENROUTER_MODEL (single) env var.
+const OPENROUTER_FREE_MODELS = [
+  "google/gemma-4-31b-it:free",
+  "qwen/qwen3-next-80b-a3b-instruct:free",
+  "meta-llama/llama-3.3-70b-instruct:free",
+  "z-ai/glm-4.5-air:free",
+  "openai/gpt-oss-120b:free",
+  "nousresearch/hermes-3-llama-3.1-405b:free",
+];
+
+function openrouterModels(): string[] {
+  const single = Deno.env.get("OPENROUTER_MODEL");
+  if (single) return [single];
+  const list = Deno.env.get("OPENROUTER_MODELS");
+  if (list) return list.split(",").map((s) => s.trim()).filter(Boolean);
+  return OPENROUTER_FREE_MODELS;
+}
 
 function getProviders(): Provider[] {
   const lovableKey = Deno.env.get("LOVABLE_API_KEY");
@@ -34,17 +46,19 @@ function getProviders(): Provider[] {
     });
   }
   if (openrouterKey) {
-    list.push({
-      name: "openrouter",
-      url: "https://openrouter.ai/api/v1/chat/completions",
-      apiKey: openrouterKey,
-      mapModel: (m) => OPENROUTER_MODEL_MAP[m] || m,
-      authHeader: (k) => ({
-        Authorization: `Bearer ${k}`,
-        "HTTP-Referer": "https://lapoe-ai.vercel.app",
-        "X-Title": "LaPoe",
-      }),
-    });
+    for (const m of openrouterModels()) {
+      list.push({
+        name: `openrouter:${m}`,
+        url: "https://openrouter.ai/api/v1/chat/completions",
+        apiKey: openrouterKey,
+        mapModel: () => m,
+        authHeader: (k) => ({
+          Authorization: `Bearer ${k}`,
+          "HTTP-Referer": "https://lapoe-ai.vercel.app",
+          "X-Title": "LaPoe",
+        }),
+      });
+    }
   }
   return list;
 }
@@ -103,7 +117,7 @@ export async function aiChat(body: AiChatBody): Promise<AiChatResult> {
       if (r.ok) return r;
       // Fall back on rate-limit, payment required, or upstream 5xx.
       if (r.status === 429 || r.status === 402 || r.status >= 500) {
-        console.warn(`[ai-chat] provider=${p.name} status=${r.status}, trying next`);
+        console.warn(`[ai-chat] provider=${p.name} status=${r.status} body=${r._bodyText.slice(0,400)}`);
         last = r;
         continue;
       }
