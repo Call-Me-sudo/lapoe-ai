@@ -43,7 +43,7 @@ function getProviders(): Provider[] {
       name: "openrouter",
       url: "https://openrouter.ai/api/v1/chat/completions",
       apiKey: openrouterKey,
-      mapModel: (m) => OPENROUTER_MODEL_MAP[m] || m,
+      mapModel: (m) => Deno.env.get("OPENROUTER_MODEL") || OPENROUTER_MODEL_MAP[m] || m,
       authHeader: (k) => ({
         Authorization: `Bearer ${k}`,
         "HTTP-Referer": "https://lapoe-ai.vercel.app",
