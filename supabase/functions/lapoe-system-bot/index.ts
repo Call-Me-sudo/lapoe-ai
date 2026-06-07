@@ -9,6 +9,15 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { aiChat } from "../_shared/ai-chat.ts";
+import {
+  detectPrimaryTopic,
+  extractUserIntent,
+  getOrCreateContext,
+  updateContext,
+  buildImprovedSystemPrompt,
+  type ConversationContext,
+  type RAGResult,
+} from "../_shared/context-aware-rag.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -1030,11 +1039,11 @@ async function handleGroupAi(sb: any, token: string, msg: any, group: any) {
   if (!shouldReply) return;
 
   // Log inbound to bot_messages so the dashboard's Messages page shows it.
-  sb.from("bot_messages").insert({
+  const { data: inboundLog } = await sb.from("bot_messages").insert({
     bot_id: null, owner_id: ownerId, group_id: null, direction: "inbound",
     content: text,
     telegram_user: msg.from?.username || msg.from?.first_name || String(msg.from?.id || ""),
-  }).then(() => {}, () => {});
+  }).select("id").maybeSingle();
 
   if (!allowed) {
     // Silent in the group. DM the owner once per month.
@@ -1044,12 +1053,43 @@ async function handleGroupAi(sb: any, token: string, msg: any, group: any) {
 
   if (!rag.exists && !rag.text) rag = await ragForOwner(sb, ownerId, text, 5);
 
-  const ownerName = persona?.display_name || "LaPoe";
-  const system = buildSystemBotPrompt(persona, rag.text, rag.exists, ownerName) +
-    `\n\nYou are in the Telegram group "${group.title || ""}". Keep it conversational.`;
+  // ===== NEW: System bot context-aware response =====
+  let conversationContext: ConversationContext | null = null;
+  let improvedSystem = "";
+  
+  try {
+    const telegramUser = msg.from?.username || msg.from?.first_name || String(msg.from?.id || "");
+    conversationContext = await getOrCreateContext(
+      sb,
+      "system-bot", // Use "system-bot" as a special bot ID
+      ownerId,
+      null, // System bot doesn't track per-group context
+      telegramUser,
+      inboundLog?.id || null
+    );
+    
+    const detectedTopic = detectPrimaryTopic(text, conversationContext.primaryTopic, conversationContext.contextSummary);
+    const ownerName = persona?.display_name || "LaPoe";
+    const baseSystem = buildSystemBotPrompt(persona, rag.text, rag.exists, ownerName) +
+      `\n\nYou are in the Telegram group "${group.title || ""}". Keep it conversational.`;
+    
+    const ragResult: RAGResult = {
+      snippets: rag.text,
+      topic: detectedTopic,
+      contextInjection: `[TOPIC: ${detectedTopic}]`
+    };
+    
+    improvedSystem = buildImprovedSystemPrompt(baseSystem, conversationContext, ragResult);
+  } catch (e) {
+    console.warn("System bot context enhancement failed, using basic prompt:", (e as Error).message);
+    const ownerName = persona?.display_name || "LaPoe";
+    improvedSystem = buildSystemBotPrompt(persona, rag.text, rag.exists, ownerName) +
+      `\n\nYou are in the Telegram group "${group.title || ""}". Keep it conversational.`;
+  }
+  // ===== END: System bot context-aware response =====
 
   let rawReply = "";
-  try { rawReply = await askAI(system, text); } catch { return; }
+  try { rawReply = await askAI(improvedSystem, text); } catch { return; }
   if (!rawReply) return;
 
   const needsKnowledge = /\[NEEDS_KNOWLEDGE\]/i.test(rawReply);
@@ -1058,10 +1098,24 @@ async function handleGroupAi(sb: any, token: string, msg: any, group: any) {
 
   await send(token, msg.chat.id, reply, msg.message_id);
 
-  sb.from("bot_messages").insert({
+  const { data: outboundLog } = await sb.from("bot_messages").insert({
     bot_id: null, owner_id: ownerId, group_id: null, direction: "outbound",
     content: reply, telegram_user: msg.from?.username || null,
-  }).then(() => {}, () => {});
+  }).select("id").maybeSingle();
+
+  // Update conversation context
+  if (conversationContext) {
+    try {
+      const userIntent = extractUserIntent(text);
+      await updateContext(sb, conversationContext.contextId, {
+        contextSummary: conversationContext.contextSummary || `User asked: "${userIntent.slice(0, 100)}"`,
+        userIntent,
+        lastBotReplyId: outboundLog?.id,
+      });
+    } catch (e) {
+      console.warn("Failed to update system bot conversation context:", (e as Error).message);
+    }
+  }
 
   await sb.rpc("bump_system_bot_usage", { _owner_id: ownerId });
 
