@@ -2,13 +2,13 @@
 // knowledge_sources rows (one per bot+group). Triggered by cron or invoked
 // directly with { bot_id, telegram_chat_id } to flush a single chat.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { aiChat } from "../_shared/ai-chat.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const LOVABLE_AI_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
 const MODEL = "google/gemini-3.5-flash";
 
 const MIN_BUFFER_ROWS = 4;        // wait until we have at least N admin messages
