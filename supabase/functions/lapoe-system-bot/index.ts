@@ -81,16 +81,10 @@ SIGNAL — for owner learning:
 }
 
 async function askAI(system: string, userText: string): Promise<string> {
-  const apiKey = Deno.env.get("LOVABLE_API_KEY");
-  if (!apiKey) throw new Error("LOVABLE_API_KEY not configured");
   if (aiBackoffUntil.t > Date.now()) throw new Error("AI backoff");
-  const res = await fetch(LOVABLE_AI_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
-    body: JSON.stringify({
-      model: AI_MODEL,
-      messages: [{ role: "system", content: system }, { role: "user", content: userText }],
-    }),
+  const res = await aiChat({
+    model: AI_MODEL,
+    messages: [{ role: "system", content: system }, { role: "user", content: userText }],
   });
   if (res.status === 429) { aiBackoffUntil.t = Date.now() + 30_000; throw new Error("rate limit"); }
   if (res.status === 402) { aiBackoffUntil.t = Date.now() + 60_000; throw new Error("credits exhausted"); }
