@@ -4,6 +4,16 @@
 // - In private chats with the bot owner (linked profile): exposes a Rose-style command suite to configure the bot.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { aiChat } from "../_shared/ai-chat.ts";
+import {
+  detectPrimaryTopic,
+  extractUserIntent,
+  enhancedRAGSnippets,
+  getOrCreateContext,
+  updateContext,
+  buildImprovedSystemPrompt,
+  type ConversationContext,
+  type RAGResult,
+} from "../_shared/context-aware-rag.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -1109,25 +1119,99 @@ async function handleSingleUpdate(supabase: any, bot: any, me: { username: strin
     const retrievalText = isFollowUpLike(cleanText) && history.length > 0
       ? `${history.slice(-4).map((m) => m.content).join("\n")}\n${cleanText}`
       : cleanText;
-    const [knowledgeResult, kExists] = await Promise.all([
-      autoKnowledge ? Promise.resolve(autoKnowledge) : ragSnippets(supabase, bot.id, retrievalText, 6),
+    
+    // ===== NEW: Context-Aware RAG Enhancement =====
+    let conversationContext: ConversationContext | null = null;
+    let ragResult: RAGResult | null = null;
+    
+    try {
+      const telegramUser = telegramUserLabel(msg.from);
+      conversationContext = await getOrCreateContext(
+        supabase,
+        bot.id,
+        bot.owner_id,
+        group?.id || null,
+        telegramUser,
+        inboundLog?.id || null
+      );
+      
+      // Detect topic from this message (or inherit from conversation)
+      const detectedTopic = detectPrimaryTopic(
+        cleanText,
+        conversationContext.primaryTopic,
+        conversationContext.contextSummary
+      );
+      
+      // Use enhanced RAG that's topic-aware
+      if (!autoKnowledge) {
+        ragResult = await enhancedRAGSnippets(
+          supabase,
+          bot.id,
+          retrievalText,
+          detectedTopic,
+          6
+        );
+      } else {
+        ragResult = {
+          snippets: autoKnowledge,
+          topic: detectedTopic,
+          contextInjection: "[PLATFORM_INFO]"
+        };
+      }
+    } catch (e) {
+      console.warn("Context-aware RAG failed, falling back to basic RAG:", (e as Error).message);
+      // Fallback to old logic
+      const [knowledgeResult] = await Promise.all([
+        autoKnowledge ? Promise.resolve(autoKnowledge) : ragSnippets(supabase, bot.id, retrievalText, 6),
+        hasKnowledge(supabase, bot.id),
+      ]);
+      ragResult = {
+        snippets: knowledgeResult,
+        topic: 'other' as any,
+        contextInjection: ""
+      };
+    }
+    // ===== END: Context-Aware RAG Enhancement =====
+
+    const [kExists] = await Promise.all([
       hasKnowledge(supabase, bot.id),
     ]);
 
-    const system = buildSystemPrompt(bot, group, knowledgeResult, kExists);
+    const baseSystem = buildSystemPrompt(bot, group, ragResult?.snippets || "", kExists);
+    // Inject conversation context into system prompt
+    const system = conversationContext 
+      ? buildImprovedSystemPrompt(baseSystem, conversationContext, ragResult!)
+      : baseSystem;
+    
     const rawReply = await askAI(system, cleanText, history);
     const needsKnowledge = /\[NEEDS_KNOWLEDGE\]/i.test(rawReply);
     const stripped = rawReply.replace(/\[NEEDS_KNOWLEDGE\]/gi, "").trim();
-    const allowedCtx = [knowledgeResult, LAPOE_SELF_KB, bot.house_rules, bot.default_instructions, bot.personality]
+    const allowedCtx = [ragResult?.snippets, LAPOE_SELF_KB, bot.house_rules, bot.default_instructions, bot.personality]
       .filter(Boolean).join("\n");
     const reply = sanitizeReply(stripped, allowedCtx);
 
     if (reply) {
-      await send(bot.telegram_bot_token, msg.chat.id, reply, msg.message_id);
-      supabase.from("bot_messages").insert({
+      const { data: outboundLog } = await supabase.from("bot_messages").insert({
         bot_id: bot.id, owner_id: bot.owner_id, group_id: group?.id || null, direction: "outbound",
         content: reply, telegram_user: telegramUserLabel(msg.from),
-      }).then(() => {}, () => {});
+      }).select("id").maybeSingle();
+      
+      // Update conversation context with this interaction
+      if (conversationContext) {
+        try {
+          const userIntent = extractUserIntent(cleanText);
+          await updateContext(supabase, conversationContext.contextId, {
+            primaryTopic: ragResult?.topic as any,
+            contextSummary: conversationContext.contextSummary || `User asked: "${userIntent.slice(0, 100)}"`,
+            userIntent,
+            lastBotReplyId: outboundLog?.id,
+          });
+        } catch (e) {
+          console.warn("Failed to update conversation context:", (e as Error).message);
+        }
+      }
+      
+      await send(bot.telegram_bot_token, msg.chat.id, reply, msg.message_id);
     }
 
     if (needsKnowledge && isQuestionLike(cleanText) && !isGreeting(cleanText)) {
