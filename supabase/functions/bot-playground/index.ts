@@ -11,7 +11,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const LOVABLE_AI_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
+import { aiChat } from "../_shared/ai-chat.ts";
 const DEFAULT_MODEL = "google/gemini-3-flash-preview";
 
 const TONES: Record<string, string> = {
@@ -180,26 +180,15 @@ Deno.serve(async (req) => {
     system = buildSystemPrompt(bot, knowledge);
   }
 
-  const apiKey = Deno.env.get("LOVABLE_API_KEY");
-  if (!apiKey) {
-    return new Response(JSON.stringify({ error: "AI gateway not configured" }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
-
-  const aiRes = await fetch(LOVABLE_AI_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
-    body: JSON.stringify({
-      model: DEFAULT_MODEL,
-      messages: [
-        { role: "system", content: system },
-        ...messages.slice(-12).map(m => ({
-          role: m.role === "assistant" ? "assistant" : "user",
-          content: String(m.content || "").slice(0, 4000),
-        })),
-      ],
-    }),
+  const aiRes = await aiChat({
+    model: DEFAULT_MODEL,
+    messages: [
+      { role: "system", content: system },
+      ...messages.slice(-12).map(m => ({
+        role: m.role === "assistant" ? "assistant" : "user",
+        content: String(m.content || "").slice(0, 4000),
+      })),
+    ],
   });
 
   if (aiRes.status === 429) {

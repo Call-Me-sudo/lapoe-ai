@@ -8,6 +8,7 @@
 // Uses LAPOE_SYSTEM_BOT_TOKEN. No per-user API key required.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { aiChat } from "../_shared/ai-chat.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -18,7 +19,6 @@ const MAX_RUNTIME_MS = 50_000;
 const FLOOD_WINDOW_SEC = 10;
 
 // ---------- AI ----------
-const LOVABLE_AI_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
 const AI_MODEL = "google/gemini-3.5-flash";
 const LAPOE_USERNAME = "lapoe_bot"; // for mention detection in groups
 const aiBackoffUntil = { t: 0 };
@@ -81,16 +81,10 @@ SIGNAL — for owner learning:
 }
 
 async function askAI(system: string, userText: string): Promise<string> {
-  const apiKey = Deno.env.get("LOVABLE_API_KEY");
-  if (!apiKey) throw new Error("LOVABLE_API_KEY not configured");
   if (aiBackoffUntil.t > Date.now()) throw new Error("AI backoff");
-  const res = await fetch(LOVABLE_AI_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
-    body: JSON.stringify({
-      model: AI_MODEL,
-      messages: [{ role: "system", content: system }, { role: "user", content: userText }],
-    }),
+  const res = await aiChat({
+    model: AI_MODEL,
+    messages: [{ role: "system", content: system }, { role: "user", content: userText }],
   });
   if (res.status === 429) { aiBackoffUntil.t = Date.now() + 30_000; throw new Error("rate limit"); }
   if (res.status === 402) { aiBackoffUntil.t = Date.now() + 60_000; throw new Error("credits exhausted"); }

@@ -2,13 +2,13 @@
 // knowledge_sources rows (one per bot+group). Triggered by cron or invoked
 // directly with { bot_id, telegram_chat_id } to flush a single chat.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { aiChat } from "../_shared/ai-chat.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const LOVABLE_AI_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
 const MODEL = "google/gemini-3.5-flash";
 
 const MIN_BUFFER_ROWS = 4;        // wait until we have at least N admin messages
@@ -28,8 +28,6 @@ function chunk(text: string): string[] {
 }
 
 async function summarize(existing: string, newMessages: { sender_name: string | null; content: string }[], groupTitle: string): Promise<string> {
-  const key = Deno.env.get("LOVABLE_API_KEY");
-  if (!key) throw new Error("Missing LOVABLE_API_KEY");
 
   const formatted = newMessages
     .map((m, i) => `(${i + 1}) ${m.sender_name || "admin"}: ${m.content.replace(/\s+/g, " ").slice(0, 800)}`)
@@ -57,14 +55,10 @@ ${formatted}
 
 Now output the updated knowledge base.`;
 
-  const res = await fetch(LOVABLE_AI_URL, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: MODEL,
-      messages: [{ role: "system", content: system }, { role: "user", content: user }],
-      temperature: 0.2,
-    }),
+  const res = await aiChat({
+    model: MODEL,
+    messages: [{ role: "system", content: system }, { role: "user", content: user }],
+    temperature: 0.2,
   });
   if (!res.ok) throw new Error(`AI ${res.status}: ${(await res.text()).slice(0, 300)}`);
   const j = await res.json();
