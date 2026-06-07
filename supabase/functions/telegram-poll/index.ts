@@ -351,19 +351,13 @@ SIGNAL — IMPORTANT for owner learning:
 }
 
 async function askAI(system: string, userText: string): Promise<string> {
-  const apiKey = Deno.env.get("LOVABLE_API_KEY");
-  if (!apiKey) throw new Error("LOVABLE_API_KEY not configured");
   if (aiBackoffUntil.t > Date.now()) throw new Error("AI backoff active");
-  const res = await fetch(LOVABLE_AI_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
-    body: JSON.stringify({
-      model: DEFAULT_MODEL,
-      messages: [
-        { role: "system", content: system },
-        { role: "user", content: userText },
-      ],
-    }),
+  const res = await aiChat({
+    model: DEFAULT_MODEL,
+    messages: [
+      { role: "system", content: system },
+      { role: "user", content: userText },
+    ],
   });
   if (res.status === 429) {
     aiBackoffUntil.t = Date.now() + 30_000;
@@ -377,7 +371,7 @@ async function askAI(system: string, userText: string): Promise<string> {
     aiBackoffUntil.t = Date.now() + 10_000;
   }
   const data = await res.json();
-  if (!res.ok) throw new Error(data?.error?.message || "Lovable AI error");
+  if (!res.ok) throw new Error(data?.error?.message || "AI error");
   return data.choices?.[0]?.message?.content?.trim() || "";
 }
 
