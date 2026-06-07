@@ -369,7 +369,6 @@ function buildSystemPrompt(bot: any, group: any | null, knowledge: string, knowl
     ? `You are currently in the Telegram group "${group.name}".${group.welcome_message ? `\nGroup vibe: ${group.welcome_message}` : ""}${group.rules ? `\nGroup rules:\n${group.rules}` : ""}`
     : "You are in a private chat.";
   const houseRules = bot.house_rules ? `\nHouse rules to follow:\n${bot.house_rules}` : "";
-  const customInstr = bot.default_instructions ? `\n\nOwner instructions:\n${bot.default_instructions}` : "";
 
   let knowledgeBlock = "";
   if (knowledge) {
@@ -378,17 +377,23 @@ function buildSystemPrompt(bot: any, group: any | null, knowledge: string, knowl
     knowledgeBlock = `\n\nThe owner gave you a knowledge base, but nothing in it matches this message. Tell the user briefly that this isn't covered in your notes, then offer what you can help with. Do NOT invent facts.`;
   }
 
+  // Build custom instructions section with HIGH priority
+  let customInstrBlock = "";
+  if (bot.default_instructions) {
+    customInstrBlock = `\n\n=== REQUIRED INSTRUCTIONS (MANDATORY — override all default rules below) ===\n${bot.default_instructions}\n=== END REQUIRED INSTRUCTIONS ===\n`;
+  }
+
   return `You are *${bot.name}*, a Telegram community bot.
 
 Tone: ${tone}
-${persona ? `Character: ${persona}\n` : ""}${groupCtx}${houseRules}${customInstr}${knowledgeBlock}
+${persona ? `Character: ${persona}\n` : ""}${groupCtx}${houseRules}${customInstrBlock}${knowledgeBlock}
 
 === ABOUT THE PLATFORM POWERING YOU (always available) ===
 ${LAPOE_SELF_KB}
 === END PLATFORM INFO ===
 If asked "what are you", "who built you", "what platform", "how do I get one like you", or any meta question about yourself/the platform, answer from the PLATFORM INFO above. Never say "I don't know" about yourself.
 
-STRICT SCOPE RULES — follow these above all else:
+STRICT SCOPE RULES — follow these above all else (unless overridden by REQUIRED INSTRUCTIONS above):
 - You exist ONLY to help with topics related to this bot's community/persona${knowledgeExists ? " and the KNOWLEDGE BASE" : ""}${group ? " and this group" : ""}, plus meta questions about LaPoe answerable from PLATFORM INFO.
 - DO NOT answer general-knowledge questions (politics, world facts, trivia, celebrities, geography, history, coding help, math, etc.) unless they are explicitly covered ${knowledgeExists ? "in the knowledge base" : "by the owner instructions or house rules"}.
 - If a question is outside your scope, politely decline in ONE short line and redirect to what you can help with.

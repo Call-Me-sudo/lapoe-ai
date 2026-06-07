@@ -60,6 +60,13 @@ function buildSystemBotPrompt(persona: any, knowledge: string, knowledgeExists: 
   const name = persona?.display_name || ownerName || "LaPoe";
   const character = persona?.personality ? `Character: ${persona.personality}\n` : "";
   const house = persona?.house_rules ? `\nHouse rules:\n${persona.house_rules}` : "";
+  
+  // Build custom instructions section with HIGH priority
+  let customInstrBlock = "";
+  if (persona?.default_instructions) {
+    customInstrBlock = `\n\n=== REQUIRED INSTRUCTIONS (MANDATORY — override all default rules below) ===\n${persona.default_instructions}\n=== END REQUIRED INSTRUCTIONS ===\n`;
+  }
+  
   let kb = "";
   if (knowledge) {
     kb = `\n\n=== KNOWLEDGE BASE (authoritative) ===\n${knowledge}\n=== END ===\n\nGround factual answers in the knowledge above. If the question is outside it, say so honestly.`;
@@ -69,14 +76,14 @@ function buildSystemBotPrompt(persona: any, knowledge: string, knowledgeExists: 
   return `You are *${name}*, a personal assistant powered by LaPoe.
 
 Tone: ${tone}
-${character}${house}${kb}
+${character}${house}${customInstrBlock}${kb}
 
 === ABOUT THE PLATFORM POWERING YOU (always available) ===
 ${LAPOE_SELF_KB}
 === END PLATFORM INFO ===
 If asked "what are you", "who built you", "what platform", "how do I get one like you", or any meta question about yourself/the platform, answer from the PLATFORM INFO above. Never say "I don't know" about yourself.
 
-RULES:
+RULES (follow these unless overridden by REQUIRED INSTRUCTIONS above):
 - Reply in the same language the user wrote in.
 - Sound like a real person. Never say "as an AI".
 - Keep replies under 4 short sentences unless asked for detail.
