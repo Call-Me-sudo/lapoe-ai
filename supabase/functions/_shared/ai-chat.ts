@@ -15,7 +15,7 @@ type Provider = {
 // Map canonical Lovable models to FREE OpenRouter equivalents so the
 // fallback works even when the user's OpenRouter key has no credits.
 // (Override via OPENROUTER_MODEL env var if you want a paid model.)
-const OPENROUTER_FREE_DEFAULT = "google/gemini-2.0-flash-exp:free";
+const OPENROUTER_FREE_DEFAULT = "deepseek/deepseek-chat-v3.1:free";
 const OPENROUTER_MODEL_MAP: Record<string, string> = {
   "google/gemini-3.5-flash": OPENROUTER_FREE_DEFAULT,
   "google/gemini-3-flash-preview": OPENROUTER_FREE_DEFAULT,
