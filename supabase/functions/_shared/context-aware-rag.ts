@@ -242,7 +242,7 @@ export async function enhancedRAGSnippets(
  */
 export async function getOrCreateContext(
   supabase: any,
-  botId: string,
+  botId: string | null,
   ownerId: string,
   groupId: string | null,
   telegramUser: string,
