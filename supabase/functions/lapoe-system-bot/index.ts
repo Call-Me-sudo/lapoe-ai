@@ -1099,6 +1099,9 @@ async function handleGroupAi(sb: any, token: string, msg: any, group: any) {
       shouldReply = true;
     }
   }
+  if (!shouldReply && isFollowUpLikeSys(text) && await recentSystemBotReplyContext(sb, ownerId, msg)) {
+    shouldReply = true;
+  }
   if (!shouldReply) return;
 
   // Log inbound to bot_messages so the dashboard's Messages page shows it.
@@ -1108,30 +1111,36 @@ async function handleGroupAi(sb: any, token: string, msg: any, group: any) {
     telegram_user: msg.from?.username || msg.from?.first_name || String(msg.from?.id || ""),
   }).select("id").maybeSingle();
 
+  const history = await recentSystemConversationMessages(sb, ownerId, msg, inboundLog?.id || null);
+  const retrievalText = isFollowUpLikeSys(text) && history.length > 0
+    ? `${history.slice(-4).map((m) => m.content).join("\n")}\n${text}`
+    : text;
+
   if (!allowed) {
     // Silent in the group. DM the owner once per month.
     await notifySystemBotOwnerLimit(sb, token, ownerId, cap).catch(() => {});
     return;
   }
 
-  if (!rag.exists && !rag.text) rag = await ragForOwner(sb, ownerId, text, 5);
+  if (!rag.exists && !rag.text) rag = await ragForOwner(sb, ownerId, retrievalText, 5);
 
   // ===== NEW: System bot context-aware response =====
   let conversationContext: ConversationContext | null = null;
   let improvedSystem = "";
+  let detectedTopic: any = "other";
   
   try {
     const telegramUser = msg.from?.username || msg.from?.first_name || String(msg.from?.id || "");
     conversationContext = await getOrCreateContext(
       sb,
-      "system-bot", // Use "system-bot" as a special bot ID
+      null,
       ownerId,
       null, // System bot doesn't track per-group context
       telegramUser,
       inboundLog?.id || null
     );
     
-    const detectedTopic = detectPrimaryTopic(text, conversationContext.primaryTopic, conversationContext.contextSummary);
+    detectedTopic = detectPrimaryTopic(text, conversationContext.primaryTopic, conversationContext.contextSummary);
     const ownerName = persona?.display_name || "LaPoe";
     const baseSystem = buildSystemBotPrompt(persona, rag.text, rag.exists, ownerName) +
       `\n\nYou are in the Telegram group "${group.title || ""}". Keep it conversational.`;
@@ -1152,7 +1161,7 @@ async function handleGroupAi(sb: any, token: string, msg: any, group: any) {
   // ===== END: System bot context-aware response =====
 
   let rawReply = "";
-  try { rawReply = await askAI(improvedSystem, text); } catch { return; }
+  try { rawReply = await askAI(improvedSystem, text, history); } catch { return; }
   if (!rawReply) return;
 
   const needsKnowledge = /\[NEEDS_KNOWLEDGE\]/i.test(rawReply);
