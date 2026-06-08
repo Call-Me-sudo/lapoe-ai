@@ -1172,7 +1172,7 @@ async function handleGroupAi(sb: any, token: string, msg: any, group: any) {
 
   const { data: outboundLog } = await sb.from("bot_messages").insert({
     bot_id: null, owner_id: ownerId, group_id: null, direction: "outbound",
-    content: reply, telegram_user: msg.from?.username || null,
+    content: reply, telegram_user: systemUserLabel(msg.from),
   }).select("id").maybeSingle();
 
   // Update conversation context
@@ -1180,7 +1180,8 @@ async function handleGroupAi(sb: any, token: string, msg: any, group: any) {
     try {
       const userIntent = extractUserIntent(text);
       await updateContext(sb, conversationContext.contextId, {
-        contextSummary: conversationContext.contextSummary || `User asked: "${userIntent.slice(0, 100)}"`,
+        primaryTopic: detectedTopic,
+        contextSummary: appendConversationSummary(conversationContext.contextSummary, text, reply),
         userIntent,
         lastBotReplyId: outboundLog?.id,
       });
