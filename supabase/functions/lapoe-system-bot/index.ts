@@ -12,6 +12,7 @@ import { aiChat } from "../_shared/ai-chat.ts";
 import {
   detectPrimaryTopic,
   extractUserIntent,
+  appendConversationSummary,
   getOrCreateContext,
   updateContext,
   buildImprovedSystemPrompt,
@@ -96,11 +97,15 @@ SIGNAL — for owner learning:
 - If the user asked a substantive factual question that DESERVED a real answer, but you cannot answer it from the KNOWLEDGE BASE / house rules / PLATFORM INFO, append the EXACT token [NEEDS_KNOWLEDGE] on its own final line. Do NOT include it for greetings, small talk, or off-topic refusals.`;
 }
 
-async function askAI(system: string, userText: string): Promise<string> {
+async function askAI(
+  system: string,
+  userText: string,
+  history: { role: "user" | "assistant"; content: string }[] = [],
+): Promise<string> {
   if (aiBackoffUntil.t > Date.now()) throw new Error("AI backoff");
   const res = await aiChat({
     model: AI_MODEL,
-    messages: [{ role: "system", content: system }, { role: "user", content: userText }],
+    messages: [{ role: "system", content: system }, ...history, { role: "user", content: userText }],
   });
   if (res.status === 429) { aiBackoffUntil.t = Date.now() + 30_000; throw new Error("rate limit"); }
   if (res.status === 402) { aiBackoffUntil.t = Date.now() + 60_000; throw new Error("credits exhausted"); }
