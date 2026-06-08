@@ -968,6 +968,43 @@ function isQuestionLikeSys(text: string): boolean {
   return /\b(what|who|when|where|why|how|can|could|should|do|does|did|is|are|am|will|would|tell me|explain|help|que|qué|cuál|cómo|porque|cómo|nini|nani|lini|wapi|kwa\s?nini|vipi)\b/i.test(t);
 }
 
+function systemUserLabel(from: any): string {
+  return from?.username || from?.first_name || String(from?.id || "");
+}
+
+function isFollowUpLikeSys(text: string): boolean {
+  const t = text.trim().toLowerCase();
+  if (t.length < 3 || /^[\/!]/.test(t) || isGreeting(t)) return false;
+  if (isQuestionLikeSys(t)) return true;
+  return /^(and|also|then|what about|how about|what if|how do i|can i|does it|is it|do they|do you|tell me more|more|why|where|when|who|which|that|this|those|these|it|they|them)\b/i.test(t);
+}
+
+async function recentSystemConversationMessages(
+  sb: any,
+  ownerId: string,
+  msg: any,
+  currentLogId: string | null,
+): Promise<{ role: "user" | "assistant"; content: string }[]> {
+  const { data } = await sb
+    .from("bot_messages")
+    .select("id,direction,content,created_at")
+    .is("bot_id", null)
+    .eq("owner_id", ownerId)
+    .eq("telegram_user", systemUserLabel(msg.from))
+    .order("created_at", { ascending: false })
+    .limit(10);
+  if (!data || data.length === 0) return [];
+
+  return data
+    .filter((row: any) => row.id !== currentLogId && row.content)
+    .reverse()
+    .slice(-8)
+    .map((row: any) => ({
+      role: row.direction === "outbound" ? "assistant" : "user",
+      content: String(row.content || "").slice(0, 2000),
+    }));
+}
+
 // DM the free-plan owner once per month when their 30 AI replies run out.
 // Stays silent in the group; uses notifications table to dedup.
 async function notifySystemBotOwnerLimit(sb: any, token: string, ownerId: string, cap: number): Promise<void> {
