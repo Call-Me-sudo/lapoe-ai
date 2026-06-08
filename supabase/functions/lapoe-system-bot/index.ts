@@ -12,6 +12,7 @@ import { aiChat } from "../_shared/ai-chat.ts";
 import {
   detectPrimaryTopic,
   extractUserIntent,
+  appendConversationSummary,
   getOrCreateContext,
   updateContext,
   buildImprovedSystemPrompt,
@@ -96,11 +97,15 @@ SIGNAL — for owner learning:
 - If the user asked a substantive factual question that DESERVED a real answer, but you cannot answer it from the KNOWLEDGE BASE / house rules / PLATFORM INFO, append the EXACT token [NEEDS_KNOWLEDGE] on its own final line. Do NOT include it for greetings, small talk, or off-topic refusals.`;
 }
 
-async function askAI(system: string, userText: string): Promise<string> {
+async function askAI(
+  system: string,
+  userText: string,
+  history: { role: "user" | "assistant"; content: string }[] = [],
+): Promise<string> {
   if (aiBackoffUntil.t > Date.now()) throw new Error("AI backoff");
   const res = await aiChat({
     model: AI_MODEL,
-    messages: [{ role: "system", content: system }, { role: "user", content: userText }],
+    messages: [{ role: "system", content: system }, ...history, { role: "user", content: userText }],
   });
   if (res.status === 429) { aiBackoffUntil.t = Date.now() + 30_000; throw new Error("rate limit"); }
   if (res.status === 402) { aiBackoffUntil.t = Date.now() + 60_000; throw new Error("credits exhausted"); }
@@ -963,6 +968,57 @@ function isQuestionLikeSys(text: string): boolean {
   return /\b(what|who|when|where|why|how|can|could|should|do|does|did|is|are|am|will|would|tell me|explain|help|que|qué|cuál|cómo|porque|cómo|nini|nani|lini|wapi|kwa\s?nini|vipi)\b/i.test(t);
 }
 
+function systemUserLabel(from: any): string {
+  return from?.username || from?.first_name || String(from?.id || "");
+}
+
+function isFollowUpLikeSys(text: string): boolean {
+  const t = text.trim().toLowerCase();
+  if (t.length < 3 || /^[\/!]/.test(t) || isGreeting(t)) return false;
+  if (isQuestionLikeSys(t)) return true;
+  return /^(and|also|then|what about|how about|what if|how do i|can i|does it|is it|do they|do you|tell me more|more|why|where|when|who|which|that|this|those|these|it|they|them)\b/i.test(t);
+}
+
+async function recentSystemConversationMessages(
+  sb: any,
+  ownerId: string,
+  msg: any,
+  currentLogId: string | null,
+): Promise<{ role: "user" | "assistant"; content: string }[]> {
+  const { data } = await sb
+    .from("bot_messages")
+    .select("id,direction,content,created_at")
+    .is("bot_id", null)
+    .eq("owner_id", ownerId)
+    .eq("telegram_user", systemUserLabel(msg.from))
+    .order("created_at", { ascending: false })
+    .limit(10);
+  if (!data || data.length === 0) return [];
+
+  return data
+    .filter((row: any) => row.id !== currentLogId && row.content)
+    .reverse()
+    .slice(-8)
+    .map((row: any) => ({
+      role: row.direction === "outbound" ? "assistant" : "user",
+      content: String(row.content || "").slice(0, 2000),
+    }));
+}
+
+async function recentSystemBotReplyContext(sb: any, ownerId: string, msg: any, minutes = 10): Promise<boolean> {
+  const { data } = await sb
+    .from("bot_messages")
+    .select("id,created_at")
+    .is("bot_id", null)
+    .eq("owner_id", ownerId)
+    .eq("direction", "outbound")
+    .eq("telegram_user", systemUserLabel(msg.from))
+    .gte("created_at", new Date(Date.now() - minutes * 60_000).toISOString())
+    .order("created_at", { ascending: false })
+    .limit(1);
+  return !!(data && data.length > 0);
+}
+
 // DM the free-plan owner once per month when their 30 AI replies run out.
 // Stays silent in the group; uses notifications table to dedup.
 async function notifySystemBotOwnerLimit(sb: any, token: string, ownerId: string, cap: number): Promise<void> {
@@ -1043,6 +1099,9 @@ async function handleGroupAi(sb: any, token: string, msg: any, group: any) {
       shouldReply = true;
     }
   }
+  if (!shouldReply && isFollowUpLikeSys(text) && await recentSystemBotReplyContext(sb, ownerId, msg)) {
+    shouldReply = true;
+  }
   if (!shouldReply) return;
 
   // Log inbound to bot_messages so the dashboard's Messages page shows it.
@@ -1052,30 +1111,36 @@ async function handleGroupAi(sb: any, token: string, msg: any, group: any) {
     telegram_user: msg.from?.username || msg.from?.first_name || String(msg.from?.id || ""),
   }).select("id").maybeSingle();
 
+  const history = await recentSystemConversationMessages(sb, ownerId, msg, inboundLog?.id || null);
+  const retrievalText = isFollowUpLikeSys(text) && history.length > 0
+    ? `${history.slice(-4).map((m) => m.content).join("\n")}\n${text}`
+    : text;
+
   if (!allowed) {
     // Silent in the group. DM the owner once per month.
     await notifySystemBotOwnerLimit(sb, token, ownerId, cap).catch(() => {});
     return;
   }
 
-  if (!rag.exists && !rag.text) rag = await ragForOwner(sb, ownerId, text, 5);
+  if (!rag.exists && !rag.text) rag = await ragForOwner(sb, ownerId, retrievalText, 5);
 
   // ===== NEW: System bot context-aware response =====
   let conversationContext: ConversationContext | null = null;
   let improvedSystem = "";
+  let detectedTopic: any = "other";
   
   try {
     const telegramUser = msg.from?.username || msg.from?.first_name || String(msg.from?.id || "");
     conversationContext = await getOrCreateContext(
       sb,
-      "system-bot", // Use "system-bot" as a special bot ID
+      null,
       ownerId,
       null, // System bot doesn't track per-group context
       telegramUser,
       inboundLog?.id || null
     );
     
-    const detectedTopic = detectPrimaryTopic(text, conversationContext.primaryTopic, conversationContext.contextSummary);
+    detectedTopic = detectPrimaryTopic(text, conversationContext.primaryTopic, conversationContext.contextSummary);
     const ownerName = persona?.display_name || "LaPoe";
     const baseSystem = buildSystemBotPrompt(persona, rag.text, rag.exists, ownerName) +
       `\n\nYou are in the Telegram group "${group.title || ""}". Keep it conversational.`;
@@ -1096,7 +1161,7 @@ async function handleGroupAi(sb: any, token: string, msg: any, group: any) {
   // ===== END: System bot context-aware response =====
 
   let rawReply = "";
-  try { rawReply = await askAI(improvedSystem, text); } catch { return; }
+  try { rawReply = await askAI(improvedSystem, text, history); } catch { return; }
   if (!rawReply) return;
 
   const needsKnowledge = /\[NEEDS_KNOWLEDGE\]/i.test(rawReply);
@@ -1107,7 +1172,7 @@ async function handleGroupAi(sb: any, token: string, msg: any, group: any) {
 
   const { data: outboundLog } = await sb.from("bot_messages").insert({
     bot_id: null, owner_id: ownerId, group_id: null, direction: "outbound",
-    content: reply, telegram_user: msg.from?.username || null,
+    content: reply, telegram_user: systemUserLabel(msg.from),
   }).select("id").maybeSingle();
 
   // Update conversation context
@@ -1115,7 +1180,8 @@ async function handleGroupAi(sb: any, token: string, msg: any, group: any) {
     try {
       const userIntent = extractUserIntent(text);
       await updateContext(sb, conversationContext.contextId, {
-        contextSummary: conversationContext.contextSummary || `User asked: "${userIntent.slice(0, 100)}"`,
+        primaryTopic: detectedTopic,
+        contextSummary: appendConversationSummary(conversationContext.contextSummary, text, reply),
         userIntent,
         lastBotReplyId: outboundLog?.id,
       });

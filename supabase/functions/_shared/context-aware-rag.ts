@@ -95,6 +95,24 @@ export function extractUserIntent(userText: string): string {
   return cleaned;
 }
 
+export function appendConversationSummary(
+  previous: string | null,
+  userText: string,
+  botReply?: string,
+): string {
+  const cleanUser = userText.replace(/\s+/g, ' ').trim().slice(0, 220);
+  const cleanReply = (botReply || '').replace(/\s+/g, ' ').trim().slice(0, 180);
+  const entry = cleanReply ? `User: ${cleanUser} | Bot: ${cleanReply}` : `User: ${cleanUser}`;
+  const parts = [previous, entry]
+    .filter(Boolean)
+    .join('\n')
+    .split('\n')
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+  return parts.slice(-6).join('\n').slice(-1200);
+}
+
 /**
  * Build context injection string for system prompt
  * Provides grounded context from conversation thread
@@ -242,7 +260,7 @@ export async function enhancedRAGSnippets(
  */
 export async function getOrCreateContext(
   supabase: any,
-  botId: string,
+  botId: string | null,
   ownerId: string,
   groupId: string | null,
   telegramUser: string,

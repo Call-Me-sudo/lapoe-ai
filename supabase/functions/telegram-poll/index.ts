@@ -7,6 +7,7 @@ import { aiChat } from "../_shared/ai-chat.ts";
 import {
   detectPrimaryTopic,
   extractUserIntent,
+  appendConversationSummary,
   enhancedRAGSnippets,
   getOrCreateContext,
   updateContext,
@@ -1207,7 +1208,7 @@ async function handleSingleUpdate(supabase: any, bot: any, me: { username: strin
           const userIntent = extractUserIntent(cleanText);
           await updateContext(supabase, conversationContext.contextId, {
             primaryTopic: ragResult?.topic as any,
-            contextSummary: conversationContext.contextSummary || `User asked: "${userIntent.slice(0, 100)}"`,
+            contextSummary: appendConversationSummary(conversationContext.contextSummary, cleanText, reply),
             userIntent,
             lastBotReplyId: outboundLog?.id,
           });
