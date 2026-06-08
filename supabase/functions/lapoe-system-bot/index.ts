@@ -1005,6 +1005,20 @@ async function recentSystemConversationMessages(
     }));
 }
 
+async function recentSystemBotReplyContext(sb: any, ownerId: string, msg: any, minutes = 10): Promise<boolean> {
+  const { data } = await sb
+    .from("bot_messages")
+    .select("id,created_at")
+    .is("bot_id", null)
+    .eq("owner_id", ownerId)
+    .eq("direction", "outbound")
+    .eq("telegram_user", systemUserLabel(msg.from))
+    .gte("created_at", new Date(Date.now() - minutes * 60_000).toISOString())
+    .order("created_at", { ascending: false })
+    .limit(1);
+  return !!(data && data.length > 0);
+}
+
 // DM the free-plan owner once per month when their 30 AI replies run out.
 // Stays silent in the group; uses notifications table to dedup.
 async function notifySystemBotOwnerLimit(sb: any, token: string, ownerId: string, cap: number): Promise<void> {
