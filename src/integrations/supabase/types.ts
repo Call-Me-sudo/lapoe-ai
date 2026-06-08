@@ -276,6 +276,108 @@ export type Database = {
         }
         Relationships: []
       }
+      conversation_contexts: {
+        Row: {
+          bot_id: string | null
+          context_summary: string | null
+          created_at: string
+          first_message_id: string | null
+          group_id: string | null
+          id: string
+          is_active: boolean
+          last_activity_at: string
+          last_bot_reply_id: string | null
+          last_message_id: string | null
+          message_count: number
+          owner_id: string
+          primary_topic: Database["public"]["Enums"]["conversation_topic"]
+          secondary_topics:
+            | Database["public"]["Enums"]["conversation_topic"][]
+            | null
+          telegram_user: string
+          updated_at: string
+          user_intent: string | null
+        }
+        Insert: {
+          bot_id?: string | null
+          context_summary?: string | null
+          created_at?: string
+          first_message_id?: string | null
+          group_id?: string | null
+          id?: string
+          is_active?: boolean
+          last_activity_at?: string
+          last_bot_reply_id?: string | null
+          last_message_id?: string | null
+          message_count?: number
+          owner_id: string
+          primary_topic?: Database["public"]["Enums"]["conversation_topic"]
+          secondary_topics?:
+            | Database["public"]["Enums"]["conversation_topic"][]
+            | null
+          telegram_user: string
+          updated_at?: string
+          user_intent?: string | null
+        }
+        Update: {
+          bot_id?: string | null
+          context_summary?: string | null
+          created_at?: string
+          first_message_id?: string | null
+          group_id?: string | null
+          id?: string
+          is_active?: boolean
+          last_activity_at?: string
+          last_bot_reply_id?: string | null
+          last_message_id?: string | null
+          message_count?: number
+          owner_id?: string
+          primary_topic?: Database["public"]["Enums"]["conversation_topic"]
+          secondary_topics?:
+            | Database["public"]["Enums"]["conversation_topic"][]
+            | null
+          telegram_user?: string
+          updated_at?: string
+          user_intent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_contexts_bot_id_fkey"
+            columns: ["bot_id"]
+            isOneToOne: false
+            referencedRelation: "bots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversation_contexts_first_message_id_fkey"
+            columns: ["first_message_id"]
+            isOneToOne: false
+            referencedRelation: "bot_messages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversation_contexts_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "telegram_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversation_contexts_last_bot_reply_id_fkey"
+            columns: ["last_bot_reply_id"]
+            isOneToOne: false
+            referencedRelation: "bot_messages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversation_contexts_last_message_id_fkey"
+            columns: ["last_message_id"]
+            isOneToOne: false
+            referencedRelation: "bot_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       knowledge_chunks: {
         Row: {
           bot_id: string | null
@@ -1061,6 +1163,16 @@ export type Database = {
           plan: Database["public"]["Enums"]["plan_tier"]
         }[]
       }
+      get_or_create_conversation_context: {
+        Args: {
+          _bot_id: string
+          _current_message_id?: string
+          _group_id: string
+          _owner_id: string
+          _telegram_user: string
+        }
+        Returns: Json
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1135,6 +1247,16 @@ export type Database = {
           plan: Database["public"]["Enums"]["plan_tier"]
         }[]
       }
+      update_conversation_context: {
+        Args: {
+          _context_id: string
+          _context_summary?: string
+          _last_bot_reply_id?: string
+          _primary_topic?: Database["public"]["Enums"]["conversation_topic"]
+          _user_intent?: string
+        }
+        Returns: undefined
+      }
       user_plan: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["plan_tier"]
@@ -1143,6 +1265,16 @@ export type Database = {
     Enums: {
       app_role: "owner" | "admin" | "user"
       bot_status: "active" | "paused" | "stopped"
+      conversation_topic:
+        | "referral_bonus"
+        | "star_sales"
+        | "payment_status"
+        | "account_setup"
+        | "withdrawal"
+        | "general_support"
+        | "product_inquiry"
+        | "technical_issue"
+        | "other"
       knowledge_kind: "url" | "text"
       message_direction: "inbound" | "outbound"
       plan_tier: "free" | "starter" | "pro" | "business"
@@ -1276,6 +1408,17 @@ export const Constants = {
     Enums: {
       app_role: ["owner", "admin", "user"],
       bot_status: ["active", "paused", "stopped"],
+      conversation_topic: [
+        "referral_bonus",
+        "star_sales",
+        "payment_status",
+        "account_setup",
+        "withdrawal",
+        "general_support",
+        "product_inquiry",
+        "technical_issue",
+        "other",
+      ],
       knowledge_kind: ["url", "text"],
       message_direction: ["inbound", "outbound"],
       plan_tier: ["free", "starter", "pro", "business"],
